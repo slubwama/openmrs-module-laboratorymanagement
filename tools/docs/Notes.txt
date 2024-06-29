@@ -1,0 +1,258 @@
+Order requires a patient
+Order can't be modified via orders api
+Order attributes can't be filtered against
+Their is no order attribute resource
+When capturing observations, a new order is created with action discontinue but the old order is left as-is. What is the use of creating a new useless  order and leaving the old one to remain the active order. When completing the order a sub fulfillment resource is used to set the status as complete, why do the dilly dance of adding a sub-resource yet you want immutability.
+specimen source field is currently not saved when your not referring the patient out
+referred_facility name is not saved if its other
+Why save captial letters of the concept of reference out
+
+
+require patient for external and referrals as agreed with sam
+a sample can be used for multiple tests
+use delegating subresources to update order e.g. what they are doing to the FulfillerDetailsResource
+create order attribute resource copy from personattributeresource
+extend the order resource to create a custom resource to handle attributes and additional fields
+extra table should have preferred lab, location blood is collected, when its collected, by who
+
+
+Add a  page to manage locations like in stock management with a delete custom action to verify location in lab activities usage.
+Who approves lab requests? Add a permission to approve lab requests.
+lab_test_request_item
+For a test requested capture additional fields:- Preferred diagnostic center, location where test request is made, capture information if the clinician is referring the patient out or within facility (referred_out flag, referred_from (clinician or lab)), add require approval and approval result flag, who has approved, date approved. If its rejected, reject the request, capture a field if the lab request was made with samples given that its a referral, first_sample_id (Will be used in calculating TAT), final_result_id (Will be used in calculating TAT)
+-- esmugemr.labmgmt_test_request_item definition
+
+CREATE TABLE `labmgmt_test_request_item` (
+  `test_request_item_id` int NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `at_location_id` int NOT NULL,
+  `to_location_id` int DEFAULT NULL,
+  `referred_out` bit(1) NOT NULL,
+  `referral_out_origin` varchar(50) DEFAULT NULL,
+  `referral_out_by` int DEFAULT NULL,
+  `referral_out_date` datetime DEFAULT NULL,
+  `referral_to_facility_id` int DEFAULT NULL,
+  `referral_to_facility_name` varchar(255) DEFAULT NULL,
+  `referred_in` bit(1) DEFAULT NULL,
+  `referral_from_facility_id` int DEFAULT NULL,
+  `referral_from_facility_name` varchar(255) DEFAULT NULL,
+  `referral_in_external_ref` varchar(50) DEFAULT NULL,
+  `require_request_approval` bit(1) DEFAULT NULL,
+  `request_approval_result` varchar(50) DEFAULT NULL,
+  `request_approval_by` int DEFAULT NULL,
+  `request_approval_date` datetime DEFAULT NULL,
+  `request_approval_remarks` varchar(500) DEFAULT NULL,
+  `initial_sample_id` int DEFAULT NULL,
+  `final_result_id` int DEFAULT NULL,
+  `creator` int NOT NULL DEFAULT '0',
+  `date_created` datetime NOT NULL,
+  `changed_by` int DEFAULT NULL,
+  `date_changed` datetime DEFAULT NULL,
+  `voided` tinyint(1) NOT NULL DEFAULT '0',
+  `voided_by` int DEFAULT NULL,
+  `date_voided` datetime DEFAULT NULL,
+  `void_reason` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `uuid` char(38) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `status` varchar(50) NOT NULL,
+  `encounter_id` int NOT NULL,
+  PRIMARY KEY (`test_request_item_id`),
+  KEY `labmgmt_test_request_item_at_location_fk` (`at_location_id`),
+  KEY `labmgmt_test_request_item_to_location_fk` (`to_location_id`),
+  KEY `labmgmt_test_request_item_referral_out_by_fk` (`referral_out_by`),
+  KEY `labmgmt_test_request_item_referral_to_facility_fk` (`referral_to_facility_id`),
+  KEY `labmgmt_test_request_item_order_fk` (`order_id`),
+  KEY `labmgmt_test_request_item_creator_fk` (`creator`),
+  KEY `labmgmt_test_request_item_changed_by_fk` (`changed_by`),
+  KEY `labmgmt_test_request_item_voided_by_fk` (`voided_by`),
+  KEY `labmgmt_test_request_item_referral_from_facility_fk` (`referral_from_facility_id`),
+  KEY `labmgmt_test_request_item_request_approval_by_fk` (`request_approval_by`),
+  KEY `labmgmt_test_request_item_encounter_fk` (`encounter_id`),
+  CONSTRAINT `labmgmt_test_request_item_at_location_fk` FOREIGN KEY (`at_location_id`) REFERENCES `location` (`location_id`),
+  CONSTRAINT `labmgmt_test_request_item_changed_by_fk` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `labmgmt_test_request_item_creator_fk` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `labmgmt_test_request_item_encounter_fk` FOREIGN KEY (`encounter_id`) REFERENCES `encounter` (`encounter_id`),
+  CONSTRAINT `labmgmt_test_request_item_order_fk` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`),
+  CONSTRAINT `labmgmt_test_request_item_referral_from_facility_fk` FOREIGN KEY (`referral_from_facility_id`) REFERENCES `concept` (`concept_id`),
+  CONSTRAINT `labmgmt_test_request_item_referral_out_by_fk` FOREIGN KEY (`referral_out_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `labmgmt_test_request_item_referral_to_facility_fk` FOREIGN KEY (`referral_to_facility_id`) REFERENCES `concept` (`concept_id`),
+  CONSTRAINT `labmgmt_test_request_item_request_approval_by_fk` FOREIGN KEY (`request_approval_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `labmgmt_test_request_item_to_location_fk` FOREIGN KEY (`to_location_id`) REFERENCES `location` (`location_id`),
+  CONSTRAINT `labmgmt_test_request_item_voided_by_fk` FOREIGN KEY (`voided_by`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+test_request:
+	diagnostic_center_id,
+	at_location_id
+	to_location_id
+
+BioRepositoryItem:
+	- BioRepositoryItemId
+	statu - (partial checkout, checkout, in-storage, spilled, disposed)
+	Sample Id,
+	Sample Type,
+	at_location_id
+	Sample Container (nullable)		
+	Who collected the Sample (nullable)
+	Sample Collection Date
+	Container Type Used (nullable)
+	Count of the number of containers (nullable)
+	Sample Reference  (not nullable) (auto generated)
+	preferred_reference_number (nullable)
+	External Sample Reference (This is for samples coming from outside)  (nullable)
+	External reference Organization (use lookup but support other)  (nullable)
+	Received By if its external referral sample		  (nullable)
+	Parent SampleId (If this a sub sample and it has been assigned a different barcode)  (nullable)
+	
+	Some of the fields a mainly nullable given that the sample can be a child.
+	No allowing nesting of more than one level
+	
+	referred_out flag
+	referred_by (person)
+	referred_facility (id)
+	referred_facility_other (text if no id)
+BioRepositoryItemMoveLine:
+	BioRepositoryItemId
+	MoveLineType
+	from state
+	from
+	to
+	to state
+	by
+	remarks
+	status (Pending, Rejected, Completed, Cancelled)
+	to_sample_id
+	from_sample_id
+	
+	
+Sample Collection:-
+	- Create a sample table with the following properties:-
+		Sample Id,
+		Sample Type,
+		at_location_id
+		Sample Container (nullable)		
+		Who collected the Sample (nullable)
+		Sample Collection Date
+		Container Type Used (nullable)
+		Count of the number of containers (nullable)
+		Sample Reference  (not nullable) (auto generated)
+		preferred_reference_number (nullable)
+		External Sample Reference (This is for samples coming from outside)  (nullable)
+		External reference Organization (use lookup but support other)  (nullable)
+		**removed**Received By if its external referral sample		  (nullable)
+		Parent SampleId (If this a sub sample and it has been assigned a different barcode)  (nullable)
+		
+		Some of the fields a mainly nullable given that the sample can be a child.
+		No allowing nesting of more than one level
+		
+		referred_out flag => retain and to_request
+		referred_by (person)  => to_request
+		referred_facility (id)  => to_request
+		referred_facility_other (text if no id)  => to_request
+		
+	-- esmugemr.labmgmt_sample definition
+
+CREATE TABLE esmugemr.labmgmt_sample (
+	sample_id INT NOT NULL,
+	parent_sample_id int NULL,
+	test_request_item_id int NOT NULL,
+	order_id int NOT null,
+	sample_type_id INT NOT NULL,
+	at_location_id int NULL,
+	container_type_id int NULL,
+	collected_by int NULL,
+	collection_date DATETIME NULL,
+	container_count int NULL,
+	accession_number varchar(255) NULL,
+	provided_ref varchar(255) NULL,
+	external_ref varchar(100) NULL,
+	referred_out bit NULL,
+	creator int DEFAULT 0 NOT NULL,
+	date_created datetime NOT NULL,
+	changed_by int NULL,
+	date_changed datetime NULL,
+	voided tinyint(1) DEFAULT 0 NOT NULL,
+	voided_by int NULL,
+	date_voided datetime NULL,
+	void_reason varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL,
+	uuid char(38) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+	CONSTRAINT labmgmt_sample_pk PRIMARY KEY (sample_id),
+	CONSTRAINT labmgmt_sample_test_request_item_fk FOREIGN KEY (test_request_item_id) REFERENCES esmugemr.labmgmt_test_request_item(test_request_item_id),
+	CONSTRAINT labmgmt_sample_sample_type_fk FOREIGN KEY (sample_type_id) REFERENCES esmugemr.concept(concept_id),
+	CONSTRAINT labmgmt_sample_at_location_fk FOREIGN KEY (at_location_id) REFERENCES esmugemr.location(location_id),
+	CONSTRAINT labmgmt_sample_container_type_fk FOREIGN KEY (container_type_id) REFERENCES esmugemr.concept(concept_id),
+	CONSTRAINT labmgmt_sample_collected_by_fk FOREIGN KEY (collected_by) REFERENCES esmugemr.users(user_id),
+	CONSTRAINT labmgmt_sample_parent_sample_fk FOREIGN KEY (parent_sample_id) REFERENCES esmugemr.labmgmt_sample(sample_id),
+	CONSTRAINT labmgmt_sample_creator_fk FOREIGN KEY (creator) REFERENCES esmugemr.users(user_id),
+	CONSTRAINT labmgmt_sample_changed_by_fk FOREIGN KEY (changed_by) REFERENCES esmugemr.users(user_id),
+	CONSTRAINT labmgmt_sample_voided_by_fk FOREIGN KEY (voided_by) REFERENCES esmugemr.users(user_id),
+	CONSTRAINT labmgmt_sample_order_fk FOREIGN KEY (order_id) REFERENCES esmugemr.orders(order_id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb3
+COLLATE=utf8mb3_general_ci;	
+		
+	- **not required**Create a table for TestOrderSample with the following	properties:-
+		orderId
+		SampleId
+		
+	- Create a table for Worksheet.
+		at_location_id
+		Creation Date
+		Lab technician (Id)
+		Lab Techinician Other
+		Diagnosis type 
+		Test Type,
+		Status (In-Progress, Completed, Cancelled)
+		
+		
+	- Create a table for Worksheet items
+		worksheet_item_id
+		worksheet_id,
+		samples_id,
+		order_id,
+		status (Pending, Cancelled, Completed), 
+		completed_date
+		
+	- Create a table for results	
+		Results_id
+		worksheet_id (nullable)
+		worksheet_item_id  (nullable)
+		samples_id
+		order_id
+		observation_id,
+		status (PRELIMINARY, FINAL, AMENDED)
+		result_date
+		
+		
+	- Create a table for results_documents
+		results_id, 
+		obs_id,
+		name,
+		remarks,
+		document_type,
+		document_name,
+		document_provider,
+		document_provider_reference
+		
+	- Create a document table
+		document_id,
+		[DocumentFormatId] [int] NULL,
+		[FileExtension] [varchar](10) NULL,
+		[ContentType] [varchar](128) NULL,
+		[ContentSize] [bigint] NOT NULL,
+		[ContentTitle] [nvarchar](256) NULL,
+		[FileName] [nvarchar](256) NULL,
+		[Bucket] [int] NULL,
+		[BucketItemRefId] [uniqueidentifier] NULL,
+		[IsDeleted] [bit] NOT NULL,
+		[Deleted] [datetimeoffset](7) NULL,
+		[DeletedBy] [uniqueidentifier] NULL,
+		[Purged] [datetimeoffset](7) NULL,
+		[Created] [datetimeoffset](7) NOT NULL,
+		[CreatedBy] [uniqueidentifier] NOT NULL,
+		[Modified] [datetimeoffset](7) NULL,
+		[ModifiedBy] [uniqueidentifier] NULL,
+		[ContentData] [varbinary](max) NULL,
+		
+		
+

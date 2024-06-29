@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module configVersion="1.2">
+
+    <!-- Base Module Properties -->
+    <id>${project.parent.artifactId}</id>
+    <name>${project.parent.name}</name>
+    <version>${project.parent.version}</version>
+    <package>org.openmrs.module.labmanagement</package>
+    <author>METS Program</author>
+    <description>
+        ${project.parent.description}
+    </description>
+
+    <activator>org.openmrs.module.labmanagement.LabManagementActivator</activator>
+
+    <!-- <updateURL>https://modules.openmrs.org/modules/download/@MODULE_ID@/update.rdf</updateURL> -->
+    <!-- /Base Module Properties -->
+
+    <require_version>${openmrsPlatformVersion}</require_version>
+
+    <require_modules>
+        <require_module version="${webservicesRestVersion}">
+            org.openmrs.module.webservices.rest
+        </require_module>
+        <require_module>
+            org.openmrs.module.patientqueueing
+        </require_module>
+        <require_module>
+            org.openmrs.module.dataexchange
+        </require_module>
+    </require_modules>
+
+    <aware_of_modules>
+        <aware_of_module>org.openmrs.module.legacyui</aware_of_module>
+    </aware_of_modules>
+
+
+    <!-- AOP
+    <advice>
+        <point>org.openmrs.api.FormService</point>
+        <class>@MODULE_PACKAGE@.advice.DuplicateFormAdvisor</class>
+    </advice>
+     /AOP -->
+
+
+    <!-- Required Privileges
+    <privilege>
+        <name>Form Entry</name>
+        <description>Allows user to access Form Entry pages/functions</description>
+    </privilege>
+     /Required Privileges -->
+
+
+    <!-- Required Global Properties
+    <globalProperty>
+        <property>@MODULE_ID@.someProperty</property>
+        <defaultValue></defaultValue>
+        <description>
+            A description of the global property goes here.  The description
+            should explain enough for administrators to understand the purpose
+            and possible values for the global property.
+        </description>
+    </globalProperty>
+    /Required Global Properties -->
+
+    <!--
+    <dwr>
+        <allow>
+            <create creator="new" javascript="DWRFormEntryService">
+                <param name="class" value="org.openmrs.module.@MODULE_ID@.web.DWRFormEntryService"/>
+                <include method="enterForm"/>
+            </create>
+        </allow>
+
+        <signatures>
+            <![CDATA[
+            import @MODULE_PACKAGE@.web.DWRFormEntryService;
+            DWRFormEntryService.enterForm(Integer patientId, Integer formId, boolean useEncounter, List<String> fields);
+            ]]>
+        </signatures>
+    </dwr>
+    -->
+
+    <!-- Servlets -->
+    <!-- Accessed through the url /pageContext()/moduleServlet/<moduleId>/<servlet-name>
+    <servlet>
+        <servlet-name>formDownload</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.web.FormDownloadServlet</servlet-class>
+    </servlet>
+    -->
+    <!-- /Servlets -->
+
+    <!-- Internationalization -->
+    <!-- All message codes should start with @MODULE_ID@.* -->
+    <messages>
+        <lang>en</lang>
+        <file>messages.properties</file>
+    </messages>
+    <messages>
+        <lang>fr</lang>
+        <file>messages_fr.properties</file>
+    </messages>
+    <messages>
+        <lang>es</lang>
+        <file>messages_es.properties</file>
+    </messages>
+    <!-- /Internationalization -->
+
+    <!-- Global Properties -->
+
+    <globalProperty>
+        <property>labmanagement.queueConcept</property>
+        <defaultValue>1836ac8a-a855-4c7e-b2ba-a290233c67b7</defaultValue>
+        <description>Concept uuid for the laboratory queue.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.locationTag</property>
+        <defaultValue>Laboratory</defaultValue>
+        <description>Location tag for laboratory locations.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.specimenTypeConcept</property>
+        <defaultValue>162476AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</defaultValue>
+        <description>Concept UUID for laboratory specimen types</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.encounterTypeUuid</property>
+        <defaultValue>214e27a1-606a-4b1e-a96e-d736c87069d5</defaultValue>
+        <description>Concept uuid for the laboratory tool encounter type.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.artCardEncounterTypeUuid</property>
+        <defaultValue>8d5b2be0-c2cc-11de-8d13-0010c6dffd0f</defaultValue>
+        <description>Concept uuid for the laboratory tool encounter type.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.orderTypeUuid</property>
+        <defaultValue>52a447d3-a64a-11e3-9aeb-50e549534c5e</defaultValue>
+        <description>Uuid for orderType</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.referalDestinationUuid</property>
+        <defaultValue>b1f8b6c8-c255-4518-89f5-4236ab76025b</defaultValue>
+        <description>Concept uuid for laboratory referals destinations</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.enableSendingLabTestsByEmail</property>
+        <defaultValue>false</defaultValue>
+        <description>This enables sending results to patient via email</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.enableSpecimenIdAutoGeneration</property>
+        <defaultValue>true</defaultValue>
+        <description>Configuration to enable/disable auto speciment id generation button.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.testGroupConcept</property>
+        <defaultValue>162384AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</defaultValue>
+        <description>Concept uuid for grouping tests.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.otherReferenceLabConcept</property>
+        <defaultValue>3476fd97-71da-4e9c-bf57-2b6318dc0c9f</defaultValue>
+        <description>Concept uuid for grouping tests.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.barcodeIdGenIdentifierSource</property>
+        <defaultValue>66bfa314-4881-11ef-9d0e-00155d78897e</defaultValue>
+        <description>Identifier source uuid passed when generating numbers</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.barcodeGenerateAndPrint</property>
+        <defaultValue>true</defaultValue>
+        <description>After generation of barcode, print it.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.containerTypeConcept</property>
+        <defaultValue>bce2b1af-98b1-48a2-98a2-3e4ffb3c79c2</defaultValue>
+        <description>Concept UUID for laboratory container types</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.volumeMeasurementTypeConcept</property>
+        <defaultValue>162402AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</defaultValue>
+        <description>Concept UUID for laboratory volume measurement types</description>
+    </globalProperty>
+    <globalProperty>
+        <property>labmanagement.locationTagUuid</property>
+        <defaultValue>1e6acc3e-696d-47de-8f74-63ed7bbe6e81</defaultValue>
+        <description>Laboratory location tag</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.testSearchMaxIntermediateResult</property>
+        <defaultValue>50</defaultValue>
+        <description>
+            Maximum intermediate results to fetch when searching for test concepts.
+        </description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.testConfigsMaxUploadFileSize</property>
+        <defaultValue>2</defaultValue>
+        <description>
+            Test configs maximum import size
+        </description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.laboratoryReferalDestinationUuid</property>
+        <defaultValue>b1f8b6c8-c255-4518-89f5-4236ab76025b</defaultValue>
+        <description>Concept uuid for laboratory referrals destinations</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.defaultVisitType</property>
+        <defaultValue>7b0f5697-27e3-40c4-8bae-f4049abfb4ed</defaultValue>
+        <description>Visit type uuid for patients who have no active visit</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.laboratoryEncounterUuid</property>
+        <defaultValue>214e27a1-606a-4b1e-a96e-d736c87069d5</defaultValue>
+        <description>Encounter type for laboratory requests</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.laboratoryEncounterRoleUuid</property>
+        <defaultValue>240b26f9-dd88-4172-823d-4a8bfeb7841f</defaultValue>
+        <description>Encounter role for the provider associated with the laboratory requests</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.requireReferralTestRequestApproval</property>
+        <defaultValue>true</defaultValue>
+        <description>Require approval of referral laboratory tests</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.requireTestRequestApproval</property>
+        <defaultValue>true</defaultValue>
+        <description>Require approval of laboratory tests</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.ownerCanApproveTestRequests</property>
+        <defaultValue>false</defaultValue>
+        <description>Allow a person who submitted a laboratory request to approve it</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.clinicalNotesConceptUuid</property>
+        <defaultValue>160632AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</defaultValue>
+        <description>Clinical notes concept id when saving to observation</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.barcodePrintUri</property>
+        <defaultValue>metsbcp://print/bc128/%BARCODE%</defaultValue>
+        <description>URI for triggering printing a barcode. Use %BARCODE% placeholder.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.barcodeAlgorithm</property>
+        <defaultValue>year2_month2_day2_number</defaultValue>
+        <description>Algorithm used to generate barcodes. Options:- number_plain,year2_month2_day2_number,date_number_48bit,ugemr</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.careSettingForReferrals</property>
+        <defaultValue></defaultValue>
+        <description>Default care setting for referrals when not provided in api. Falls back to any outpatient type caresetting.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.unknownProviderUuid</property>
+        <defaultValue>f9badd80-ab76-11e2-9e96-0800200c9a66</defaultValue>
+        <description>The uuid for the unknown provider. Falls back to the default one</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.patientIdentifierTypes</property>
+        <defaultValue>8d79403a-c2cc-11de-8d13-0010c6dffd0f, 05a29f94-c0ed-11e2-94be-8c13b969e334, e1731641-30ab-102d-86b0-7a5022ba4115, 8d793bee-c2cc-11de-8d13-0010c6dffd0f</defaultValue>
+        <description>The uuids for patient identifier types separated by a comma in order of priority.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.testResultEditTimeout</property>
+        <defaultValue>172800</defaultValue>
+        <description>The time in seconds from creation of a test result after which a test which does not require approval can't be modified.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.mainLaboratoryTag</property>
+        <defaultValue>Main Laboratory</defaultValue>
+        <description>Location tag for main laboratory location.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.autoReleaseSamples</property>
+        <defaultValue>true</defaultValue>
+        <description>Auto release samples from sample collection to worklist</description>
+    </globalProperty>
+
+    <!-- /Global Properties -->
+</module>
+

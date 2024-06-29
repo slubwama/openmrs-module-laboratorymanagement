@@ -1,0 +1,2 @@
+general_log = on
+general_log_file="D:/RnD/os/db/mysql-5.6.23-winx64/general.log"

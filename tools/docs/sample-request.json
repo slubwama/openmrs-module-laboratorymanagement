@@ -1,0 +1,86 @@
+{
+	"atLocationUuid": "c8b19970-087a-4ed9-9054-c40ba8015358",
+	"requestDate": "2024-07-24",
+	"clinicalNotes": "Test of the items",
+	"urgency": "ROUTINE",
+	"referralFromFacilityUuid": "6371adf9-0fdb-4de6-821c-f2d8eac5aa77",
+	"referralInExternalRef": "RF56677",
+	"samples": [
+		{
+			"sampleTypeUuid": "162403AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			"accessionNumber": "LTF486",
+			"externalRef": "A0012",
+			"tests": [
+				{
+					"testUuid": "dc548e89-30ab-102d-86b0-7a5022ba4115",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				},
+				{
+					"testUuid": "dc54c43f-30ab-102d-86b0-7a5022ba4115",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				}
+			]
+		},
+		{
+			"sampleTypeUuid": "1002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			"accessionNumber": "LTF487",
+			"externalRef": "B45566",
+			"tests": [
+				{
+					"testUuid": "5f6f5edd-3579-4d04-a99d-a34a4e7cdf91",
+					"locationUuid": "7f65d926-57d6-4402-ae10-a5b3bcbf7986"
+				},
+				{
+					"testUuid": "161199AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+					"locationUuid": "7f65d926-57d6-4402-ae10-a5b3bcbf7986"
+				}
+			]
+		},
+		{
+			"sampleTypeUuid": "159994AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			"accessionNumber": "LTF488",
+			"externalRef": "UR6778",
+			"tests": [
+				{
+					"testUuid": "5f02429c-f83d-48e3-b6f7-bc288aa20ca0",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				},
+				{
+					"testUuid": "161494AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				}
+			]
+		},
+		{
+			"sampleTypeUuid": "1002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			"accessionNumber": "LTF489",
+			"externalRef": "MA3445",
+			"tests": [
+				{
+					"testUuid": "dc54c43f-30ab-102d-86b0-7a5022ba4115",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				},
+				{
+					"testUuid": "1643AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				}
+			]
+		},
+		{
+			"sampleTypeUuid": "1002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			"accessionNumber": "LTF48A",
+			"externalRef": "RF67878",
+			"tests": [
+				{
+					"testUuid": "7f420159-b843-44a7-b53c-c6ca52a53ec5",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				},
+				{
+					"testUuid": "161199AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+					"locationUuid": "ba158c33-dc43-4306-9a4a-b4075751d36c"
+				}
+			]
+		}
+	],
+	"referredIn": true
+}

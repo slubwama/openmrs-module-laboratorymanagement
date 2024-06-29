@@ -1,0 +1,67 @@
+1271,Hematology,1019,CBC,Yes,Default,Yes
+1271,Hematology,21,HBG,Yes,Default,Yes
+1271,Hematology,657,Cd4,Yes,Default,Yes
+1271,Hematology,885,PAP SMEAR,Yes,Default,Yes
+1271,Hematology,161520,PSA Test,Yes,Default,Yes
+1271,Hematology,161152,Prothrombin Time (with INR),Yes,Default,Yes
+1271,Hematology,855,ESR,Yes,Default,Yes
+1271,Hematology,161436,Clotting Time Test,Yes,Default,Yes
+1271,Hematology,161434,Bleeding Time Test,Yes,Default,Yes
+1271,Hematology,163702,Clotting Panel,Yes,Default,Yes
+1271,Hematology,160225,Sickle Cell,Yes,Default,Yes
+1271,Hematology,161499,Coombs,Yes,Default,Yes
+1271,Hematology,161473,Blood Grouping Test,Yes,Default,Yes
+1271,Hematology,161500,CRP,Yes,Default,Yes
+1271,Hematology,163436,Coagulation Profile,Yes,Default,Yes
+1071,Chemistry,165850,FBS,Yes,Default,Yes
+1071,Chemistry,165849,RBS,Yes,Default,Yes
+1071,Chemistry,166522,LFT,Yes,Default,Yes
+1071,Chemistry,166529,RFT,Yes,Default,Yes
+1071,Chemistry,5473,SERUM ELECTROLYTES,Yes,Default,Yes
+1071,Chemistry,1010,LIPID Profile,Yes,Default,Yes
+1071,Chemistry,159644,HBA1C,Yes,Default,Yes
+1071,Chemistry,1013,Lipase,Yes,Default,Yes
+1071,Chemistry,162630,Basic Metabolic Panel,Yes,Default,Yes
+1071,Chemistry,160917,Alpha Fetoprotein,Yes,Default,Yes
+1071,Chemistry,161518,Cardiac Profile,Yes,Default,Yes
+1071,Chemistry,166405,Blood gas,Yes,Default,Yes
+1071,Chemistry,161491,FSH,Yes,Default,Yes
+1071,Chemistry,161506,Thyroid,Yes,Default,Yes
+1071,Chemistry,160915,CEA,Yes,Default,Yes
+1071,Chemistry,161512,Serum Iron,Yes,Default,Yes
+1071,Chemistry,160226,G6PD,Yes,Default,Yes
+1071,Chemistry,161516,Prolactin,Yes,Default,Yes
+1078,Molecular,65413,GeneXpert,Yes,Default,Yes
+1078,Molecular,65412,VL,Yes,Default,Yes
+1078,Molecular,320,HEP B VL,Yes,Default,Yes
+1078,Molecular,44,DNA/PCR,Yes,Default,Yes
+1078,Molecular,161494,ANA,Yes,Default,Yes
+1078,Molecular,159859,HPV,Yes,Default,Yes
+1081,Microbiology,161461,ZN STAIN,Yes,Default,Yes
+1081,Microbiology,302,URINALYSIS,Yes,Default,Yes
+1081,Microbiology,161451,Stool Test,Yes,Default,Yes
+1081,Microbiology,32,Blood Slide,Yes,Default,Yes
+1081,Microbiology,163625,Toxoplasma Panel,Yes,Default,Yes
+1081,Microbiology,165416,TB LAM,Yes,Default,Yes
+1081,Microbiology,161468,Semen Analysis,Yes,Default,Yes
+1081,Microbiology,165414,TB Microscopy,Yes,Default,Yes
+1081,Microbiology,161199,Cytology,Yes,Default,Yes
+1081,Microbiology,32,Malarial Smear,Yes,Default,Yes
+1081,Microbiology,159645,CSF Analysis,Yes,Default,Yes
+1081,Microbiology,159981,TB Culture Construct,Yes,Default,Yes
+1081,Microbiology,161458,Vaginal Swab,Yes,Default,Yes
+1081,Microbiology,163722,Rapid test for HIV,Yes,Default,Yes
+1081,Microbiology,161462,Skin snip,Yes,Default,Yes
+1081,Microbiology,163652,Urethral fluid examination,Yes,Default,Yes
+1082,Serology,165417,RPR,Yes,Default,Yes
+1082,Serology,161480,HIV Screening,Yes,Default,Yes
+1082,Serology,168064,HCG,Yes,Default,Yes
+1082,Serology,161476,Syphilis,Yes,Default,Yes
+1082,Serology,159430,HBsAg,Yes,Default,Yes
+1082,Serology,163620,H Pylori Test,Yes,Default,Yes
+1082,Serology,165418,CrAg,Yes,Default,Yes
+1082,Serology,161477,Typhoid,Yes,Default,Yes
+1082,Serology,161490,Leutinizing hormone,Yes,Default,Yes
+1082,Serology,1325,Hepatitis C,Yes,Default,Yes
+1082,Serology,161479,Rheumatoid Factor,Yes,Default,Yes
+1082,Serology,1643,Malaria RDT,Yes,Default,Yes

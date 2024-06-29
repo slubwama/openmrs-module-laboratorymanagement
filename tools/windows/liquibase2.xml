@@ -1,0 +1,1154 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="jssenyan (generated)" id="1719582648668-1">
+        <createTable tableName="labmgmt_approval_config">
+            <column name="approval_config_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="approval_title" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privilege" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pending_status" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="returned_status" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rejected_status" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approved_status" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-2">
+        <createTable tableName="labmgmt_approval_flow">
+            <column name="approval_flow_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(100)"/>
+            <column name="level_one" type="INT"/>
+            <column name="level_two" type="INT"/>
+            <column name="level_three" type="INT"/>
+            <column name="level_four" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="system_name" type="VARCHAR(50)">
+                <constraints unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-3">
+        <createTable tableName="labmgmt_bio_repository_item">
+            <column name="bio_repository_item_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="patient_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_type_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="at_location_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="registered_date" type="datetime"/>
+            <column name="container_type_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="original_sample_id" type="INT"/>
+            <column name="ref_number" type="VARCHAR(50)"/>
+            <column name="address_line1" type="VARCHAR(60)"/>
+            <column name="address_line2" type="VARCHAR(60)"/>
+            <column name="address_line3" type="VARCHAR(60)"/>
+            <column name="address_line4" type="VARCHAR(60)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiry_date" type="datetime"/>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="registered_by" type="INT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-4">
+        <createTable tableName="labmgmt_bio_repository_item_move_line">
+            <column name="bio_repository_item_move_line_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="move_line_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_state" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_state" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="move_by" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="from_sample_id" type="INT"/>
+            <column name="to_sample_id" type="INT"/>
+            <column name="reused_checkout" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-5">
+        <createTable tableName="labmgmt_sample">
+            <column name="sample_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="parent_sample_id" type="INT"/>
+            <column name="test_request_item_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_type_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="at_location_id" type="INT"/>
+            <column name="container_type_id" type="INT"/>
+            <column name="collected_by" type="INT"/>
+            <column name="collection_date" type="datetime"/>
+            <column name="container_count" type="INT"/>
+            <column name="accession_number" type="VARCHAR(255)"/>
+            <column name="provided_ref" type="VARCHAR(255)"/>
+            <column name="external_ref" type="VARCHAR(100)"/>
+            <column name="referred_out" type="BIT(1)"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-6">
+        <createTable tableName="labmgmt_test_approval">
+            <column name="test_approval_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="approval_config_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approval_result" type="VARCHAR(100)"/>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column name="activated_date" type="datetime"/>
+            <column name="approval_date" type="datetime"/>
+            <column name="approved_by" type="INT"/>
+            <column name="next_approval_id" type="INT"/>
+            <column name="remaining_levels" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-7">
+        <createTable tableName="labmgmt_test_config">
+            <column name="test_config_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="test_id" type="INT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="require_approval" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approval_flow_id" type="INT"/>
+            <column name="test_group_id" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-8">
+        <createTable tableName="labmgmt_test_request_item">
+            <column autoIncrement="true" name="test_request_item_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="order_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="at_location_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="to_location_id" type="INT"/>
+            <column name="referred_out" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_out_origin" type="VARCHAR(50)"/>
+            <column name="referral_out_by" type="INT"/>
+            <column name="referral_out_date" type="datetime"/>
+            <column name="referral_to_facility_id" type="INT"/>
+            <column name="referral_to_facility_name" type="VARCHAR(255)"/>
+            <column name="referred_in" type="BIT(1)"/>
+            <column name="referral_from_facility_id" type="INT"/>
+            <column name="referral_from_facility_name" type="VARCHAR(255)"/>
+            <column name="referral_in_external_ref" type="VARCHAR(50)"/>
+            <column name="require_request_approval" type="BIT(1)"/>
+            <column name="request_approval_result" type="VARCHAR(50)"/>
+            <column name="request_approval_by" type="INT"/>
+            <column name="request_approval_date" type="datetime"/>
+            <column name="request_approval_remarks" type="VARCHAR(500)"/>
+            <column name="initial_sample_id" type="INT"/>
+            <column name="final_result_id" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encounter_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-9">
+        <createTable tableName="labmgmt_test_result">
+            <column name="test_result_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="worksheet_item_id" type="INT"/>
+            <column name="sample_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="test_request_item_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="at_location_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="obs_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="0" name="result_by" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="require_approval" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_approval_id" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-10">
+        <createTable tableName="labmgmt_test_result_document">
+            <column name="test_result_document_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="test_result_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_name" type="VARCHAR(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_provider" type="TINYINT(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_provider_ref" type="VARCHAR(1024)"/>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-11">
+        <createTable tableName="labmgmt_worksheet">
+            <column name="worksheet_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="at_location_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="worksheet_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="test_id" type="INT"/>
+            <column name="diagnosis_type_id" type="INT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responsible_person" type="INT"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responsible_person_other" type="VARCHAR(150)"/>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-12">
+        <createTable tableName="labmgmt_worksheet_item">
+            <column name="worksheet_item_id" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="worksheet_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_date" type="datetime"/>
+            <column name="cancelled_date" type="datetime"/>
+            <column name="cancellation_remarks" type="VARCHAR(500)"/>
+            <column defaultValueNumeric="0" name="creator" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="INT"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="INT"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="VARCHAR(255)"/>
+            <column name="uuid" type="CHAR(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-13">
+        <createIndex associatedWith="" indexName="labmgmt_approval_config_changed_by_fk" tableName="labmgmt_approval_config">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-14">
+        <createIndex associatedWith="" indexName="labmgmt_approval_config_creator_fk" tableName="labmgmt_approval_config">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-15">
+        <createIndex associatedWith="" indexName="labmgmt_approval_config_voided_by_fk" tableName="labmgmt_approval_config">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-16">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_changed_by_fk" tableName="labmgmt_approval_flow">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-17">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_creator_fk" tableName="labmgmt_approval_flow">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-18">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_level_four_fk" tableName="labmgmt_approval_flow">
+            <column name="level_four"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-19">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_level_one_fk" tableName="labmgmt_approval_flow">
+            <column name="level_one"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-20">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_level_three_fk" tableName="labmgmt_approval_flow">
+            <column name="level_three"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-21">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_level_two_fk" tableName="labmgmt_approval_flow">
+            <column name="level_two"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-22">
+        <createIndex associatedWith="" indexName="labmgmt_approval_flow_voided_by_fk" tableName="labmgmt_approval_flow">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-23">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_changed_by_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-24">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_creator_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-25">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_dest_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="destination_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-26">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_frm_sample_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="from_sample_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-27">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_mv_by_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="move_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-28">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_reuse_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="reused_checkout"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-29">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_src_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="source_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-30">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_to_sample_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="to_sample_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-31">
+        <createIndex associatedWith="" indexName="labmgmt_bio_rep_item_line_voided_by_fk" tableName="labmgmt_bio_repository_item_move_line">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-32">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_changed_by_fk" tableName="labmgmt_bio_repository_item">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-33">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_container_fk" tableName="labmgmt_bio_repository_item">
+            <column name="container_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-34">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_creator_fk" tableName="labmgmt_bio_repository_item">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-35">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_loc_fk" tableName="labmgmt_bio_repository_item">
+            <column name="at_location_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-36">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_patient_fk" tableName="labmgmt_bio_repository_item">
+            <column name="patient_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-37">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_reg_by_fk" tableName="labmgmt_bio_repository_item">
+            <column name="registered_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-38">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_sample_type_fk" tableName="labmgmt_bio_repository_item">
+            <column name="sample_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-39">
+        <createIndex associatedWith="" indexName="labmgmt_bio_repository_item_voided_by_fk" tableName="labmgmt_bio_repository_item">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-40">
+        <createIndex associatedWith="" indexName="labmgmt_sample_at_location_fk" tableName="labmgmt_sample">
+            <column name="at_location_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-41">
+        <createIndex associatedWith="" indexName="labmgmt_sample_changed_by_fk" tableName="labmgmt_sample">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-42">
+        <createIndex associatedWith="" indexName="labmgmt_sample_collected_by_fk" tableName="labmgmt_sample">
+            <column name="collected_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-43">
+        <createIndex associatedWith="" indexName="labmgmt_sample_container_type_fk" tableName="labmgmt_sample">
+            <column name="container_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-44">
+        <createIndex associatedWith="" indexName="labmgmt_sample_creator_fk" tableName="labmgmt_sample">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-45">
+        <createIndex associatedWith="" indexName="labmgmt_sample_order_fk" tableName="labmgmt_sample">
+            <column name="order_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-46">
+        <createIndex associatedWith="" indexName="labmgmt_sample_parent_sample_fk" tableName="labmgmt_sample">
+            <column name="parent_sample_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-47">
+        <createIndex associatedWith="" indexName="labmgmt_sample_sample_type_fk" tableName="labmgmt_sample">
+            <column name="sample_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-48">
+        <createIndex associatedWith="" indexName="labmgmt_sample_test_request_item_fk" tableName="labmgmt_sample">
+            <column name="test_request_item_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-49">
+        <createIndex associatedWith="" indexName="labmgmt_sample_voided_by_fk" tableName="labmgmt_sample">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-50">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_approval_by_fk" tableName="labmgmt_test_approval">
+            <column name="approved_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-51">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_changed_by_fk" tableName="labmgmt_test_approval">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-52">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_config_fk" tableName="labmgmt_test_approval">
+            <column name="approval_config_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-53">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_creator_fk" tableName="labmgmt_test_approval">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-54">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_next_approval_fk" tableName="labmgmt_test_approval">
+            <column name="next_approval_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-55">
+        <createIndex associatedWith="" indexName="labmgmt_test_approval_voided_by_fk" tableName="labmgmt_test_approval">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-56">
+        <createIndex associatedWith="" indexName="labmgmt_test_config_changed_by_fk" tableName="labmgmt_test_config">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-57">
+        <createIndex associatedWith="" indexName="labmgmt_test_config_creator_fk" tableName="labmgmt_test_config">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-58">
+        <createIndex associatedWith="" indexName="labmgmt_test_config_group_fk" tableName="labmgmt_test_config">
+            <column name="test_group_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-59">
+        <createIndex associatedWith="" indexName="labmgmt_test_config_voided_by_fk" tableName="labmgmt_test_config">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-60">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_at_location_fk" tableName="labmgmt_test_request_item">
+            <column name="at_location_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-61">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_changed_by_fk" tableName="labmgmt_test_request_item">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-62">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_creator_fk" tableName="labmgmt_test_request_item">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-63">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_encounter_fk" tableName="labmgmt_test_request_item">
+            <column name="encounter_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-64">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_order_fk" tableName="labmgmt_test_request_item">
+            <column name="order_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-65">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_referral_from_facility_fk" tableName="labmgmt_test_request_item">
+            <column name="referral_from_facility_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-66">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_referral_out_by_fk" tableName="labmgmt_test_request_item">
+            <column name="referral_out_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-67">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_referral_to_facility_fk" tableName="labmgmt_test_request_item">
+            <column name="referral_to_facility_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-68">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_request_approval_by_fk" tableName="labmgmt_test_request_item">
+            <column name="request_approval_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-69">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_to_location_fk" tableName="labmgmt_test_request_item">
+            <column name="to_location_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-70">
+        <createIndex associatedWith="" indexName="labmgmt_test_request_item_voided_by_fk" tableName="labmgmt_test_request_item">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-71">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_changed_by_fk" tableName="labmgmt_test_result">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-72">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_creator_fk" tableName="labmgmt_test_result">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-73">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_document__test_result_fk" tableName="labmgmt_test_result_document">
+            <column name="test_result_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-74">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_document_changed_by_fk" tableName="labmgmt_test_result_document">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-75">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_document_creator_fk" tableName="labmgmt_test_result_document">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-76">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_document_voided_by_fk" tableName="labmgmt_test_result_document">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-77">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_obs_fk" tableName="labmgmt_test_result">
+            <column name="obs_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-78">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_order_fk" tableName="labmgmt_test_result">
+            <column name="order_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-79">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_result_by_fk" tableName="labmgmt_test_result">
+            <column defaultValueNumeric="0" name="result_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-80">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_sample_fk" tableName="labmgmt_test_result">
+            <column name="sample_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-81">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_test_request_item_fk" tableName="labmgmt_test_result">
+            <column name="test_request_item_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-82">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_voided_by_fk" tableName="labmgmt_test_result">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-83">
+        <createIndex associatedWith="" indexName="labmgmt_test_result_worksheet_item_fk" tableName="labmgmt_test_result">
+            <column name="worksheet_item_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-84">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_at_location_fk" tableName="labmgmt_worksheet">
+            <column name="at_location_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-85">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_changed_by_fk" tableName="labmgmt_worksheet">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-86">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_creator_fk" tableName="labmgmt_worksheet">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-87">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_item_changed_by_fk" tableName="labmgmt_worksheet_item">
+            <column name="changed_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-88">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_item_creator_fk" tableName="labmgmt_worksheet_item">
+            <column defaultValueNumeric="0" name="creator"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-89">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_item_sample_fk" tableName="labmgmt_worksheet_item">
+            <column name="sample_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-90">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_item_voided_by_fk" tableName="labmgmt_worksheet_item">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-91">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_item_worksheet_fk" tableName="labmgmt_worksheet_item">
+            <column name="worksheet_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-92">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_responsible_person_fk" tableName="labmgmt_worksheet">
+            <column name="responsible_person"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-93">
+        <createIndex associatedWith="" indexName="labmgmt_worksheet_voided_by_fk" tableName="labmgmt_worksheet">
+            <column name="voided_by"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-94">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_approval_config" constraintName="labmgmt_approval_config_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-95">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_approval_config" constraintName="labmgmt_approval_config_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-96">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_approval_config" constraintName="labmgmt_approval_config_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-97">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-98">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-99">
+        <addForeignKeyConstraint baseColumnNames="level_four" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_level_four_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="approval_config_id" referencedTableName="labmgmt_approval_config" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-100">
+        <addForeignKeyConstraint baseColumnNames="level_one" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_level_one_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="approval_config_id" referencedTableName="labmgmt_approval_config" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-101">
+        <addForeignKeyConstraint baseColumnNames="level_three" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_level_three_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="approval_config_id" referencedTableName="labmgmt_approval_config" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-102">
+        <addForeignKeyConstraint baseColumnNames="level_two" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_level_two_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="approval_config_id" referencedTableName="labmgmt_approval_config" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-103">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_approval_flow" constraintName="labmgmt_approval_flow_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-104">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-105">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-106">
+        <addForeignKeyConstraint baseColumnNames="destination_id" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_dest_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-107">
+        <addForeignKeyConstraint baseColumnNames="from_sample_id" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_frm_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="sample_id" referencedTableName="labmgmt_sample" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-108">
+        <addForeignKeyConstraint baseColumnNames="move_by" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_mv_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-109">
+        <addForeignKeyConstraint baseColumnNames="reused_checkout" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_reuse_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="bio_repository_item_move_line_id" referencedTableName="labmgmt_bio_repository_item_move_line" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-110">
+        <addForeignKeyConstraint baseColumnNames="source_id" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_src_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-111">
+        <addForeignKeyConstraint baseColumnNames="to_sample_id" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_to_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-112">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_bio_repository_item_move_line" constraintName="labmgmt_bio_rep_item_line_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-113">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-114">
+        <addForeignKeyConstraint baseColumnNames="container_type_id" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_container_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-115">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-116">
+        <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_loc_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-117">
+        <addForeignKeyConstraint baseColumnNames="patient_id" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_patient_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="patient_id" referencedTableName="patient" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-118">
+        <addForeignKeyConstraint baseColumnNames="registered_by" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_reg_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-119">
+        <addForeignKeyConstraint baseColumnNames="sample_type_id" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_sample_type_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-120">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_bio_repository_item" constraintName="labmgmt_bio_repository_item_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-121">
+        <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_at_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-122">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-123">
+        <addForeignKeyConstraint baseColumnNames="collected_by" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_collected_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-124">
+        <addForeignKeyConstraint baseColumnNames="container_type_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_container_type_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-125">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-126">
+        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_order_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="order_id" referencedTableName="orders" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-127">
+        <addForeignKeyConstraint baseColumnNames="parent_sample_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_parent_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="sample_id" referencedTableName="labmgmt_sample" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-128">
+        <addForeignKeyConstraint baseColumnNames="sample_type_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_sample_type_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-129">
+        <addForeignKeyConstraint baseColumnNames="test_request_item_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_test_request_item_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="test_request_item_id" referencedTableName="labmgmt_test_request_item" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-130">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-131">
+        <addForeignKeyConstraint baseColumnNames="approved_by" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_approval_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-132">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-133">
+        <addForeignKeyConstraint baseColumnNames="approval_config_id" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_config_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="approval_config_id" referencedTableName="labmgmt_approval_config" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-134">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-135">
+        <addForeignKeyConstraint baseColumnNames="next_approval_id" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_next_approval_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="test_approval_id" referencedTableName="labmgmt_test_approval" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-136">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_approval" constraintName="labmgmt_test_approval_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-137">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_config" constraintName="labmgmt_test_config_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-138">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_config" constraintName="labmgmt_test_config_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-139">
+        <addForeignKeyConstraint baseColumnNames="test_group_id" baseTableName="labmgmt_test_config" constraintName="labmgmt_test_config_group_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-140">
+        <addForeignKeyConstraint baseColumnNames="test_id" baseTableName="labmgmt_test_config" constraintName="labmgmt_test_config_test_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-141">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_config" constraintName="labmgmt_test_config_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-142">
+        <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_at_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-143">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-144">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-145">
+        <addForeignKeyConstraint baseColumnNames="encounter_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_encounter_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="encounter_id" referencedTableName="encounter" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-146">
+        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_order_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="order_id" referencedTableName="orders" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-147">
+        <addForeignKeyConstraint baseColumnNames="referral_from_facility_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_referral_from_facility_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-148">
+        <addForeignKeyConstraint baseColumnNames="referral_out_by" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_referral_out_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-149">
+        <addForeignKeyConstraint baseColumnNames="referral_to_facility_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_referral_to_facility_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-150">
+        <addForeignKeyConstraint baseColumnNames="request_approval_by" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_request_approval_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-151">
+        <addForeignKeyConstraint baseColumnNames="to_location_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_to_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-152">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-153">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-154">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-155">
+        <addForeignKeyConstraint baseColumnNames="test_result_id" baseTableName="labmgmt_test_result_document" constraintName="labmgmt_test_result_document__test_result_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="test_result_id" referencedTableName="labmgmt_test_result" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-156">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_result_document" constraintName="labmgmt_test_result_document_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-157">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_result_document" constraintName="labmgmt_test_result_document_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-158">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_result_document" constraintName="labmgmt_test_result_document_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-159">
+        <addForeignKeyConstraint baseColumnNames="obs_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_obs_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="obs_id" referencedTableName="obs" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-160">
+        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_order_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="order_id" referencedTableName="orders" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-161">
+        <addForeignKeyConstraint baseColumnNames="result_by" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_result_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-162">
+        <addForeignKeyConstraint baseColumnNames="sample_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="sample_id" referencedTableName="labmgmt_sample" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-163">
+        <addForeignKeyConstraint baseColumnNames="test_request_item_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_test_request_item_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="test_request_item_id" referencedTableName="labmgmt_test_request_item" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-164">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-165">
+        <addForeignKeyConstraint baseColumnNames="worksheet_item_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_worksheet_item_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="worksheet_item_id" referencedTableName="labmgmt_worksheet_item" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-166">
+        <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_worksheet" constraintName="labmgmt_worksheet_at_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-167">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_worksheet" constraintName="labmgmt_worksheet_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-168">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_worksheet" constraintName="labmgmt_worksheet_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-169">
+        <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_worksheet_item" constraintName="labmgmt_worksheet_item_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-170">
+        <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_worksheet_item" constraintName="labmgmt_worksheet_item_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-171">
+        <addForeignKeyConstraint baseColumnNames="sample_id" baseTableName="labmgmt_worksheet_item" constraintName="labmgmt_worksheet_item_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="sample_id" referencedTableName="labmgmt_sample" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-172">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_worksheet_item" constraintName="labmgmt_worksheet_item_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-173">
+        <addForeignKeyConstraint baseColumnNames="worksheet_id" baseTableName="labmgmt_worksheet_item" constraintName="labmgmt_worksheet_item_worksheet_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="worksheet_id" referencedTableName="labmgmt_worksheet" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-174">
+        <addForeignKeyConstraint baseColumnNames="responsible_person" baseTableName="labmgmt_worksheet" constraintName="labmgmt_worksheet_responsible_person_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="jssenyan (generated)" id="1719582648668-175">
+        <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_worksheet" constraintName="labmgmt_worksheet_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

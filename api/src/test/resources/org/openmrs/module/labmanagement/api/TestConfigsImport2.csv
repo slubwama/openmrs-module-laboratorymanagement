@@ -1,0 +1,5 @@
+﻿Test Group Concept,Test Group Name,Test Concept Id,Test Name,Require Approval (Yes/No),Approval Flow System Name,Active (Yes/No)
+5497,CD4,14,FOLLOWING,Yes,Default,No
+60,HSm,792,Riumone,Yes,Default,Yes
+23,Food ,19,Fav,No,,Yes
+12,Treatment,11,Malaria Program,No,Default,Yes
