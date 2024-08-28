@@ -8,6 +8,7 @@ import org.openmrs.module.labmanagement.api.model.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -74,6 +75,7 @@ public class TestResultDTO {
     private Boolean canApprove;
     private Boolean canUpdate;
     private List<TestApprovalDTO> approvals;
+    private Map<String, Object> requestContextItems;
 
     public Integer getId() {
         return id;
@@ -671,8 +673,8 @@ public class TestResultDTO {
     }
 
     public static boolean canUpdateTestResult(TestRequestItemDTO testRequestItem, int editTimeout){
-        return testRequestItem != null && TestRequestItemStatus.canUpdateTestResult(testRequestItem.getStatus()) &&
-                canUpdateTestResult(testRequestItem.getTestResult(), editTimeout);
+        return testRequestItem != null && TestRequestItemStatus.canUpdateTestResult(testRequestItem.getStatus(),
+                testRequestItem.getTestResult()) && canUpdateTestResult(testRequestItem.getTestResult(), editTimeout);
     }
 
     public static boolean canUpdateTestResult(TestResultDTO testResult, int editTimeout){
@@ -720,5 +722,13 @@ public class TestResultDTO {
 
     public void setApprovals(List<TestApprovalDTO> approvals) {
         this.approvals = approvals;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

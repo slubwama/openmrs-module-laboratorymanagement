@@ -560,7 +560,7 @@ public class EntityUtil {
 		testRequest.setCareSetting(getCareSetting());
 		testRequest.setStatus((TestRequestStatus) getRandomEnum(TestRequestStatus.class));
 		testRequest.setClinicalNote(getRandomString(500));
-		testRequest.setAtLocationId(getRandomInt());
+		testRequest.setAtLocation(getLocation());
 		testRequest.setReferredIn(getRandomBool());
 		ReferralLocation referralLocation=newReferralLocation(dao);
 		dao.saveReferralLocation(referralLocation);

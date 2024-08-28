@@ -1,5 +1,7 @@
 package org.openmrs.module.labmanagement.api.model;
 
+import org.openmrs.module.labmanagement.api.dto.TestResultDTO;
+
 public enum TestRequestItemStatus {
     REFERRED_OUT_PROVIDER(),
     REQUEST_APPROVAL(),
@@ -50,9 +52,10 @@ public enum TestRequestItemStatus {
                 testRequestItemStatus.equals(IN_PROGRESS));
     }
 
-    public  static  boolean canUpdateTestResult(TestRequestItemStatus testRequestItemStatus){
+    public  static  boolean canUpdateTestResult(TestRequestItemStatus testRequestItemStatus, TestResultDTO testResult){
         return testRequestItemStatus != null && (testRequestItemStatus.equals(IN_PROGRESS) ||
-                testRequestItemStatus.equals(REFERRED_OUT_LAB) );
+                testRequestItemStatus.equals(REFERRED_OUT_LAB) ||
+                (testResult != null && !testResult.getRequireApproval() && testRequestItemStatus.equals(COMPLETED)) );
     }
 
     public  static  boolean canDoSampleCollection(TestRequestItemStatus testRequestItemStatus){

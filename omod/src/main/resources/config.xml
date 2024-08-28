@@ -302,6 +302,30 @@
         <description>Auto release samples from sample collection to worklist</description>
     </globalProperty>
 
+    <globalProperty>
+        <property>labmanagement.closeAfterPrint</property>
+        <defaultValue>true</defaultValue>
+        <description>Close print window after print.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.printLogoText</property>
+        <defaultValue></defaultValue>
+        <description>Text that appears below logo.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.printLogoUri</property>
+        <defaultValue></defaultValue>
+        <description>Logo URI for laboratory print.</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.healthCenterName</property>
+        <defaultValue></defaultValue>
+        <description>Health center name that appears on prints.</description>
+    </globalProperty>
+
     <!-- /Global Properties -->
 </module>
 

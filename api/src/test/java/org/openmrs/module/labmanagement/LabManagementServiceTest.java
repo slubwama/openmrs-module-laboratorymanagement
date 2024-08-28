@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.logic.op.In;
@@ -27,6 +28,7 @@ import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.StringUtils;
+import org.openmrs.module.labmanagement.tasks.DataImport;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -2411,6 +2413,155 @@ tests	[…]
 			List<Obs> testResultObs = obsToVerify.stream().filter(p->p.getObsId().equals(encounterObs.getObsId())).collect(Collectors.toList());
 			Assert.assertEquals(testResultObs.size(), 1);
 		}
+	}
+
+	@Test
+	public void testParentChildRoleAssignments(){
+		DataImport dataImport = new DataImport();
+		UserService userService = Context.getUserService();
+		List<Role> roles = userService.getAllRoles();
+		Role roleWithChildren = roles.stream().filter(Role::hasChildRoles).findFirst().orElse(null);
+		if(roleWithChildren != null){
+			Role finalRoleWithChildren = roleWithChildren;
+			Role roleChild =	 roles.stream().filter(p-> !p.getName().equals(finalRoleWithChildren.getName()) &&
+					p.getAllParentRoles().stream().noneMatch(x -> x.getName().equals(finalRoleWithChildren.getName()))).findFirst().orElse(null);
+
+		 if(roleChild != null){
+			 dataImport.applyParentRoleAssignments(Context.getUserService(), roleChild.getName(),roleWithChildren.getName());
+		 }
+		}else if(roles.size() > 1){
+			roleWithChildren = roles.get(0);
+			Role roleChild = roles.get(1);
+			dataImport.applyParentRoleAssignments(Context.getUserService(), roleChild.getName(),roleWithChildren.getName());
+		}
+	}
+
+	@Test
+	public void getDashboardMetrics_shouldSucceed() {
+		SetGlobalProperties();
+		TestRequestDTO testRequestDTO = eu().newLabRequestReferral(dao());
+		TestRequest testRequest = labManagementService.saveTestRequest(testRequestDTO);
+
+		Context.flushSession();
+		Context.flushSession();
+		Context.updateSearchIndexForType(Sample.class);
+
+		DashboardMetricsDTO dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
+				DateUtil.endOfDay(new Date()));
+
+		Assert.assertEquals(dashboardMetricsDTO.getTestsToAccept(), new Integer(1));
+
+		SampleSearchFilter filter = new SampleSearchFilter();
+		filter.setIncludeTests(true);
+		filter.setForWorksheet(true);
+		filter.setTestRequestId(testRequest.getId());
+		Result<SampleDTO> result = labManagementService.findSamples(filter);
+		assertTrue(result.getData().stream().allMatch(p -> p.getTestRequestUuid().equalsIgnoreCase(testRequest.getUuid())));
+		assertEquals(result.getData().size(), (int)testRequestDTO.getSamples().stream().map(p-> p.getTests().size()).reduce(0,(x,y)-> x+y) );
+		List<SampleDTO> sampleIds = result.getData();
+
+		TestRequestAction testRequestAction = new TestRequestAction();
+		testRequestAction.setAction(ApprovalResult.APPROVED);
+		testRequestAction.setRemarks("Approved");
+		testRequestAction.setRecords(sampleIds.stream().flatMap(p-> p.getTests().stream()).map(p -> p.getUuid()).collect(Collectors.toList()));
+		labManagementService.approveTestRequestItem(testRequestAction);
+
+		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
+				DateUtil.endOfDay(new Date()));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(1));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(0));
+
+		TestRequest entity = labManagementService.getTestRequestById(testRequest.getId());
+		Assert.assertEquals(entity.getStatus(), TestRequestStatus.IN_PROGRESS);
+
+		for (TestRequestItem testRequestItem : dao().getTestRequestItemsByTestRequestId(
+				Collections.singletonList(entity.getId()), false)) {
+			Assert.assertEquals(testRequestItem.getStatus(), TestRequestItemStatus.IN_PROGRESS);
+		}
+
+		SampleSearchFilter sampleSearchFilter = new SampleSearchFilter();
+		sampleSearchFilter.setForWorksheet(false);
+		sampleSearchFilter.setSampleStatuses(Arrays.asList(SampleStatus.TESTING));
+		sampleSearchFilter.setIncludeTests(true);
+		SampleDTO thisSample = labManagementService.findSamples(sampleSearchFilter).getData()
+				.stream()
+				.filter(p -> p.getUuid().equals(sampleIds.get(0).getUuid())).findFirst().orElse(null);
+		Assert.assertNotNull(thisSample);
+
+		WorksheetDTO worksheetDTO = new WorksheetDTO();
+		worksheetDTO.setResponsiblePersonUuid(eu().getUser().getUuid());
+		worksheetDTO.setWorksheetDate(new Date());
+		worksheetDTO.setAtLocationUuid(eu().getLocation().getUuid());
+		worksheetDTO.setRemarks("Testing");
+		worksheetDTO.setWorksheetItems(new ArrayList<>());
+
+		for(SampleDTO sample : sampleIds) {
+			WorksheetItemDTO worksheetItemDTO = new WorksheetItemDTO();
+			worksheetItemDTO.setTestRequestItemSampleUuid(sample.getTestRequestItemSampleUuid());
+			worksheetDTO.getWorksheetItems().add(worksheetItemDTO);
+		}
+		Worksheet worksheet = labManagementService.saveWorksheet(worksheetDTO);
+
+		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
+				DateUtil.endOfDay(new Date()));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(0));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(1));
+
+		WorksheetTestResultDTO worksheetTestResultDTO=new WorksheetTestResultDTO();
+		worksheetTestResultDTO.setWorksheetUuid(worksheet.getUuid());
+		worksheetTestResultDTO.setTestResults(new ArrayList<>());
+		for(WorksheetItem worksheetItem : dao().getWorksheetItemsByWorksheetId(worksheet.getId())){
+			TestResultDTO testResultDTO = new TestResultDTO();
+			testResultDTO.setTestRequestItemSampleUuid(worksheetItem.getTestRequestItemSample().getUuid());
+			testResultDTO.setWorksheetItemUuid(worksheetItem.getUuid());
+			testResultDTO.setRemarks(eu().getRandomString(300));
+			testResultDTO.setAdditionalTestsRequired(false);
+			testResultDTO.setArchiveSample(false);
+			Obs obs = new Obs();
+			obs.setConcept(worksheetItem.getTestRequestItemSample().getTestRequestItem().getOrder().getConcept());
+			obs.setOrder(worksheetItem.getTestRequestItemSample().getTestRequestItem().getOrder());
+			obs.setEncounter(worksheetItem.getTestRequestItemSample().getTestRequestItem().getEncounter());
+
+			if(obs.getConcept().getDatatype().isCoded()){
+				obs.setValueCoded(obs.getConcept().getAnswers().stream().findFirst().orElse(null).getConcept());
+			}else if(obs.getConcept().getDatatype().isNumeric()){
+				obs.setValueNumeric(eu().getRandomDouble());
+			}else{
+				obs.setValueText("Result");
+			}
+
+			if(obs.getConcept().getSetMembers() != null && obs.getConcept().getSetMembers().size() > 0){
+				obs.setGroupMembers(new HashSet<>());
+				int index = 0;
+				for(Concept concept : obs.getConcept().getSetMembers()){
+					Obs obsChild = new Obs();
+					obsChild.setConcept(worksheetItem.getTestRequestItemSample().getTestRequestItem().getOrder().getConcept());
+					obsChild.setOrder(worksheetItem.getTestRequestItemSample().getTestRequestItem().getOrder());
+					obsChild.setEncounter(worksheetItem.getTestRequestItemSample().getTestRequestItem().getEncounter());
+
+					if(obsChild.getConcept().getDatatype().isCoded()){
+						obsChild.setValueCoded(obs.getConcept().getAnswers().stream().findFirst().orElse(null).getConcept());
+					}else if(obsChild.getConcept().getDatatype().isNumeric()){
+						obsChild.setValueNumeric(eu().getRandomDouble());
+					}else{
+						obsChild.setValueText("Result" + Integer.toString(++index));
+					}
+					obs.getGroupMembers().add(obsChild);
+				}
+			}
+
+			testResultDTO.setObs(obs);
+			worksheetTestResultDTO.getTestResults().add(testResultDTO);
+		}
+		labManagementService.saveWorksheetTestResults(worksheetTestResultDTO);
+
+		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
+				DateUtil.endOfDay(new Date()));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(0));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(0));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsPendingApproval(), new Integer(1));
+
+
 	}
 
 }

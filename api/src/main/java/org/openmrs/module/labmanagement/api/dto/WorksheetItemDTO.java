@@ -8,6 +8,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 
 public class WorksheetItemDTO {
     private String uuid;
@@ -76,6 +77,7 @@ public class WorksheetItemDTO {
     private String testResultUuid;
     private TestResultDTO testResult;
     private Concept testConcept;
+    private Map<String, Object> requestContextItems;
 
     public Integer getId() {
         return id;
@@ -596,5 +598,13 @@ public class WorksheetItemDTO {
 
     public void setReferralInExternalRef(String referralInExternalRef) {
         this.referralInExternalRef = referralInExternalRef;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

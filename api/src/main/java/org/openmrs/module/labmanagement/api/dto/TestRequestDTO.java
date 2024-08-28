@@ -6,6 +6,7 @@ import org.openmrs.module.labmanagement.api.model.TestRequestStatus;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class TestRequestDTO implements Serializable {
     private String uuid;
@@ -50,6 +51,7 @@ public class TestRequestDTO implements Serializable {
     private Date dateChanged;
     private List<TestRequestItemDTO> tests;
     private List<TestRequestSampleDTO> samples;
+    private Map<String, Object> requestContextItems;
 
     public String getUuid() {
         return uuid;
@@ -389,5 +391,13 @@ public class TestRequestDTO implements Serializable {
 
     public void setRequestReason(String requestReason) {
         this.requestReason = requestReason;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

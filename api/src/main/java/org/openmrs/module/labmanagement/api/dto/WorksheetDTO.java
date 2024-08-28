@@ -4,6 +4,7 @@ import org.openmrs.module.labmanagement.api.model.WorksheetStatus;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class WorksheetDTO {
     private Integer id;
@@ -41,6 +42,7 @@ public class WorksheetDTO {
     private String changedByFamilyName;
     private Date dateChanged;
     private List<WorksheetItemDTO> worksheetItems;
+    private Map<String, Object> requestContextItems;
 
 
     public Integer getId() {
@@ -313,5 +315,13 @@ public class WorksheetDTO {
 
     public void setWorksheetItems(List<WorksheetItemDTO> worksheetItems) {
         this.worksheetItems = worksheetItems;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

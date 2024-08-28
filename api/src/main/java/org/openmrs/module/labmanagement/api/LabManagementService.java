@@ -18,6 +18,7 @@ import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.List;
 import java.util.Collection;
 import java.util.Map;
@@ -264,4 +265,7 @@ public interface LabManagementService extends OpenmrsService {
     @Transactional(readOnly = true)
     @Authorized(Privileges.APP_LABMANAGEMENT_TESTRESULTS)
     Result<TestApprovalDTO> findTestApprovals(TestApprovalSearchFilter filter);
+
+    @Transactional(readOnly = true)
+    DashboardMetricsDTO getDashboardMetrics(Date startDate, Date endDate);
 }

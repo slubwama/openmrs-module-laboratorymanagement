@@ -972,7 +972,6 @@ public class LabManagementDao extends DaoBase {
     public Result<TestRequestDTO> findTestRequests(TestRequestSearchFilter filter){
         HashMap<String, Object> parameterList = new HashMap<>();
         HashMap<String, Collection> parameterWithList = new HashMap<>();
-Provider provider;
         StringBuilder hqlQuery = new StringBuilder("select tr.uuid as uuid, tr.id as id, tr.requestDate as requestDate,\n" +
                 "tr.requestNo as requestNo,\n" +
                 "tr.urgency as urgency,\n" +
@@ -991,6 +990,8 @@ Provider provider;
                 "p.uuid as patientUuid,\n" +
                 "pv.person.id as providerId,\n" +
                 "pv.uuid as providerUuid,\n" +
+                "al.uuid as atLocationUuid,\n" +
+                "al.name as atLocationName,\n" +
                 "tr.creator.userId as creator,\n" +
                 "tr.creator.uuid as creatorUuid,\n" +
                 "tr.dateCreated as dateCreated,\n" +
@@ -1003,6 +1004,7 @@ Provider provider;
                 " tr.careSetting cs left join\n" +
                 " tr.patient p left join\n" +
                 " tr.provider pv left join\n" +
+                " tr.atLocation al left join\n" +
                 " tr.changedBy cb\n");
 
         StringBuilder hqlFilter = new StringBuilder();
@@ -2843,5 +2845,46 @@ Provider provider;
         result.setData(executeQuery(TestApprovalDTO.class, hqlQuery, result, orderByBuilder.toString(), parameterList, parameterWithList));
 
         return result;
+    }
+
+    public DashboardMetricsDTO getDashboardMetrics(Date startDate, Date endDate){
+
+        HashMap<String, Object> parameterList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder(
+                "SELECT SUM(CASE WHEN tri.status = :srqa THEN 1 ELSE 0 END) as testsToAccept,\n" +
+                "SUM(CASE WHEN tri.status = :ssc THEN 1 ELSE 0 END) as testsForSampleCollection,\n" +
+                "SUM(CASE WHEN tri.status = :sc THEN 1 ELSE 0 END) as testsRejected,\n" +
+                "SUM(CASE WHEN tri.referredOut = 1 and tri.referralOutOrigin = :rool THEN 1 ELSE 0 END) as testsReferredOutLab,\n" +
+                "SUM(CASE WHEN tri.referredOut = 1 and tri.referralOutOrigin = :roop THEN 1 ELSE 0 END) as testsReferredOutProvider,\n" +
+                "SUM(CASE WHEN tri.referredOut = 1 and tri.referralOutOrigin = :rool and EXISTS(SELECT 1 FROM labmanagement.TestResult tr where tr.order.id=tri.order.id and tr.voided=0)  THEN 1 ELSE 0 END) as testsReferredOutLabResulted,\n" +
+                "\n" +
+                "SUM(CASE WHEN tri.status = :scd THEN 1 ELSE 0 END) as testsCompleted,\n" +
+                "SUM(CASE WHEN tri.status = :sip and EXISTS(SELECT 1 FROM labmanagement.TestResult tr where tr.order.id=tri.order.id and tr.completed=0 and tr.voided=0 ) THEN 1 ELSE 0 END) as testsPendingApproval,\n" +
+                "\n" +
+                "SUM(CASE WHEN tri.status = :sip and NOT EXISTS(SELECT tr.id FROM labmanagement.TestResult tr where tr.order.id=tri.order.id and tr.voided=0 ) THEN 1 ELSE 0 END) as testsInProgress,\n" +
+                "SUM(CASE WHEN tri.status = :sip and EXISTS(SELECT ltris.id FROM labmanagement.TestRequestItemSample ltris, labmanagement.WorksheetItem lwi where ltris.testRequestItem.id=tri.id and ltris.id = lwi.testRequestItemSample.id and ltris.voided=0 and  lwi.voided=0)  THEN 1 ELSE 0 END) as testsOnWorksheet,\n" +
+                "SUM(CASE WHEN tri.status = :sip and EXISTS(SELECT tr.id FROM labmanagement.TestResult tr join tr.currentApproval lta where tr.order.id=tri.order.id and tr.completed=0 and (lta.approvalResult = :tarr OR  lta.approvalResult = :tarrt) and tr.voided=0 and lta.voided=0) THEN 1 ELSE 0 END) as testResultsRejected\n" +
+                "FROM labmanagement.TestRequestItem tri\n" +
+                "where tri.dateCreated >= :startDate and tri.dateCreated <= :endDate and tri.voided = 0\n"
+                );
+
+        parameterList.put("startDate", startDate);
+        parameterList.put("endDate", endDate);
+        parameterList.put("srqa", TestRequestItemStatus.REQUEST_APPROVAL);
+        parameterList.put("ssc", TestRequestItemStatus.SAMPLE_COLLECTION);
+        parameterList.put("sc", TestRequestItemStatus.CANCELLED);
+        parameterList.put("scd", TestRequestItemStatus.COMPLETED);
+        parameterList.put("sip", TestRequestItemStatus.IN_PROGRESS);
+        parameterList.put("rool", ReferralOutOrigin.Laboratory);
+        parameterList.put("roop", ReferralOutOrigin.Provider);
+        parameterList.put("tarr", ApprovalResult.REJECTED);
+        parameterList.put("tarrt", ApprovalResult.RETURNED);
+
+        Result<DashboardMetricsDTO> result = new Result<>();
+        result.setData(executeQuery(DashboardMetricsDTO.class, hqlQuery, result, "", parameterList, new HashMap<>()));
+        if (!result.getData().isEmpty()) {
+           return result.getData().get(0);
+        }
+        return new DashboardMetricsDTO();
     }
 }

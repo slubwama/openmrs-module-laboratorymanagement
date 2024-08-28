@@ -862,6 +862,11 @@
       <column name="referral_from_facility_id" />
     </createIndex>
   </changeSet>
+  <changeSet author="dev" id="labmanagement-1719626186290-62-1">
+    <createIndex indexName="labmgmt_test_request_at_location_FK" tableName="labmgmt_test_request">
+      <column name="at_location_id" />
+    </createIndex>
+  </changeSet>
   <changeSet author="dev" id="labmanagement-1719626186290-63">
     <createIndex indexName="labmgmt_test_request_care_setting_fk" tableName="labmgmt_test_request">
       <column name="care_setting_id" />
@@ -1263,6 +1268,9 @@
   </changeSet>
   <changeSet author="dev" id="labmanagement-1719626186290-164">
     <addForeignKeyConstraint baseColumnNames="referral_from_facility_id" baseTableName="labmgmt_test_request" constraintName="labmgmt_test_request_referral_location" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="referral_location_id" referencedTableName="labmgmt_referral_location" />
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1719626186290-164-1">
+    <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_test_request" constraintName="labmgmt_test_request_at_location" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" />
   </changeSet>
   <changeSet author="dev" id="labmanagement-1719626186290-165">
     <addForeignKeyConstraint baseColumnNames="care_setting_id" baseTableName="labmgmt_test_request" constraintName="labmgmt_test_request_care_setting_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="care_setting_id" referencedTableName="care_setting" />

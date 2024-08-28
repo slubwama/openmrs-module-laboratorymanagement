@@ -40,7 +40,8 @@
     <role  role="Laboratory Reporting" description="This Role enables a provider to access reports"  uuid="04366bfd-35c4-11ef-9df0-00155d919f83"/>
 
     <!-- ROLE PRIVILEGES -->
-    <!--* BASE ROLE *-->
+    <!--* BASE ROLE  *-->
+    <role_role parent_role="Base Role"  child_role="Lab Management Base Role"/>
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.dashboard"/>
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.approvalconfigurations"/>
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.testconfigurations"/>

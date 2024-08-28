@@ -37,7 +37,7 @@ import java.util.*;
         "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*"})
 public class WorksheetResource extends ResourceBase<WorksheetDTO> {
 
-    private Boolean canEditWorksheet;
+
 
     @Override
     public WorksheetDTO getByUniqueId(String uniqueId) {
@@ -387,9 +387,10 @@ public class WorksheetResource extends ResourceBase<WorksheetDTO> {
 
     @PropertyGetter("permission")
     public SimpleObject getPermission(WorksheetDTO worksheet) {
+        Boolean canEditWorksheet = (Boolean) worksheet.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_WORKSHEETS_MUTATE,null);
         if(canEditWorksheet == null){
             User user = Context.getAuthenticatedUser();
-            canEditWorksheet = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_WORKSHEETS_MUTATE);
+            canEditWorksheet = setRequestContextValue(worksheet.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_WORKSHEETS_MUTATE,user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_WORKSHEETS_MUTATE));
         }
         SimpleObject simpleObject = new SimpleObject();
         simpleObject.add("canEdit", canEditWorksheet && WorksheetStatus.canEditWorksheet(worksheet.getStatus()));

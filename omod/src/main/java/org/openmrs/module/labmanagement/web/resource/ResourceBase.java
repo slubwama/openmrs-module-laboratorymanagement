@@ -16,6 +16,7 @@ import org.springframework.web.client.RestClientException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class ResourceBase<T> extends DelegatingCrudResource<T> {
 
@@ -92,5 +93,15 @@ public abstract class ResourceBase<T> extends DelegatingCrudResource<T> {
 		modelImpl.property("changedByGivenName", new StringProperty());
 		modelImpl.property("changedByFamilyName", new StringProperty());
 		modelImpl.property("voided", new BooleanProperty());
+	}
+
+	protected Boolean setRequestContextValue(Map<String, Object> requestContextItems, String key, Boolean value){
+		requestContextItems.put(key, value);
+		return value;
+	}
+
+	protected Integer setRequestContextValue(Map<String, Object> requestContextItems, String key, Integer value){
+		requestContextItems.put(key, value);
+		return value;
 	}
 }

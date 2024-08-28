@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class TestRequestItemDTO extends TestRequestTestDTO {
     private Integer id;
@@ -82,6 +83,7 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
     private Concept testConcept;
     private String worksheetNo;
     private String worksheetUuid;
+    private Map<String, Object> requestContextItems;
 
     public Integer getId() {
         return id;
@@ -622,5 +624,13 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
 
     public void setWorksheetUuid(String worksheetUuid) {
         this.worksheetUuid = worksheetUuid;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

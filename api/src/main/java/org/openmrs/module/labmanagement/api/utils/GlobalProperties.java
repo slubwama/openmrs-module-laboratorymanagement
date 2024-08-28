@@ -47,6 +47,8 @@ public class GlobalProperties {
 
 	public static final String AUTO_RELEASE_SAMPLES = ModuleConstants.MODULE_ID + ".autoReleaseSamples";
 
+	public static final String HEALTH_CENTER_NAME = ModuleConstants.MODULE_ID + ".healthCenterName";
+	public static final String UGEMR_HEALTH_CENTER_NAME = "ugandaemr.healthCenterName";
 
 	////////////////////////
 
@@ -56,11 +58,10 @@ public class GlobalProperties {
 
 	public static final String DEFAULT_VISIT_TYPE = ModuleConstants.MODULE_ID + ".defaultVisitType";
 
-	public static final String PRINT_LOGO = ModuleConstants.MODULE_ID + ".printLogo";
+	public static final String PRINT_LOGO = ModuleConstants.MODULE_ID + ".printLogoUri";
 
 	public static final String PRINT_LOGO_TEXT = ModuleConstants.MODULE_ID + ".printLogoText";
 
-	public static final String HEALTH_CENTER_NAME = "ugandaemr.healthCenterName";
 
 	public static final String ENABLE_STOCK_BATCH_JOB = ModuleConstants.MODULE_ID + ".enableStockBatchJob";
 
@@ -242,6 +243,14 @@ public class GlobalProperties {
 	public static String getHealthCenterName() {
 		try {
 			return getGlobalProperty(HEALTH_CENTER_NAME);
+		}
+		catch (Exception exception) {}
+		return null;
+	}
+
+	public static String getUgandaEMRHealthCenterName() {
+		try {
+			return getGlobalProperty(UGEMR_HEALTH_CENTER_NAME);
 		}
 		catch (Exception exception) {}
 		return null;

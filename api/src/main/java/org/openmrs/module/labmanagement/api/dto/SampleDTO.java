@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
 public class SampleDTO extends TestRequestSampleDTO {
@@ -82,6 +83,7 @@ public class SampleDTO extends TestRequestSampleDTO {
     private String changedByFamilyName;
     private Date dateChanged;
     private Set<String> sampleTestItemUuids;
+    private Map<String, Object> requestContextItems;
 
     public Integer getId() {
         return id;
@@ -605,5 +607,13 @@ public class SampleDTO extends TestRequestSampleDTO {
 
     public void setReferralInExternalRef(String referralInExternalRef) {
         this.referralInExternalRef = referralInExternalRef;
+    }
+
+    public Map<String, Object> getRequestContextItems() {
+        return requestContextItems;
+    }
+
+    public void setRequestContextItems(Map<String, Object> requestContextItems) {
+        this.requestContextItems = requestContextItems;
     }
 }

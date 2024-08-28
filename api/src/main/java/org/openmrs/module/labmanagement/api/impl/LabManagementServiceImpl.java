@@ -718,6 +718,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 invalidRequest("labmanagement.fieldrequired", "Test location " + testIndex);
             }
 
+            if(test.getReferredOut() == null || !test.getReferredOut()){
+                allReferredOut = false;
+            }
             testConfigSearchFilter.getTestUuids().add(test.getTestUuid());
             if(locations.containsKey(test.getLocationUuid()))
                 continue;
@@ -726,9 +729,6 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 invalidRequest("labmanagement.thingnotexists",  "Test location "+ testIndex);
             }
             locations.putIfAbsent(test.getLocationUuid(), location);
-            if(test.getReferredOut() == null || !test.getReferredOut()){
-                allReferredOut = false;
-            }
         }
 
         int testCount = testConfigSearchFilter.getTestUuids().size();
@@ -869,7 +869,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         testRequest.setRequestDate(testRequestDTO.getRequestDate());
         testRequest.setPatient(patient);
         testRequest.setEncounter(encounter);
-        testRequest.setAtLocationId(atLocation.getId());
+        testRequest.setAtLocation(atLocation);
         testRequest.setProvider(provider);
         testRequest.setCareSetting(careSetting);
         testRequest.setReferredIn(testRequestDTO.getReferredIn());
@@ -1294,7 +1294,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 p.getCreator(),
                 p.getChangedBy()
         )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        Map<String, Object> requestContextItems = new HashMap<>();
         for (TestRequestDTO testRequestDTO : result.getData()) {
+            testRequestDTO.setRequestContextItems(requestContextItems);
             if (testRequestDTO.getCreator() != null) {
                 Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCreator())).findFirst();
                 if (userPersonNameDTO.isPresent()) {
@@ -1406,8 +1409,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             worksheetInfo = dao.getTestRequestItemWorksheetRefs(result.getData().stream().map(p->p.getId()).collect(Collectors.toList()));
         }
 
-        for (TestRequestItemDTO testRequestItemDTO : result.getData()) {
 
+        Map<String, Object> requestContextItems = new HashMap<>();
+        for (TestRequestItemDTO testRequestItemDTO : result.getData()) {
+            testRequestItemDTO.setRequestContextItems(requestContextItems);
             if(sampleRefs != null && !sampleRefs.isEmpty()){
                 testRequestItemDTO.setSamples(sampleRefs.getOrDefault(testRequestItemDTO.getId(), new ArrayList<>()));
             }
@@ -1682,7 +1687,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 p.getReferralOutBy(),
                 p.getCollectedBy()
         )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        Map<String, Object> requestContextItems = new HashMap<>();
         for (SampleDTO sampleDTO : result.getData()) {
+            sampleDTO.setRequestContextItems(requestContextItems);
             if (sampleDTO.getCreator() != null) {
                 Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(sampleDTO.getCreator())).findFirst();
                 if (userPersonNameDTO.isPresent()) {
@@ -2293,7 +2301,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 p.getChangedBy(),
                 p.getResponsiblePersonId()
         )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        Map<String, Object> requestContextItems = new HashMap<>();
         for (WorksheetDTO worksheetDTO : result.getData()) {
+            worksheetDTO.setRequestContextItems(requestContextItems);
             if (worksheetDTO.getCreator() != null) {
                 Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(worksheetDTO.getCreator())).findFirst();
                 if (userPersonNameDTO.isPresent()) {
@@ -2584,7 +2595,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 p.getChangedBy(),
                 p.getSampleCollectedBy()
         )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        Map<String, Object> requestContextItems=new HashMap<>();
         for (WorksheetItemDTO worksheetItemDTO : result.getData()) {
+            worksheetItemDTO.setRequestContextItems(requestContextItems);
             if(setTestResults){
                 List<TestResultDTO> testResult = testResults.getOrDefault(worksheetItemDTO.getId(), null);
                 if(testResult != null && !testResult.isEmpty()){
@@ -2752,7 +2766,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         int editTimeout = GlobalProperties.getTestResultEditTimeout();
         boolean hasTestResultPerm = currentUser != null && currentUser.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE);
+
+        Map<String, Object> requestContextItems=new HashMap<>();
         for (TestResultDTO testResultDTO : result.getData()) {
+            testResultDTO.setRequestContextItems(requestContextItems);
             List<Obs> obs = observations.getOrDefault(testResultDTO.getObsId(), null);
             testResultDTO.setObs(obs != null && obs.size() > 0 ? obs.get(0): null);
             if (testResultDTO.getCreator() != null) {
@@ -2950,6 +2967,12 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         TestApproval oldTestApproval = testResult.getCurrentApproval();
         testResult.setRequireApproval(testConfig.getRequireApproval() != null && testConfig.getRequireApproval());
+        boolean referredOut = testResult.getTestRequestItemSample().getTestRequestItem().getReferredOut() != null &&
+                testResult.getTestRequestItemSample().getTestRequestItem().getReferredOut();
+        if(referredOut){
+            testResult.setRequireApproval(false);
+        }
+
         if(testResult.getRequireApproval()) {
             if (testConfig.getApprovalFlow() == null) {
                 invalidRequest("labmanagement.thingnotexists", "Test config approval flow for test");
@@ -3048,7 +3071,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
         }
 
-        if(!isTestAlreadyCompleted && testResult.getCompleted()){
+        if(!isTestAlreadyCompleted && testResult.getCompleted() && !referredOut){
             onTestResultCompleted(testResult);
         }
 
@@ -3200,5 +3223,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
         }
         return result;
+    }
+
+    public DashboardMetricsDTO getDashboardMetrics(Date startDate, Date endDate){
+        return dao.getDashboardMetrics(startDate, endDate);
     }
 }

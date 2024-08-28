@@ -863,7 +863,7 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedTestRequest, hasProperty("creator", is(testRequest.getCreator())));
         assertThat(savedTestRequest, hasProperty("careSetting", is(testRequest.getCareSetting())));
         assertThat(savedTestRequest, hasProperty("status", is(testRequest.getStatus())));
-        assertThat(savedTestRequest, hasProperty("atLocationId", is(testRequest.getAtLocationId())));
+        assertThat(savedTestRequest, hasProperty("atLocation", is(testRequest.getAtLocation())));
         assertThat(savedTestRequest, hasProperty("referredIn", is(testRequest.getReferredIn())));
         assertThat(savedTestRequest, hasProperty("referralFromFacility", is(testRequest.getReferralFromFacility())));
         assertThat(savedTestRequest, hasProperty("referralFromFacilityName", is(testRequest.getReferralFromFacilityName())));
@@ -888,7 +888,7 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedTestRequest, hasProperty("creator", is(testRequest.getCreator())));
         assertThat(savedTestRequest, hasProperty("careSetting", is(testRequest.getCareSetting())));
         assertThat(savedTestRequest, hasProperty("status", is(testRequest.getStatus())));
-        assertThat(savedTestRequest, hasProperty("atLocationId", is(testRequest.getAtLocationId())));
+        assertThat(savedTestRequest, hasProperty("atLocation", is(testRequest.getAtLocation())));
         assertThat(savedTestRequest, hasProperty("referredIn", is(testRequest.getReferredIn())));
         assertThat(savedTestRequest, hasProperty("referralFromFacility", is(testRequest.getReferralFromFacility())));
         assertThat(savedTestRequest, hasProperty("referralFromFacilityName", is(testRequest.getReferralFromFacilityName())));

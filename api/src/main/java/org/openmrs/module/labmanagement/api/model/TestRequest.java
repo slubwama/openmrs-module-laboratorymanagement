@@ -63,8 +63,9 @@ public class TestRequest extends BaseOpenmrsData {
     @Enumerated(EnumType.STRING)
     private TestRequestStatus status;
 
-    @Column(name = "at_location_id", nullable = false)
-    private Integer atLocationId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "at_location_id", nullable = false)
+    private Location atLocation;
 
     @Column(name = "referred_in", nullable = false)
     private Boolean referredIn;
@@ -175,12 +176,12 @@ public class TestRequest extends BaseOpenmrsData {
         this.status = status;
     }
 
-    public Integer getAtLocationId() {
-        return atLocationId;
+    public Location getAtLocation() {
+        return atLocation;
     }
 
-    public void setAtLocationId(Integer atLocationId) {
-        this.atLocationId = atLocationId;
+    public void setAtLocation(Location atLocation) {
+        this.atLocation = atLocation;
     }
 
     public Boolean getReferredIn() {

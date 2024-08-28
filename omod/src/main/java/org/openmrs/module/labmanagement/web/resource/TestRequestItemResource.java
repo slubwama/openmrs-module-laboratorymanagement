@@ -1,5 +1,6 @@
 package org.openmrs.module.labmanagement.web.resource;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
@@ -24,10 +25,7 @@ import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.PropertyGetter;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
-import org.openmrs.module.webservices.rest.web.representation.DefaultRepresentation;
-import org.openmrs.module.webservices.rest.web.representation.FullRepresentation;
-import org.openmrs.module.webservices.rest.web.representation.RefRepresentation;
-import org.openmrs.module.webservices.rest.web.representation.Representation;
+import org.openmrs.module.webservices.rest.web.representation.*;
 import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
@@ -39,11 +37,7 @@ import java.util.stream.Collectors;
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/test-request-item", supportedClass = TestRequestItemDTO.class, supportedOpenmrsVersions = {"1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*"})
 public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
 
-    private Boolean hasApprovePermission;
-    private Boolean hasCollectionPermission;
-    private Boolean canViewTestResults;
-    private Boolean canEditTestResults;
-    private int editResultTimeout = 0;
+
 
     @Override
     public TestRequestItemDTO getByUniqueId(String uniqueId) {
@@ -284,7 +278,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             description.addProperty("changedByFamilyName");
             description.addProperty("testResult", Representation.FULL);
             description.addProperty("samples", Representation.REF);
-            description.addProperty("testConcept", Representation.FULL);
+            description.addProperty("testConcept", new NamedRepresentation("fullchildren"));
 			description.addSelfLink();
 		}
 
@@ -400,13 +394,18 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
 
     @PropertyGetter("permission")
     public SimpleObject getPermission(TestRequestItemDTO testRequestItemDTO) {
+        Boolean hasCollectionPermission = (Boolean) testRequestItemDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,null);
+        Boolean canViewTestResults = (Boolean) testRequestItemDTO.getRequestContextItems().getOrDefault(Privileges.APP_LABMANAGEMENT_TESTRESULTS,null);
+        Boolean canEditTestResults = (Boolean) testRequestItemDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE,null);
+        int editResultTimeout = (int) testRequestItemDTO.getRequestContextItems().getOrDefault("TestResultEditTimeout", 0);;
+        Boolean hasApprovePermission = (Boolean) testRequestItemDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_TESTREQUESTS_APPROVE,null);
         if(hasApprovePermission == null){
             User user = Context.getAuthenticatedUser();
-            hasApprovePermission = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTREQUESTS_APPROVE);
-            hasCollectionPermission = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT);
-            canEditTestResults = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE);
-            canViewTestResults = user.hasPrivilege(Privileges.APP_LABMANAGEMENT_TESTRESULTS);
-            editResultTimeout = GlobalProperties.getTestResultEditTimeout();
+            hasApprovePermission =  setRequestContextValue(testRequestItemDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_TESTREQUESTS_APPROVE,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTREQUESTS_APPROVE));
+            hasCollectionPermission = setRequestContextValue(testRequestItemDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT));
+            canEditTestResults = setRequestContextValue(testRequestItemDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE,user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE));
+            canViewTestResults = setRequestContextValue(testRequestItemDTO.getRequestContextItems(), Privileges.APP_LABMANAGEMENT_TESTRESULTS,user.hasPrivilege(Privileges.APP_LABMANAGEMENT_TESTRESULTS));
+            editResultTimeout = setRequestContextValue(testRequestItemDTO.getRequestContextItems(), "TestResultEditTimeout" ,GlobalProperties.getTestResultEditTimeout());
         }
         SimpleObject simpleObject = new SimpleObject();
         simpleObject.add("canEdit", false);

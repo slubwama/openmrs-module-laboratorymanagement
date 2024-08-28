@@ -13,6 +13,7 @@ import org.openmrs.module.labmanagement.api.model.Sample;
 import org.openmrs.module.labmanagement.api.model.SampleStatus;
 import org.openmrs.module.labmanagement.api.model.TestRequest;
 import org.openmrs.module.labmanagement.api.model.TestRequestItemStatus;
+import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.module.labmanagement.web.SampleTestRequestItemRepresentation;
 import org.openmrs.module.webservices.rest.SimpleObject;
@@ -37,8 +38,6 @@ import java.util.stream.Collectors;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/sample", supportedClass = SampleDTO.class, supportedOpenmrsVersions = {"1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*"})
 public class SampleResource extends ResourceBase<SampleDTO> {
-    private Boolean hasEditPermission;
-    private Boolean hasCollectionPermission;
 
     @Override
     public SampleDTO getByUniqueId(String uniqueId) {
@@ -499,11 +498,14 @@ public class SampleResource extends ResourceBase<SampleDTO> {
 
     @PropertyGetter("permission")
     public SimpleObject getPermission(SampleDTO sampleDTO) {
+        Boolean hasEditPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE,null);
+        Boolean hasCollectionPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,null);
         if(hasEditPermission == null){
             User user = Context.getAuthenticatedUser();
-            hasEditPermission = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE);
-            hasCollectionPermission = user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT);
+            hasEditPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE));
+            hasCollectionPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT));
         }
+
         SimpleObject simpleObject = new SimpleObject();
         simpleObject.add("canEdit", hasEditPermission && SampleStatus.canEdit(sampleDTO));
         simpleObject.add("canDelete", hasEditPermission && SampleStatus.canDeleteSampleWithStatus(sampleDTO.getStatus()));
