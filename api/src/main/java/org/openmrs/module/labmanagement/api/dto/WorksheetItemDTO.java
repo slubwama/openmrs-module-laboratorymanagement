@@ -4,8 +4,6 @@ import org.openmrs.Concept;
 import org.openmrs.Order;
 import org.openmrs.module.labmanagement.api.model.WorksheetItemStatus;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
@@ -15,6 +13,8 @@ public class WorksheetItemDTO {
     private Integer id;
     private Integer worksheetId;
     private String worksheetNo;
+    private String testRequestNo;
+    private String orderNumber;
     private String worksheetUuid;
     private Integer sampleId;
     private String sampleUuid;
@@ -606,5 +606,21 @@ public class WorksheetItemDTO {
 
     public void setRequestContextItems(Map<String, Object> requestContextItems) {
         this.requestContextItems = requestContextItems;
+    }
+
+    public String getTestRequestNo() {
+        return testRequestNo;
+    }
+
+    public void setTestRequestNo(String testRequestNo) {
+        this.testRequestNo = testRequestNo;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
     }
 }

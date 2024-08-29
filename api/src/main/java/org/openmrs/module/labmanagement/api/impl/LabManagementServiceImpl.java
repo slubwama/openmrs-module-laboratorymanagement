@@ -18,16 +18,18 @@ import org.openmrs.annotation.Authorized;
 import org.openmrs.api.*;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
-import org.openmrs.logic.op.In;
 import org.openmrs.messagesource.MessageSourceService;
+import org.openmrs.module.labmanagement.LabLocationTags;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.Privileges;
 import org.openmrs.module.labmanagement.api.dao.LabManagementDao;
 import org.openmrs.module.labmanagement.api.dto.*;
+import org.openmrs.module.labmanagement.api.jobs.AsyncTasksBatchJob;
 import org.openmrs.module.labmanagement.api.jobs.TestConfigImportJob;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
+import org.openmrs.module.labmanagement.api.reporting.Report;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.parameter.EncounterSearchCriteria;
@@ -42,6 +44,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("deprecation")
 public class LabManagementServiceImpl extends BaseOpenmrsService implements LabManagementService {
@@ -1327,6 +1330,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItemSearchFilter.setItemLocationId(filter.getItemLocationId());
                 testRequestItemSearchFilter.setOnlyPendingResultApproval(filter.getOnlyPendingResultApproval());
                 testRequestItemSearchFilter.setPendingResultApproval(filter.getPendingResultApproval());
+                testRequestItemSearchFilter.setItemMatch(filter.getRequestItemMatch());
             }
             testRequestItemSearchFilter.setIncludeTestSamples(filter.getIncludeTestRequestItemSamples());
             testRequestItemSearchFilter.setIncludeTestResult(filter.getIncludeTestItemTestResult());
@@ -1634,7 +1638,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 cancelled++;
             }
         }
-        if(pending > 0) return;
+        if(pending > 0) {
+            // All pending a referred-out, send patient back to clinician
+            return;
+        }
         if(cancelled == total && TestRequestStatus.isNotCompleted(testRequest.getStatus())){
             testRequest.setStatus(TestRequestStatus.CANCELLED);
             testRequest.setDateStopped(new Date());
@@ -2070,6 +2077,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItemSample.setSample(sample);
                 testRequestItemSample.setTestRequestItem(testRequestItems.get(testToAdd));
                 samplesAdded.add(dao.saveTestRequestItemSample(testRequestItemSample));
+                if(testRequestItemSample.getTestRequestItem().getInitialSampleId() == null){
+                    testRequestItemSample.getTestRequestItem().setInitialSampleId(sample.getId());
+                    dao.saveTestRequestItem(testRequestItemSample.getTestRequestItem());
+                }
             }
         }
         Map<Integer, String> instructionUpdate = null;
@@ -2847,8 +2858,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
 
         List<TestResult> testResults = new ArrayList<>();
+        LabManagementService labManagementService = Context.getService(LabManagementService.class);
         for(TestResultDTO testResultDTO : worksheetTestResultDTO.getTestResults()){
-             testResults.add(saveTestResult(testResultDTO, worksheet));
+             testResults.add(labManagementService.saveTestResult(testResultDTO, worksheet));
         }
         return testResults;
     }
@@ -3071,8 +3083,17 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
         }
 
-        if(!isTestAlreadyCompleted && testResult.getCompleted() && !referredOut){
+        if(!isTestAlreadyCompleted && testResult.getCompleted()){
             onTestResultCompleted(testResult);
+        }
+
+        if(testResult.getTestRequestItemSample().getTestRequestItem().getFinalResultId() == null){
+            testResult.getTestRequestItemSample().getTestRequestItem().setFinalResultId(testResult.getId());
+            dao.saveTestRequestItem(testResult.getTestRequestItemSample().getTestRequestItem());
+        }
+
+        if(testResult.getCompleted()){
+            checkCompletion(testResult.getTestRequestItemSample().getTestRequestItem().getTestRequest());
         }
 
         if(testResult.getWorksheetItem() != null) {
@@ -3184,6 +3205,15 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         for(Map.Entry<String, List<TestResult>> testRequestGroup :
                 testResults.stream().collect(Collectors.groupingBy(x->x.getTestRequestItemSample().getTestRequestItem().getTestRequest().getUuid())).entrySet()){
+            if(!testRequestAction.getAction().equals(ApprovalResult.APPROVED)){
+                for(TestResult testResult : testRequestGroup.getValue()){
+                    testResult.getTestRequestItemSample().getTestRequestItem().setReturnCount(
+                            (testResult.getTestRequestItemSample().getTestRequestItem().getReturnCount() == null ? 0
+                            : testResult.getTestRequestItemSample().getTestRequestItem().getReturnCount()) + 1
+                    );
+                    dao.saveTestRequestItem(testResult.getTestRequestItemSample().getTestRequestItem());
+                }
+            }
             checkCompletion(testRequestGroup.getValue().get(0).getTestRequestItemSample().getTestRequestItem().getTestRequest());
         }
 
@@ -3199,10 +3229,16 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         return approvalDTO;
     }
 
-    private void onTestResultCompleted(TestResult testResult){
+    private Order onTestResultCompleted(TestResult testResult){
         TestRequestItem testRequestItem = testResult.getTestRequestItemSample().getTestRequestItem();
         testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
         dao.saveTestRequestItem(testRequestItem);
+
+        if(testResult.getOrder() != null && ! Order.FulfillerStatus.COMPLETED.equals(testResult.getOrder().getFulfillerStatus())){
+            return Context.getOrderService().updateOrderFulfillerStatus(testResult.getOrder(),
+                    Order.FulfillerStatus.COMPLETED,testResult.getOrder().getFulfillerComment());
+        }
+        return null;
     }
 
     public Result<TestApprovalDTO> findTestApprovals(TestApprovalSearchFilter filter){
@@ -3227,5 +3263,435 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
     public DashboardMetricsDTO getDashboardMetrics(Date startDate, Date endDate){
         return dao.getDashboardMetrics(startDate, endDate);
+    }
+
+
+    public BatchJobDTO saveBatchJob(BatchJobDTO batchJobDTO){
+        Location locationScope = null;
+        if(!StringUtils.isBlank(batchJobDTO.getLocationScopeUuid())) {
+            locationScope = Context.getLocationService().getLocationByUuid(batchJobDTO.getLocationScopeUuid());
+            /*if(locationScope == null){
+                invalidRequest(Context.getMessageSourceService().getMessage("labmanagement.batchjob.fieldvaluenotexist"), "report");
+            }*/
+        }
+
+        BatchJobSearchFilter batchJobSearchFilter=new BatchJobSearchFilter();
+        batchJobSearchFilter.setBatchJobType(batchJobDTO.getBatchJobType());
+        batchJobSearchFilter.setParameters(batchJobDTO.getParameters());
+        batchJobSearchFilter.setPrivilegeScope(batchJobDTO.getPrivilegeScope());
+        if(locationScope != null) {
+            batchJobSearchFilter.setLocationScopeIds(Arrays.asList(locationScope.getId()));
+        }
+        batchJobSearchFilter.setBatchJobStatus(Arrays.asList(BatchJobStatus.Pending, BatchJobStatus.Running));
+        Result<BatchJobDTO> pendingSimilarJobs = findBatchJobs(batchJobSearchFilter);
+        BatchJob batchJob = null;
+        if(!pendingSimilarJobs.getData().isEmpty()){
+            batchJob = dao.getBatchJobById(pendingSimilarJobs.getData().get(0).getId());
+            if(batchJob.getBatchJobOwners() == null){
+                batchJob.setBatchJobOwners(new HashSet<>());
+            }
+            Integer currentUserId = Context.getAuthenticatedUser().getId();
+            if(!batchJob.getBatchJobOwners().stream().anyMatch(p->p.getOwner().getId().equals(currentUserId))){
+                BatchJobOwner batchJobOwner = new BatchJobOwner();
+                batchJobOwner.setOwner(Context.getAuthenticatedUser());
+                batchJob.addBatchJobOwner(batchJobOwner);
+            }
+        }
+        else {
+
+            batchJob = new BatchJob();
+            batchJob.setCreator(Context.getAuthenticatedUser());
+            batchJob.setDateCreated(new Date());
+            batchJob.setBatchJobType(batchJobDTO.getBatchJobType());
+            batchJob.setStatus(BatchJobStatus.Pending);
+            batchJob.setDescription(batchJobDTO.getDescription());
+            batchJob.setExpiration(DateUtils.addMinutes(new Date(), GlobalProperties.getBatchJobExpiryInMinutes()));
+            batchJob.setParameters(batchJobDTO.getParameters());
+            batchJob.setPrivilegeScope(batchJobDTO.getPrivilegeScope());
+
+            if (locationScope != null) {
+                batchJob.setLocationScope(locationScope);
+            }
+
+            BatchJobOwner batchJobOwner = new BatchJobOwner();
+            batchJobOwner.setOwner(Context.getAuthenticatedUser());
+            batchJob.addBatchJobOwner(batchJobOwner);
+        }
+
+        dao.saveBatchJob(batchJob);
+        AsyncTasksBatchJob.queueBatchJob(batchJob);
+
+        batchJobSearchFilter = new BatchJobSearchFilter();
+        batchJobSearchFilter.setBatchJobUuids(Arrays.asList(batchJob.getUuid()));
+        Result<BatchJobDTO> jobs = findBatchJobs(batchJobSearchFilter);
+        return jobs.getData().isEmpty() ? null : jobs.getData().get(0);
+    }
+
+    public Result<BatchJobDTO> findBatchJobs(BatchJobSearchFilter filter){
+        return dao.findBatchJobs(filter);
+    }
+
+    public void failBatchJob(String batchJobUuid, String reason){
+        BatchJob batchJob = dao.getBatchJobByUuid(batchJobUuid);
+        if(batchJob == null) return;
+
+        if(!batchJob.getStatus().equals(BatchJobStatus.Running) && !batchJob.getStatus().equals(BatchJobStatus.Pending)){
+            invalidRequest("labmanagement.batchjob.notcancellable");
+        }
+        if(reason != null && reason.length() > 2500){
+            reason = reason.substring(0,2500-1);
+        }
+        batchJob.setExitMessage(reason);
+        batchJob.setStatus(BatchJobStatus.Failed);
+        batchJob.setDateChanged(new Date());
+        batchJob.setChangedBy(Context.getAuthenticatedUser());
+        dao.saveBatchJob(batchJob);
+    }
+
+
+    public void cancelBatchJob(String batchJobUuid, String reason){
+        BatchJob batchJob = dao.getBatchJobByUuid(batchJobUuid);
+        if(batchJob == null) return;
+
+        if(!batchJob.getStatus().equals(BatchJobStatus.Running) && !batchJob.getStatus().equals(BatchJobStatus.Pending)){
+            invalidRequest("labmanagement.batchjob.notcancellable");
+        }
+
+        batchJob.setStatus(BatchJobStatus.Cancelled);
+        batchJob.setCancelReason(reason);
+        batchJob.setCancelledBy(Context.getAuthenticatedUser());
+        batchJob.setCancelledDate(new Date());
+        batchJob.setDateChanged(new Date());
+        batchJob.setChangedBy(Context.getAuthenticatedUser());
+        dao.saveBatchJob(batchJob);
+
+        AsyncTasksBatchJob.stopBatchJob(batchJob);
+    }
+
+    public List<Report> getReports(){
+        return Report.getAllReports();
+    }
+
+    public BatchJob getNextActiveBatchJob(){
+        return dao.getNextActiveBatchJob();
+    }
+
+    public BatchJob getBatchJobByUuid(String batchJobUuid){
+        return dao.getBatchJobByUuid(batchJobUuid);
+    }
+
+    public void saveBatchJob(BatchJob batchJob){
+        dao.saveBatchJob(batchJob);
+    }
+
+
+    public void updateBatchJobRunning(String batchJobUuid){
+        BatchJob batchJob = dao.getBatchJobByUuid(batchJobUuid);
+        if(batchJob == null) return;
+        batchJob.setStatus(BatchJobStatus.Running);
+        if(batchJob.getStartTime() == null) {
+            batchJob.setStartTime(new Date());
+        }
+        batchJob.setDateChanged(new Date());
+        batchJob.setChangedBy(Context.getAuthenticatedUser());
+        dao.saveBatchJob(batchJob);
+    }
+
+    public void expireBatchJob(String batchJobUuid, String reason){
+        BatchJob batchJob = dao.getBatchJobByUuid(batchJobUuid);
+        if(batchJob == null) return;
+        batchJob.setStatus(BatchJobStatus.Expired);
+        if(batchJob.getStartTime() != null){
+            batchJob.setEndTime(new Date());
+        }
+        batchJob.setExitMessage(reason);
+        batchJob.setDateChanged(new Date());
+        batchJob.setChangedBy(Context.getAuthenticatedUser());
+        dao.saveBatchJob(batchJob);
+    }
+
+    public void updateBatchJobExecutionState(String batchJobUuid, String  executionState){
+        BatchJob batchJob = dao.getBatchJobByUuid(batchJobUuid);
+        if(batchJob == null) return;
+        batchJob.setExecutionState(executionState);
+        batchJob.setDateChanged(new Date());
+        batchJob.setChangedBy(Context.getAuthenticatedUser());
+        dao.saveBatchJob(batchJob);
+    }
+
+    public List<BatchJob> getExpiredBatchJobs(){
+        return dao.getExpiredBatchJobs();
+    }
+
+    public void deleteBatchJob(BatchJob batchJob){
+        dao.deleteBatchJob(batchJob);
+    }
+
+    public List<Order> getOrdersToMigrate(Integer laboratoryEncounterTypeId, Integer afterOrderId, int limit, Date startDate, Date endDate){
+        return dao.getOrdersToMigrate(laboratoryEncounterTypeId,afterOrderId,limit,startDate,endDate);
+    }
+
+    public Pair<Boolean, String> migrateOrder(Order orderToMigration){
+
+        Order order = Context.getOrderService().getOrder(orderToMigration.getId());
+
+        Order nextOrder = dao.getNextOrder(order);
+        if(nextOrder != null){
+            return new Pair<>(false, String.format("Order is superceeded by order %1s  with id %2s", nextOrder.getOrderNumber() , nextOrder.getOrderId()));
+        }
+
+        List<Order> previousOrders = new ArrayList<>();
+        Order previousOrder = order.getPreviousOrder();
+        int max=20;
+        while(previousOrder != null && max > 0){
+            previousOrders.add(previousOrder);
+            previousOrder = previousOrder.getPreviousOrder();
+            max--;
+        }
+
+        Integer orderWithTestRequestItem = dao.getOrderInChainWithTestRequestItem(order, previousOrders);
+        if(orderWithTestRequestItem != null){
+            return new Pair<>(false, String.format("Order %1s in chain is already migrated", orderWithTestRequestItem));
+        }
+
+        TestRequest testRequest=new TestRequest();
+        testRequest.setPatient(order.getPatient());
+        testRequest.setVisit(order.getEncounter().getVisit());
+        testRequest.setEncounter(order.getEncounter());
+        testRequest.setProvider(order.getOrderer());
+        testRequest.setRequestDate(order.getDateActivated());
+        testRequest.setRequestNo("LRN-" + order.getOrderNumber());
+        testRequest.setUrgency(order.getUrgency());
+
+        String clinicalNoteConceptUUid =  GlobalProperties.getClinicalNotesConceptUuid();
+        if(StringUtils.isNotBlank(clinicalNoteConceptUUid)){
+            Obs obs = order.getEncounter().getAllObs().stream().filter(p -> p.getConcept().getUuid().equalsIgnoreCase(clinicalNoteConceptUUid))
+                    .findFirst().orElse(null);
+            if(obs != null){
+                testRequest.setClinicalNote(obs.getValueText());
+            }
+        }
+        testRequest.setCareSetting(order.getCareSetting());
+
+        // status and date stopped
+        testRequest.setDateStopped(null);
+        if(Order.FulfillerStatus.DECLINED.equals(order.getFulfillerStatus()) || Order.FulfillerStatus.EXCEPTION.equals(order.getFulfillerStatus())){
+            testRequest.setStatus(TestRequestStatus.CANCELLED);
+        }else if(Order.FulfillerStatus.COMPLETED.equals(order.getFulfillerStatus())){
+            testRequest.setStatus(TestRequestStatus.COMPLETED);
+        }else {
+            testRequest.setStatus(TestRequestStatus.IN_PROGRESS);
+        }
+
+        testRequest.setAtLocation(order.getEncounter().getLocation());
+        testRequest.setReferredIn(false);
+        testRequest.setReferralFromFacility(null);
+        testRequest.setReferralFromFacilityName(null);
+        testRequest.setReferralInExternalRef(null);
+        testRequest.setCreator(order.getCreator());
+        testRequest.setDateCreated(order.getDateCreated());
+
+        TestRequestItem testRequestItem = new TestRequestItem();
+        testRequestItem.setTestRequest(testRequest);
+        testRequestItem.setOrder(order);
+        testRequestItem.setAtLocation(testRequest.getAtLocation());
+
+        Location toLocation = null;
+        LocationService locationService = Context.getLocationService();
+        LocationTag mainLocationTag = locationService.getLocationTagByName(LabLocationTags.MAIN_LABORATORY_LOCATION_TAG);
+        LocationTag locationTag = locationService.getLocationTagByName(LabLocationTags.LABORATORY_LOCATION_TAG);
+        if(mainLocationTag != null || locationTag != null){
+            List<Location> laboratories = Context.getLocationService()
+                    .getLocationsHavingAnyTag(Stream.of(mainLocationTag, locationTag).filter(Objects::nonNull).collect(Collectors.toList()));
+            if(!laboratories.isEmpty()){
+                toLocation = laboratories.stream().min(Comparator.comparing(Location::getId)).orElse(null);
+            }
+        }
+        testRequestItem.setToLocation(toLocation == null ? testRequestItem.getAtLocation() : toLocation);
+        testRequestItem.setReferredOut(order.getInstructions() != null && order.getInstructions().startsWith("REFER"));
+        if(testRequestItem.getReferredOut()){
+            testRequestItem.setReferralOutOrigin(ReferralOutOrigin.Laboratory);
+            testRequestItem.setReferralToFacilityName(order.getInstructions());
+        }
+        testRequestItem.setRequireRequestApproval(false);
+
+        Obs orderObs = order.getEncounter().getObs().stream().filter(p->p.getOrder() != null &&
+                p.getOrder().getOrderId().equals(order.getOrderId())).max(Comparator.comparing(Obs::getId)).orElse(null);
+        testRequestItem.setCompleted(false);
+        if(testRequest.getStatus() == TestRequestStatus.COMPLETED){
+            testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+            testRequestItem.setCompleted(true);
+        } else if(testRequest.getStatus() == TestRequestStatus.CANCELLED){
+            testRequestItem.setStatus(TestRequestItemStatus.CANCELLED);
+        }
+        else if(testRequestItem.getReferredOut()){
+            if(orderObs == null){
+                testRequestItem.setStatus(TestRequestItemStatus.REFERRED_OUT_LAB);
+            }else{
+                testRequest.setStatus(TestRequestStatus.COMPLETED);
+                testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+                testRequestItem.setCompleted(true);
+            }
+        }else if(orderObs != null){
+            testRequestItem.setStatus(TestRequestItemStatus.IN_PROGRESS);
+        } else if(StringUtils.isBlank(order.getAccessionNumber())){
+            testRequestItem.setStatus(TestRequestItemStatus.SAMPLE_COLLECTION);
+        }else {
+            testRequestItem.setStatus(TestRequestItemStatus.IN_PROGRESS);
+        }
+
+        testRequestItem.setEncounter(order.getEncounter());
+        testRequestItem.setReferralOutSample(null);
+        testRequestItem.setReturnCount(0);
+        testRequestItem.setDateCreated(testRequest.getDateCreated());
+        testRequestItem.setCreator(testRequest.getCreator());
+
+        String unknownConceptUuid = GlobalProperties.getUnknownConceptUuid();
+        Concept unknownConcept = null;
+        if(StringUtils.isNotBlank(unknownConceptUuid)){
+            unknownConcept = Context.getConceptService().getConceptByUuid(unknownConceptUuid);
+        }
+
+        TestOrder testOrder = null;
+        if(order instanceof TestOrder){
+            testOrder = (TestOrder) order;
+        }
+        Sample sample = null;
+        if(StringUtils.isNotBlank(order.getAccessionNumber()) || orderObs != null){
+            sample=new Sample();
+            sample.setParentSample(null);
+            if(testOrder != null) {
+                sample.setSampleType(testOrder.getSpecimenSource());
+            }
+            if(sample.getSampleType() == null && unknownConcept != null){
+                sample.setSampleType(unknownConcept);
+            }
+            if(sample.getSampleType() == null){
+                sample.setSampleType(order.getConcept());
+            }
+            sample.setAtLocation(testRequest.getAtLocation());
+            sample.setAccessionNumber(order.getAccessionNumber() == null ? "UNKNOW" : order.getAccessionNumber());
+            sample.setReferredOut(testRequestItem.getReferredOut());
+
+            sample.setStatus( testRequestItem.getCompleted() ? SampleStatus.DISPOSED : SampleStatus.TESTING);
+            sample.setEncounter(testRequest.getEncounter());
+            sample.setReferralOutOrigin(testRequestItem.getReferralOutOrigin());
+            sample.setReferralToFacilityName(testRequestItem.getReferralToFacilityName());
+            sample.setDateCreated(order.getDateCreated());
+            sample.setCreator(order.getCreator());
+        }
+
+        TestResult testResult = null;
+        TestApproval testApproval = null;
+        if(orderObs != null){
+            testResult = new TestResult();
+            testResult.setWorksheetItem(null);
+            testResult.setOrder(order);
+            testResult.setObs(orderObs);
+            testResult.setResultBy(orderObs.getCreator());
+            testResult.setStatus("Approval Not Required");
+            testResult.setResultDate(order.getDateCreated());
+            testResult.setCompleted(TestRequestItemStatus.isCompletedProcess(testRequestItem.getStatus()));
+            testResult.setCompletedResult(testResult.getCompleted() ? !TestRequestItemStatus.CANCELLED.equals(testRequestItem.getStatus()) :
+                    false);
+            testResult.setRequireApproval(!testResult.getCompleted());
+            testResult.setCompletedDate(testResult.getCompleted() ? order.getDateActivated() : null);
+            testResult.setDateCreated(orderObs.getDateCreated());
+            testResult.setCreator(orderObs.getCreator());
+        }
+
+        if(testResult != null && !TestRequestItemStatus.isCompletedProcess(testRequestItem.getStatus())){
+            TestConfig testConfig = dao.getTestConfigByConcept(order.getConcept().getConceptId());
+            ApprovalFlow approvalFlow = null;
+            Boolean completeItem = null;
+            if(testConfig != null){
+                if(testConfig.getRequireApproval()  == null || !testConfig.getRequireApproval()){
+                    completeItem = true;
+                }else{
+                    approvalFlow = testConfig.getApprovalFlow();
+                }
+            }
+            if(completeItem == null && approvalFlow == null){
+                ApprovalFlowSearchFilter approvalFlowSearchFilter=new ApprovalFlowSearchFilter();
+                approvalFlowSearchFilter.setNameOrSystemName("Default");
+                approvalFlowSearchFilter.setVoided(false);
+                Result<ApprovalFlowDTO> approvalFlowResult = dao.findApprovalFlows(approvalFlowSearchFilter);
+                if(!approvalFlowResult.getData().isEmpty()){
+                    approvalFlow = dao.getApprovalFlowById(approvalFlowResult.getData().get(0).getId());
+                }else{
+                    approvalFlowSearchFilter.setNameOrSystemName(null);
+                    approvalFlowResult = dao.findApprovalFlows(approvalFlowSearchFilter);
+                    if(!approvalFlowResult.getData().isEmpty()){
+                        approvalFlow = dao.getApprovalFlowById(approvalFlowResult.getData().get(0).getId());
+                    }
+                }
+            }
+
+            if(completeItem == null && approvalFlow == null){
+                completeItem = true;
+            }
+
+            if(Boolean.TRUE.equals(completeItem)){
+                testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+                testRequestItem.setCompleted(true);
+                testRequest.setStatus(TestRequestStatus.COMPLETED);
+                testResult.setCompleted(true);
+                testResult.setRequireApproval(false);
+                testResult.setCompletedDate(order.getDateActivated());
+            }else{
+                testResult.setRequireApproval(true);
+                approvalFlow.setNextTestApproval(testResult,null,0);
+            }
+        }else if(testResult != null){
+            testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+            testRequestItem.setCompleted(true);
+            testRequest.setStatus(TestRequestStatus.COMPLETED);
+            testResult.setCompleted(true);
+            testResult.setCompletedDate(order.getDateActivated());
+            testResult.setCompletedResult(testRequestItem.getStatus().equals(TestRequestItemStatus.COMPLETED));
+            testResult.setRequireApproval(false);
+        }
+
+        testRequest = dao.saveTestRequest(testRequest);
+        testRequestItem.setTestRequest(testRequest);
+        testRequestItem = dao.saveTestRequestItem(testRequestItem);
+        TestRequestItemSample testRequestItemSample = null;
+        if(sample != null){
+            sample.setTestRequest(testRequest);
+            sample = dao.saveSample(sample);
+            testRequestItemSample = new TestRequestItemSample();
+            testRequestItemSample.setSample(sample);
+            testRequestItemSample.setTestRequestItem(testRequestItem);
+            testRequestItemSample.setDateCreated(sample.getDateCreated());
+            testRequestItemSample.setCreator(sample.getCreator());
+            testRequestItemSample = dao.saveTestRequestItemSample(testRequestItemSample);
+            testRequestItemSample.setDateCreated(sample.getDateCreated());
+            testRequestItemSample.setCreator(sample.getCreator());
+        }
+
+        if(testResult != null){
+            testResult.setTestRequestItemSample(testRequestItemSample);
+            testResult = dao.saveTestResult(testResult);
+
+            if(testResult.getCurrentApproval() != null){
+                dao.saveTestApproval(testResult.getCurrentApproval());
+            }
+        }
+
+        boolean saveTestRequest = false;
+        if(sample != null) {
+            testRequestItem.setInitialSampleId(sample.getId());
+            saveTestRequest=true;
+        }
+        if(testResult != null) {
+            testRequestItem.setFinalResultId(testResult.getId());
+            saveTestRequest=true;
+        }
+
+        if(saveTestRequest){
+            dao.saveTestRequestItem(testRequestItem);
+        }
+
+        return new Pair<>(true, null);
     }
 }

@@ -33,6 +33,7 @@ public class TestRequestSearchFilter extends SearchFilter {
     private boolean permApproval=false;
     private boolean includeTestItemConcept = false;
     private boolean includeTestItemWorksheetInfo=false;
+    private RequestItemMatchOptions requestItemMatch;
 
     public Integer getTestRequestId() {
         return testRequestId;
@@ -232,5 +233,13 @@ public class TestRequestSearchFilter extends SearchFilter {
 
     public void setIncludeTestItemTestResultApprovals(boolean includeTestItemTestResultApprovals) {
         this.includeTestItemTestResultApprovals = includeTestItemTestResultApprovals;
+    }
+
+    public RequestItemMatchOptions getRequestItemMatch() {
+        return requestItemMatch;
+    }
+
+    public void setRequestItemMatch(RequestItemMatchOptions requestItemMatch) {
+        this.requestItemMatch = requestItemMatch;
     }
 }

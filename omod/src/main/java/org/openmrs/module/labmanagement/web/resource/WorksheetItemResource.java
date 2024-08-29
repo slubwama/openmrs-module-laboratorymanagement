@@ -202,6 +202,8 @@ public class WorksheetItemResource extends ResourceBase<WorksheetItemDTO> {
             description.addProperty("testUuid");
             description.addProperty("testName");
             description.addProperty("testShortName");
+            description.addProperty("testRequestNo");
+            description.addProperty("orderNumber");
 
             description.addProperty("urgency");
             description.addProperty("patientUuid");
@@ -301,6 +303,8 @@ public class WorksheetItemResource extends ResourceBase<WorksheetItemDTO> {
             modelImpl.property("referralInExternalRef", new StringProperty());
             modelImpl.property("referralFromFacilityName", new StringProperty());
             modelImpl.property("permission", new StringProperty());
+            modelImpl.property("testRequestNo", new StringProperty());
+            modelImpl.property("orderNumber", new StringProperty());
 
         }
         if (rep instanceof DefaultRepresentation) {

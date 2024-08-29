@@ -11,10 +11,12 @@ package org.openmrs.module.labmanagement.api;
 
 import org.hibernate.criterion.Restrictions;
 import org.openmrs.Concept;
+import org.openmrs.Order;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
+import org.openmrs.module.labmanagement.api.reporting.Report;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.file.Path;
@@ -239,6 +241,9 @@ public interface LabManagementService extends OpenmrsService {
 
     @Transactional
     @Authorized(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE)
+    TestResult saveTestResult(TestResultDTO testResultDTO, Worksheet worksheetToValidateAgainst);
+
+    @Authorized(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE)
     List<TestResult> saveWorksheetTestResults(WorksheetTestResultDTO worksheetTestResultDTO);
 
     @Transactional(readOnly = true)
@@ -268,4 +273,55 @@ public interface LabManagementService extends OpenmrsService {
 
     @Transactional(readOnly = true)
     DashboardMetricsDTO getDashboardMetrics(Date startDate, Date endDate);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_REPORTS_MUTATE, requireAll = false)
+    BatchJobDTO saveBatchJob(BatchJobDTO batchJobDTO);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = Privileges.APP_LABMANAGEMENT_REPORTS)
+    Result<BatchJobDTO> findBatchJobs(BatchJobSearchFilter batchJobSearchFilter);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_REPORTS_MUTATE, requireAll = false)
+    void cancelBatchJob(String batchJobUuid, String reason);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_REPORTS_MUTATE, requireAll = false)
+    void failBatchJob(String batchJobUuid, String reason);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_REPORTS_MUTATE, requireAll = false)
+    void expireBatchJob(String batchJobUuid, String reason);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = Privileges.APP_LABMANAGEMENT_REPORTS)
+    List<Report> getReports();
+
+    @Transactional(readOnly = true)
+    BatchJob getNextActiveBatchJob();
+
+    @Transactional(readOnly = true)
+    BatchJob getBatchJobByUuid(String batchJobUuid);
+
+    @Transactional
+    void saveBatchJob(BatchJob batchJob);
+
+    @Transactional
+    void updateBatchJobRunning(String batchJobUuid);
+
+    @Transactional
+    void updateBatchJobExecutionState(String batchJobUuid, String executionState);
+
+    @Transactional(readOnly = true)
+    List<BatchJob> getExpiredBatchJobs();
+
+    @Transactional
+    void deleteBatchJob(BatchJob batchJob);
+
+    @Transactional(readOnly = true)
+    List<Order> getOrdersToMigrate(Integer laboratoryEncounterTypeId, Integer afterOrderId, int limit, Date startDate, Date endDate);
+
+    @Transactional
+    Pair<Boolean, String> migrateOrder(Order order);
 }

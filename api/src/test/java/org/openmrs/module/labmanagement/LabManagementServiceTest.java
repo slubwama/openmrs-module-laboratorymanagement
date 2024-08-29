@@ -23,6 +23,7 @@ import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.dao.LabManagementDao;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.impl.LabManagementServiceImpl;
+import org.openmrs.module.labmanagement.api.jobs.AsyncTasksBatchJob;
 import org.openmrs.module.labmanagement.api.jobs.TestConfigImportJob;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.DateUtil;
@@ -2316,6 +2317,44 @@ tests	[…]
 		Context.flushSession();
 		Context.flushSession();
 
+
+
+		testRequestSearchFilter = new TestRequestSearchFilter();
+		testRequestSearchFilter.setIncludeTestItems(true);
+		testRequestSearchFilter.setIncludeTestItemTestResult(true);
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.NoWorkStarted);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+		assertTrue(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.NoResults);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+		assertTrue(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.Results);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+        assertFalse(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.Rejected);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+		assertTrue(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.Worksheet);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+        assertFalse(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.WorksheetNoResults);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+		assertTrue(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.WorksheetResults);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+        assertFalse(testRequests.getData().isEmpty());
+
+		testRequestSearchFilter.setRequestItemMatch(RequestItemMatchOptions.NoWorksheetResults);
+		testRequests = labManagementService.findTestRequests(testRequestSearchFilter);
+		assertTrue(testRequests.getData().isEmpty());
+
+
 		// Check we can overwrite the values third time with same obs id
 		worksheetTestResultDTO=new WorksheetTestResultDTO();
 		worksheetTestResultDTO.setWorksheetUuid(worksheet.getUuid());
@@ -2382,6 +2421,7 @@ tests	[…]
 			testResultDTO.setObs(obs);
 			worksheetTestResultDTO.getTestResults().add(testResultDTO);
 		}
+
 		WorksheetTestResultDTO finalWorksheetTestResultDTO = worksheetTestResultDTO;
 		Assert.assertThrows(Exception.class,()->{
 			labManagementService.saveWorksheetTestResults(finalWorksheetTestResultDTO);
@@ -2389,7 +2429,6 @@ tests	[…]
 			Context.flushSession();
 			checkEncounterObsIsAsExpected(worksheet);
 		});
-
 	}
 
 	private void checkEncounterObsIsAsExpected(Worksheet worksheet) {
@@ -2449,7 +2488,7 @@ tests	[…]
 		DashboardMetricsDTO dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
 				DateUtil.endOfDay(new Date()));
 
-		Assert.assertEquals(dashboardMetricsDTO.getTestsToAccept(), new Integer(1));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsToAccept(), new Long(10L));
 
 		SampleSearchFilter filter = new SampleSearchFilter();
 		filter.setIncludeTests(true);
@@ -2468,8 +2507,8 @@ tests	[…]
 
 		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
 				DateUtil.endOfDay(new Date()));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(1));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(0));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Long(10));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Long(0));
 
 		TestRequest entity = labManagementService.getTestRequestById(testRequest.getId());
 		Assert.assertEquals(entity.getStatus(), TestRequestStatus.IN_PROGRESS);
@@ -2504,8 +2543,8 @@ tests	[…]
 
 		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
 				DateUtil.endOfDay(new Date()));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(0));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(1));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Long(10));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Long(10));
 
 		WorksheetTestResultDTO worksheetTestResultDTO=new WorksheetTestResultDTO();
 		worksheetTestResultDTO.setWorksheetUuid(worksheet.getUuid());
@@ -2557,11 +2596,23 @@ tests	[…]
 
 		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
 				DateUtil.endOfDay(new Date()));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Integer(0));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Integer(0));
-		Assert.assertEquals(dashboardMetricsDTO.getTestsPendingApproval(), new Integer(1));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Long(0));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsOnWorksheet(), new Long(10));
+		Assert.assertEquals(dashboardMetricsDTO.getTestsPendingApproval(), new Long(10));
+	}
 
+	@Test
+	public void checkDataMigration(){
+		GlobalProperties.setGlobalProperty(GlobalProperties.ENABLE_DATA_MIGRATION, "true");
+		eu().setRequiredTestRequestEnvironment();
+		BatchJobDTO batchJob=new BatchJobDTO();
+		batchJob.setBatchJobType(BatchJobType.Migration);
+		batchJob.setStatus(BatchJobStatus.Pending);
+		batchJob.setDescription("Batch job");
+		labManagementService.saveBatchJob(batchJob);
 
+		AsyncTasksBatchJob asyncTasksBatchJob=new AsyncTasksBatchJob();
+		asyncTasksBatchJob.execute();
 	}
 
 }

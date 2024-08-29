@@ -92,6 +92,12 @@ public class TestRequestResource extends ResourceBase<TestRequestDTO> {
             filter.setItemStatuses(statusIds);
         }
 
+        param = context.getParameter("itemMatch");
+        if (!StringUtils.isBlank(param)) {
+            RequestItemMatchOptions opStatus = (RequestItemMatchOptions) Enum.valueOf(RequestItemMatchOptions.class, param);
+            filter.setRequestItemMatch(opStatus);
+        }
+
         param = context.getParameter("testConcept");
         if (StringUtils.isNotBlank(param)) {
             String[] params = param.split(",", 10);

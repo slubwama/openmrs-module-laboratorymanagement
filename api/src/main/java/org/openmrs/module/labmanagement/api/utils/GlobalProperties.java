@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.api.utils;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.GlobalProperty;
@@ -48,11 +47,10 @@ public class GlobalProperties {
 	public static final String AUTO_RELEASE_SAMPLES = ModuleConstants.MODULE_ID + ".autoReleaseSamples";
 
 	public static final String HEALTH_CENTER_NAME = ModuleConstants.MODULE_ID + ".healthCenterName";
+
 	public static final String UGEMR_HEALTH_CENTER_NAME = "ugandaemr.healthCenterName";
 
-	////////////////////////
-
-	public static final String UNKNOWN_CONCEPT_ID = ModuleConstants.MODULE_ID + ".unknownConceptId";
+	public static final String UNKNOWN_CONCEPT_UUID = ModuleConstants.MODULE_ID + ".unknownConceptUuid";
 
 	public static final String TEST_CONFIGS_MAX_UPLOAD_FILE_SIZE = ModuleConstants.MODULE_ID + ".testConfigsMaxUploadFileSize";
 
@@ -62,12 +60,14 @@ public class GlobalProperties {
 
 	public static final String PRINT_LOGO_TEXT = ModuleConstants.MODULE_ID + ".printLogoText";
 
-
-	public static final String ENABLE_STOCK_BATCH_JOB = ModuleConstants.MODULE_ID + ".enableStockBatchJob";
-
 	public static final String BATCH_JOB_EXPIRY_IN_MINUTES = ModuleConstants.MODULE_ID + ".batchJobExpiryInMinutes";
 
 	public static final String APPLICATION_ROOT_URL = ModuleConstants.MODULE_ID + ".applicationRootUrl";
+
+	public static final String ENABLE_DATA_MIGRATION = ModuleConstants.MODULE_ID + ".enableDataMigration";
+
+	public static final String LAST_MIGRATED_ORDER_ID = ModuleConstants.MODULE_ID + ".lastMigratedOrderId";
+
 
 
 
@@ -233,9 +233,9 @@ public class GlobalProperties {
 
 	/////////////////////////////
 
-	public static String getUnknownConceptId() {
+	public static String getUnknownConceptUuid() {
 		try {
-			return getGlobalProperty(UNKNOWN_CONCEPT_ID);
+			return getGlobalProperty(UNKNOWN_CONCEPT_UUID);
 		}
 		catch (Exception exception) {}
 		return null;
@@ -254,17 +254,6 @@ public class GlobalProperties {
 		}
 		catch (Exception exception) {}
 		return null;
-	}
-
-	public static boolean isStockBatchJobEnabled() {
-		try {
-			String result = getGlobalProperty(ENABLE_STOCK_BATCH_JOB);
-			if (result == null)
-				return false;
-			return result.equalsIgnoreCase("true") || result.equalsIgnoreCase("yes") || result.equals("1");
-		}
-		catch (Exception exception) {}
-		return false;
 	}
 
 	public static Integer getBatchJobExpiryInMinutes() {
@@ -316,30 +305,24 @@ public class GlobalProperties {
 		return BigDecimal.valueOf(30.5);
 	}
 
-	public static String getObservationDispensingLocationConcept() {
+	public static boolean enableDataMigration() {
 		try {
-			return getGlobalProperty("labmanagement.observationDispensingLocationConcept");
-		}
-		catch (Exception exception) {}
-		return null;
-	}
-
-	public static String getObservationDrugConcept() {
-		try {
-			return getGlobalProperty("labmanagement.observationDrugConcept");
-		}
-		catch (Exception exception) {}
-		return null;
-	}
-
-	public static boolean uomPriorityIsBigToSmall() {
-		try {
-			String property = getGlobalProperty("labmanagement.packagingUnitPackSizePriorityIsBigToSmall");
-			if (StringUtils.isBlank(property))
-				return true;
-			return Boolean.parseBoolean(property);
+			return Boolean.parseBoolean(getGlobalProperty(ENABLE_DATA_MIGRATION));
 		}
 		catch (Exception exception) {}
 		return true;
+	}
+
+
+	public static Integer getLastMigratedOrderId() {
+		try {
+			return Integer.parseInt(getGlobalProperty(LAST_MIGRATED_ORDER_ID));
+		}
+		catch (Exception exception) {}
+		return 0;
+	}
+
+	public static void setLastMigratedOrderId(Integer value) {
+		setGlobalProperty(LAST_MIGRATED_ORDER_ID, String.valueOf(value));
 	}
 }

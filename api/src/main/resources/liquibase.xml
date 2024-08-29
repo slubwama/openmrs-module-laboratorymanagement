@@ -1496,4 +1496,191 @@
       SELECT (SELECT iis.id FROM idgen_identifier_source iis WHERE iis.uuid = '66bfa314-4881-11ef-9d0e-00155d78897e'), 100,'0123456789',100,null,null,3,null
     </sql>
   </changeSet>
+  <changeSet author="dev" id="1724860264558-1">
+    <createTable tableName="labmgmt_batch_job">
+      <column autoIncrement="true" name="batch_job_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="batch_job_type" type="VARCHAR(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="status" type="VARCHAR(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="description" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="start_time" type="datetime"/>
+      <column name="end_time" type="datetime"/>
+      <column name="expiration" type="datetime"/>
+      <column name="parameters" type="VARCHAR(5000)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="privilege_scope" type="VARCHAR(255)"/>
+      <column name="location_scope" type="INT"/>
+      <column name="execution_state" type="VARCHAR(5000)"/>
+      <column name="cancelled_by" type="INT"/>
+      <column name="cancelled_date" type="datetime"/>
+      <column name="cancel_reason" type="VARCHAR(500)"/>
+      <column name="exit_message" type="VARCHAR(2500)"/>
+      <column name="completed_date" type="datetime"/>
+      <column name="output_artifact_size" type="BIGINT"/>
+      <column name="output_artifact_file_ext" type="VARCHAR(10)"/>
+      <column name="output_artifact_viewable" type="BIT(1)"/>
+      <column defaultValueNumeric="0" name="creator" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changed_by" type="INT"/>
+      <column name="date_changed" type="datetime"/>
+      <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_voided" type="datetime"/>
+      <column name="voided_by" type="INT"/>
+      <column name="void_reason" type="VARCHAR(255)"/>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false" unique="true"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-2">
+    <createTable tableName="labmgmt_batch_job_owner">
+      <column autoIncrement="true" name="batch_job_owner_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="batch_job_id" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="owner" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false" unique="true"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-3">
+    <createIndex indexName="labmgmt_batch_job_cancelled_by_fk" tableName="labmgmt_batch_job">
+      <column name="cancelled_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-4">
+    <createIndex indexName="labmgmt_batch_job_changed_by_fk" tableName="labmgmt_batch_job">
+      <column name="changed_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-5">
+    <createIndex indexName="labmgmt_batch_job_creator_fk" tableName="labmgmt_batch_job">
+      <column defaultValueNumeric="0" name="creator"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-6">
+    <createIndex indexName="labmgmt_batch_job_location_fk" tableName="labmgmt_batch_job">
+      <column name="location_scope"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-7">
+    <createIndex indexName="labmgmt_batch_job_owner_batch_job_fk" tableName="labmgmt_batch_job_owner">
+      <column name="batch_job_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-8">
+    <createIndex indexName="labmgmt_batch_job_owner_owner_fk" tableName="labmgmt_batch_job_owner">
+      <column name="owner"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-9">
+    <createIndex indexName="labmgmt_batch_job_voided_by_fk" tableName="labmgmt_batch_job">
+      <column name="voided_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-10">
+    <addForeignKeyConstraint baseColumnNames="cancelled_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_cancelled_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-11">
+    <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-12">
+    <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-13">
+    <addForeignKeyConstraint baseColumnNames="location_scope" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-14">
+    <addForeignKeyConstraint baseColumnNames="batch_job_id" baseTableName="labmgmt_batch_job_owner" constraintName="labmgmt_batch_job_owner_batch_job_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="batch_job_id" referencedTableName="labmgmt_batch_job"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-15">
+    <addForeignKeyConstraint baseColumnNames="owner" baseTableName="labmgmt_batch_job_owner" constraintName="labmgmt_batch_job_owner_owner_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-16">
+    <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1724860264558-17">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM scheduler_task_config
+        WHERE schedulable_class = 'org.openmrs.module.labmanagement.api.jobs.AsyncTasksBatchJob'
+      </sqlCheck>
+    </preConditions>
+    <sql>DELETE FROM scheduler_task_config where uuid='73eb1d31-6e5e-11ed-9a5b-00155db5005a'</sql>
+    <comment>Inserting Asynchronous Report Generation And Batch Jobs into 'schedule_task_config' table</comment>
+    <insert tableName="scheduler_task_config">
+      <column name="name" value="Lab Asynchronous Batch Jobs" />
+      <column name="description" value="Runs report generation and batch jobs asynchronously" />
+      <column name="schedulable_class" value="org.openmrs.module.labmanagement.api.jobs.AsyncTasksBatchJob" />
+      <column name="start_time_pattern" value="MM/dd/yyyy HH:mm:ss" />
+      <column name="start_time" valueDate="2024-08-28T00:59:59" />
+      <column name="repeat_interval" value="60" />
+      <column name="date_created" valueDate="CURRENT_TIMESTAMP" />
+      <column name="created_by" value="1" />
+      <column name="start_on_startup" value="1"/>
+      <column name="started" value="1"/>
+      <column name="uuid" value="73eb1d31-6e5e-11ed-9a5b-00155db5005a" />
+    </insert>
+  </changeSet>
+  <changeSet author="dev" id="1724925089724-1">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM labmgmt_approval_config
+        WHERE uuid = '2c89e7a6-484c-483b-b056-f67ffb62f24d'
+      </sqlCheck>
+    </preConditions>
+    <insert tableName="labmgmt_approval_config">
+      <column name="approval_title" value="Supervisor Approval"/>
+      <column name="privilege" value="Task: labmanagement.testresults.approve"/>
+      <column name="pending_status" value="Pending Supervisor Approval"/>
+      <column name="returned_status" value="Returned By Supervisor"/>
+      <column name="rejected_status" value="Rejected By Supervisor"/>
+      <column name="approved_status" value="Approved By Supervisor"/>
+      <column name="creator" valueNumeric="1"/>
+      <column name="date_created" valueDate="2024-07-10T10:45:44"/>
+      <column name="changed_by"/>
+      <column name="date_changed"/>
+      <column name="voided" valueBoolean="false"/>
+      <column name="voided_by"/>
+      <column name="date_voided"/>
+      <column name="void_reason"/>
+      <column name="uuid" value="2c89e7a6-484c-483b-b056-f67ffb62f24d"/>
+    </insert>
+  </changeSet>
+  <changeSet author="dev" id="1724925089724-2">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*) FROM labmgmt_approval_flow
+        WHERE uuid = '0a1740d8-5ebc-11ef-8266-00155d56be3d'
+      </sqlCheck>
+    </preConditions>
+    <sql>
+      INSERT INTO labmgmt_approval_flow (name, system_name, level_one, level_two, level_three, level_four, level_one_allow_owner, level_two_allow_owner, level_three_allow_owner, level_four_allow_owner, level_two_allow_previous, level_three_allow_previous, level_four_allow_previous, creator, date_created, changed_by, date_changed, voided, voided_by, date_voided, void_reason, uuid)
+      SELECT 'Default', 'Default', lac.approval_config_id, NULL, NULL, NULL, 1, 1, 1, 1, 1, 1, 1, 1, '2024-08-20 09:18:38', 1, '2024-08-29 12:37:43', 0, NULL, NULL, NULL, '0a1740d8-5ebc-11ef-8266-00155d56be3d'
+      FROM labmgmt_approval_config lac
+      WHERE uuid = '2c89e7a6-484c-483b-b056-f67ffb62f24d'
+    </sql>
+  </changeSet>
 </databaseChangeLog>

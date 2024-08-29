@@ -11,6 +11,7 @@ package org.openmrs.module.labmanagement.api.dao;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
@@ -20,6 +21,7 @@ import org.openmrs.*;
 import org.openmrs.Order;
 import org.openmrs.api.ConceptNameType;
 import org.openmrs.api.db.hibernate.DbSession;
+import org.openmrs.logic.op.Or;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
@@ -44,7 +46,13 @@ public class LabManagementDao extends DaoBase {
     public void deleteTestRequestItemSamples(List<Integer> testRequestItemSamplesIds) {
         if(testRequestItemSamplesIds == null || testRequestItemSamplesIds.isEmpty()) return ;
         DbSession session = getSession();
-        Query query = session.createQuery("DELETE labmanagement.TestRequestItemSample WHERE id in :id");
+        Query query = session.createQuery("Update labmanagement.TestRequestItem as tri set tri.initialSampleId = null WHERE tri.id in (" +
+                "select tris.testRequestItem.id from labmanagement.TestRequestItemSample tris where tris.id in :id ) and tri.initialSampleId in (" +
+                "select tris.sample.id from labmanagement.TestRequestItemSample tris where tris.id in :id )");
+        query.setParameterList("id", testRequestItemSamplesIds);
+        query.executeUpdate();
+
+        query = session.createQuery("DELETE labmanagement.TestRequestItemSample WHERE id in :id");
         query.setParameterList("id", testRequestItemSamplesIds);
         query.executeUpdate();
     }
@@ -1031,14 +1039,44 @@ public class LabManagementDao extends DaoBase {
         StringBuilder itemCheck = null;
         if((filter.getItemStatuses()!= null && !filter.getItemStatuses().isEmpty()) ||
                 (filter.getTestConceptIds()!= null && !filter.getTestConceptIds().isEmpty()) ||
-                filter.getReferredOut() != null || filter.getItemLocationId() != null || filter.getPendingResultApproval() != null){
+                filter.getReferredOut() != null || filter.getItemLocationId() != null || filter.getPendingResultApproval() != null ||
+        filter.getRequestItemMatch() != null){
             itemCheck=new StringBuilder("exists ( from labmanagement.TestRequestItem tri ");
             if((filter.getTestConceptIds()!= null && !filter.getTestConceptIds().isEmpty())){
                 itemCheck.append("left join tri.order trio ");
             }
 
-            if(filter.getPendingResultApproval() != null && filter.getPendingResultApproval()){
+            boolean leftJoinForApproval = false;
+            boolean leftJoinForWorksheets = false;
+            if(filter.getRequestItemMatch() != null) {
+                switch (filter.getRequestItemMatch()) {
+                    case NoWorkStarted:
+                        leftJoinForWorksheets = true;
+                    case Results:
+                    case NoResults:
+                    case Rejected:
+                        leftJoinForApproval = true;
+                        break;
+                    case Worksheet:
+                    case WorksheetNoResults:
+                    case WorksheetResults:
+                        leftJoinForWorksheets = true;
+                        break;
+                    case NoWorksheetResults:
+                        leftJoinForWorksheets = true;
+                        leftJoinForApproval = true;
+                        break;
+                    default:
+                        throw new NotImplementedException("Request item match option not implemented: " + filter.getRequestItemMatch().toString());
+                }
+            }
+
+            if((filter.getPendingResultApproval() != null && filter.getPendingResultApproval()) || leftJoinForApproval || leftJoinForWorksheets){
                 itemCheck.append("left join tri.testRequestItemSamples tris left join tris.testResults tristr left join tristr.currentApproval tristrca ");
+            }
+
+            if(leftJoinForWorksheets){
+                itemCheck.append("left join tris.worksheetItems trisws ");
             }
 
             itemCheck.append(" where tri.testRequest.id = tr.id and ");
@@ -1067,7 +1105,39 @@ public class LabManagementDao extends DaoBase {
             if(filter.getPendingResultApproval() != null){
                 itemCheck.append("and tris.voided=0 and tristr.requireApproval=1 and tristr.completed=0 and tristr.voided = 0 ");
                 if(filter.getOnlyPendingResultApproval()){
-                    itemCheck.append("and tristrca.approvalResult is null");
+                    itemCheck.append("and tristrca.approvalResult is null ");
+                }
+            }
+
+            if(filter.getRequestItemMatch() != null) {
+                switch (filter.getRequestItemMatch()) {
+                    case NoWorkStarted:
+                        itemCheck.append("and trisws.id is null and tristr.id is null  ");
+                        break;
+                    case Results:
+                        itemCheck.append("and tristr.id is not null  ");
+                        break;
+                    case NoResults:
+                        itemCheck.append("and tristr.id is null  ");
+                        break;
+                    case Rejected:
+                        itemCheck.append("and tristrca.approvalResult = :raprt ");
+                        parameterList.put("raprt", ApprovalResult.REJECTED);
+                        break;
+                    case Worksheet:
+                        itemCheck.append("and trisws.id is not null ");
+                        break;
+                    case WorksheetNoResults:
+                        itemCheck.append("and trisws.id is not null and tristr.id is null  ");
+                        break;
+                    case WorksheetResults:
+                        itemCheck.append("and trisws.id is not null and tristr.id is not null  ");
+                        break;
+                    case NoWorksheetResults:
+                        itemCheck.append("and trisws.id is null and tristr.id is not null  ");
+                        break;
+                    default:
+                        throw new NotImplementedException("Request item match option not implemented: " + filter.getRequestItemMatch().toString());
                 }
             }
 
@@ -1230,6 +1300,31 @@ public class LabManagementDao extends DaoBase {
         HashMap<String, Object> parameterList = new HashMap<>();
         HashMap<String, Collection> parameterWithList = new HashMap<>();
 
+        boolean leftJoinForApproval = false;
+        boolean leftJoinForWorksheets = false;
+        if(filter.getItemMatch() != null) {
+            switch (filter.getItemMatch()) {
+                case NoWorkStarted:
+                    leftJoinForWorksheets=true;
+                case Results:
+                case NoResults:
+                case Rejected:
+                    leftJoinForApproval = true;
+                    break;
+                case Worksheet:
+                case WorksheetNoResults:
+                case WorksheetResults:
+                    leftJoinForWorksheets = true;
+                    break;
+                case NoWorksheetResults:
+                    leftJoinForWorksheets = true;
+                    leftJoinForApproval = true;
+                    break;
+                default:
+                    throw new NotImplementedException("Request item match option not implemented: " + filter.getItemMatch().toString());
+            }
+        }
+
         StringBuilder hqlQuery = new StringBuilder("select tri.uuid as uuid, tri.id as id, \n" +
                 "o.orderId as orderId,\n" +
                 "o.orderNumber as orderNumber,\n" +
@@ -1272,9 +1367,12 @@ public class LabManagementDao extends DaoBase {
                 "from labmanagement.TestRequestItem tri left join\n" +
                 " tri.testRequest tr left join\n" +
                 " tri.order o left join\n" +
-                (filter.getPendingResultApproval() != null && filter.getPendingResultApproval() ?
-                        " tri.testRequestItemSamples tris left join tris.testResults tristr left join tristr.currentApproval tristrca left join "
+                ((filter.getPendingResultApproval() != null && filter.getPendingResultApproval())|| (leftJoinForApproval || leftJoinForWorksheets) ?
+                        ( " tri.testRequestItemSamples tris left join tris.testResults tristr left join tristr.currentApproval tristrca left join " +
+                                (leftJoinForWorksheets ? " tris.worksheetItems trisws left join " : "")
+                                )
                         : "") +
+
                 " tri.atLocation al left join\n" +
                 " tri.toLocation tl left join\n" +
                 " tri.referralOutBy rob left join\n" +
@@ -1335,6 +1433,38 @@ public class LabManagementDao extends DaoBase {
             appendFilter(hqlFilter, "tris.voided=0 and tristr.requireApproval=1 and tristr.completed=0 and tristr.voided = 0");
             if (filter.getOnlyPendingResultApproval()) {
                 appendFilter(hqlFilter, "tristrca.approvalResult is null");
+            }
+        }
+
+        if(filter.getItemMatch() != null) {
+            switch (filter.getItemMatch()) {
+                case NoWorkStarted:
+                    appendFilter(hqlFilter, "trisws.id is null and tristr.id is null  ");
+                    break;
+                case Results:
+                    appendFilter(hqlFilter,"tristr.id is not null  ");
+                    break;
+                case NoResults:
+                    appendFilter(hqlFilter, "tristr.id is null  ");
+                    break;
+                case Rejected:
+                    appendFilter(hqlFilter, "tristrca.approvalResult = :raprt ");
+                    parameterList.put("raprt", ApprovalResult.REJECTED);
+                    break;
+                case Worksheet:
+                    appendFilter(hqlFilter, "trisws.id is not null ");
+                    break;
+                case WorksheetNoResults:
+                    appendFilter(hqlFilter, "trisws.id is not null and tristr.id is null  ");
+                    break;
+                case WorksheetResults:
+                    appendFilter(hqlFilter, "trisws.id is not null and tristr.id is not null  ");
+                    break;
+                case NoWorksheetResults:
+                    appendFilter(hqlFilter, "trisws.id is null and tristr.id is not null  ");
+                    break;
+                default:
+                    throw new NotImplementedException("Request item match option not implemented: " + filter.getItemMatch().toString());
             }
         }
 
@@ -1537,6 +1667,7 @@ public class LabManagementDao extends DaoBase {
                 "rff.concept.id as referralFromFacilityId,\n" +
                 "coalesce(tr.referralFromFacilityName, rff.name) as referralFromFacilityName,\n" +
                 "tr.referralInExternalRef as referralInExternalRef,\n" +
+                "tr.requestNo as testRequestNo,\n" +
                 "s.creator.userId as creator,\n" +
                 "s.creator.uuid as creatorUuid,\n" +
                 "s.dateCreated as dateCreated,\n" +
@@ -1948,6 +2079,7 @@ public class LabManagementDao extends DaoBase {
                 "tl.uuid as toLocationUuid,\n" +
                 "tl.name as toLocationName," +
                 "o.urgency as urgency," +
+                "o.orderNumber as orderNumber," +
                 "p.id as patientId,\n" +
                 "p.uuid as patientUuid\n" +
                 "from labmanagement.TestRequestItemSample tris join " +
@@ -2275,6 +2407,8 @@ public class LabManagementDao extends DaoBase {
                 "rff.concept.id as referralFromFacilityId,\n" +
                 "coalesce(tr.referralFromFacilityName, rff.name) as referralFromFacilityName,\n" +
                 "tr.referralInExternalRef as referralInExternalRef,\n" +
+                "tr.requestNo as testRequestNo,\n" +
+                "trio.orderNumber as orderNumber,\n" +
                 "trio.urgency as urgency,\n" +
                 "tl.uuid as toLocationUuid,\n" +
                 "tl.name as toLocationName," +
@@ -2465,7 +2599,7 @@ public class LabManagementDao extends DaoBase {
     public void deleteStockManagementParty(Location location) {
         try {
             DbSession session = getSession();
-            Query query = session.createQuery("DELETE FROM stockmanagement.Party p WHERE p.location = :id");
+            Query query = session.createQuery("DELETE FROM labmanagement.Party p WHERE p.location = :id");
             query.setParameter("id", location);
             query.executeUpdate();
         } catch (Exception exception) {
@@ -2477,7 +2611,7 @@ public class LabManagementDao extends DaoBase {
         try {
             DbSession session = getSession();
             Query query = session
-                    .createQuery("DELETE FROM stockmanagement.LocationTree WHERE parentLocationId = :p or childLocationId = :p");
+                    .createQuery("DELETE FROM labmanagement.LocationTree WHERE parentLocationId = :p or childLocationId = :p");
             query.setParameter("p", locationId);
             query.executeUpdate();
         } catch (Exception exception) {
@@ -2887,4 +3021,308 @@ public class LabManagementDao extends DaoBase {
         }
         return new DashboardMetricsDTO();
     }
+
+
+    public BatchJob getNextActiveBatchJob(){
+        DbSession dbSession = getSession();
+        Criteria criteria = dbSession.createCriteria(BatchJob.class, "bj");
+        criteria.add(Restrictions.in("bj.status", Arrays.asList(BatchJobStatus.Pending, BatchJobStatus.Running)));
+        criteria.add(Restrictions.eq("bj.voided", false));
+
+        Result<BatchJob> result = new Result<>();
+        result.setPageIndex(0);
+        result.setPageSize(1);
+
+        result.setData(executeCriteria(criteria, result, org.hibernate.criterion.Order.asc("bj.id")));
+        return result.getData().isEmpty() ? null : result.getData().get(0);
+    }
+
+    public Result<BatchJobDTO> findBatchJobs(BatchJobSearchFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select bj.uuid as uuid, bj.id as id, bj.batchJobType as batchJobType,\n" +
+                "bj.status as status," +
+                "bj.description as description,\n" +
+                "bj.startTime as startTime,\n" +
+                "bj.endTime  as endTime,\n" +
+                "bj.expiration as expiration,\n" +
+                "bj.parameters as parameters,\n" +
+                "bj.privilegeScope as privilegeScope,\n" +
+                "bj.locationScope.locationId as locationScopeId,\n" +
+                "ls.uuid as locationScopeUuid,\n" +
+                "ls.name as locationScope,\n" +
+                "bj.executionState as executionState,\n" +
+                "bj.cancelReason as cancelReason,\n" +
+                "bj.cancelledDate as cancelledDate,\n" +
+                "bj.exitMessage as exitMessage,\n" +
+                "bj.completedDate as completedDate,\n" +
+                "bj.dateCreated as dateCreated,\n" +
+                "bj.creator.userId as creator,\n" +
+                "bj.voided as voided,\n" +
+                "bj.outputArtifactSize as outputArtifactSize,\n" +
+                "bj.outputArtifactFileExt as outputArtifactFileExt,\n" +
+                "bj.outputArtifactViewable as outputArtifactViewable,\n" +
+                "bj.cancelledBy.userId as cancelledBy\n" +
+                " from labmanagement.BatchJob bj left join bj.locationScope ls\n");
+
+        StringBuilder hqlFilter = new StringBuilder();
+
+        if (filter.getBatchJobIds() != null && !filter.getBatchJobIds().isEmpty()) {
+            appendFilter(hqlFilter, "bj.id in (:id)");
+            parameterWithList.put("id", filter.getBatchJobIds());
+        }
+
+        if (filter.getBatchJobUuids() != null && !filter.getBatchJobUuids().isEmpty()) {
+            appendFilter(hqlFilter, "bj.uuid in (:uuid)");
+            parameterWithList.put("uuid", filter.getBatchJobUuids());
+        }
+
+        if (filter.getBatchJobType() != null) {
+            appendFilter(hqlFilter, "bj.batchJobType = :batchJobType");
+            parameterList.put("batchJobType", filter.getBatchJobType());
+        }
+
+        if (filter.getBatchJobStatus() != null && !filter.getBatchJobStatus().isEmpty()) {
+            appendFilter(hqlFilter, "bj.status in (:status)");
+            parameterWithList.put("status", filter.getBatchJobStatus());
+        }
+
+        if (filter.getDateCreatedMin() != null) {
+            appendFilter(hqlFilter, "bj.dateCreated >= :ldc");
+            parameterList.putIfAbsent("ldc", filter.getDateCreatedMin());
+        }
+
+        if (filter.getDateCreatedMax() != null) {
+            appendFilter(hqlFilter, "bj.dateCreated <= :ldcx");
+            parameterList.putIfAbsent("ldcx", filter.getDateCreatedMax());
+        }
+
+        if (filter.getCompletedDateMin() != null) {
+            appendFilter(hqlFilter, "bj.completedDate >= :lcd");
+            parameterList.putIfAbsent("lcd", filter.getCompletedDateMin());
+        }
+
+        if (filter.getCompletedDateMax() != null) {
+            appendFilter(hqlFilter, "bj.completedDate <= :lcdx");
+            parameterList.putIfAbsent("lcdx", filter.getCompletedDateMax());
+        }
+
+        List<Integer> locationIdsToFilter = null;
+        if (filter.getLocationScopeIds() != null && !filter.getLocationScopeIds().isEmpty()) {
+            locationIdsToFilter = filter.getLocationScopeIds();
+        }
+
+        if (locationIdsToFilter != null && !locationIdsToFilter.isEmpty()) {
+            appendFilter(hqlFilter, "bj.locationScope.locationId in (:liids)");
+            parameterWithList.put("liids", locationIdsToFilter);
+        }
+
+        if (filter.getPrivilegeScope() != null) {
+            appendFilter(hqlFilter, "bj.privilegeScope = :pvgsp");
+            parameterList.put("pvgsp", filter.getPrivilegeScope());
+        }
+
+        if (filter.getParameters() != null) {
+            appendFilter(hqlFilter, "bj.parameters = :parameters");
+            parameterList.put("parameters", filter.getParameters());
+        }
+
+        if (!filter.getIncludeVoided()) {
+            appendFilter(hqlFilter, "bj.voided = :vdd");
+            parameterList.putIfAbsent("vdd", false);
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        Result<BatchJobDTO> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+
+        result.setData(executeQuery(BatchJobDTO.class, hqlQuery, result," order by bj.id desc", parameterList, parameterWithList));
+
+        if (!result.getData().isEmpty()) {
+            Result<BatchJobOwnerDTO> batchJobOwners = findBatchJobOwnersInternal(result.getData().stream().map(p -> p.getId()).collect(Collectors.toList()), false);
+            List<Integer> userIds = result.getData().stream().map(p -> p.getCreator()).filter(p -> p != null).distinct().collect(Collectors.toList());
+            userIds.addAll(result.getData().stream().map(p -> p.getCancelledBy()).filter(p -> p != null).distinct().collect(Collectors.toList()));
+            userIds.addAll(batchJobOwners.getData().stream().map(p -> p.getOwnerUserId()).filter(p -> p != null).distinct().collect(Collectors.toList()));
+            List<UserPersonNameDTO> personNames = getPersonNameByUserIds(userIds.stream().distinct().collect(Collectors.toList()));
+            for(BatchJobOwnerDTO batchJobOwnerDTO: batchJobOwners.getData()){
+                if (batchJobOwnerDTO.getOwnerUserId() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream()
+                            .filter(p -> p.getUserId().equals(batchJobOwnerDTO.getOwnerUserId())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        batchJobOwnerDTO.setOwnerFamilyName(userPersonNameDTO.get().getFamilyName());
+                        batchJobOwnerDTO.setOwnerGivenName(userPersonNameDTO.get().getGivenName());
+                        batchJobOwnerDTO.setOwnerUserUuid(userPersonNameDTO.get().getUuid());
+                    }
+                }
+            }
+            for (BatchJobDTO batchJobDTO : result.getData()) {
+                if (batchJobDTO.getCreator() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream()
+                            .filter(p -> p.getUserId().equals(batchJobDTO.getCreator())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        batchJobDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                        batchJobDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                        batchJobDTO.setCreatorUuid(userPersonNameDTO.get().getUuid());
+                    }
+                }
+
+                if (batchJobDTO.getCancelledBy() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream()
+                            .filter(p -> p.getUserId().equals(batchJobDTO.getCancelledBy())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        batchJobDTO.setCancelledByFamilyName(userPersonNameDTO.get().getFamilyName());
+                        batchJobDTO.setCancelledByGivenName(userPersonNameDTO.get().getGivenName());
+                        batchJobDTO.setCancelledByUuid(userPersonNameDTO.get().getUuid());
+                    }
+                }
+
+                batchJobDTO.setOwners(batchJobOwners.getData().stream().filter(p->p.getBatchJobId().equals(batchJobDTO.getId())).collect(Collectors.toList()));
+                for (BatchJobOwnerDTO batchJobOwnerDTO: batchJobDTO.getOwners()){
+                    batchJobOwnerDTO.setBatchJobUuid(batchJobDTO.getUuid());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Result<BatchJobOwnerDTO> findBatchJobOwners(List<Integer> batchJobIds) {
+        return findBatchJobOwnersInternal(batchJobIds, true);
+    }
+
+    private Result<BatchJobOwnerDTO> findBatchJobOwnersInternal(List<Integer> batchJobIds, boolean setNames){
+        if(batchJobIds == null || batchJobIds.isEmpty()){
+            return new Result<>(new ArrayList<>(),0);
+        }
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select bjo.uuid as uuid, bjo.id as id, bjo.batchJob.id as batchJobId,\n" +
+                "bjo.owner.userId as ownerUserId,\n" +
+                "bjo.dateCreated as dateCreated\n" +
+                "from labmanagement.BatchJobOwner bjo\n");
+
+        StringBuilder hqlFilter = new StringBuilder();
+        appendFilter(hqlFilter, "bjo.batchJob.id in (:batchJobId)");
+        parameterWithList.put("batchJobId", batchJobIds);
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        Result<BatchJobOwnerDTO> result = new Result<>();
+        result.setData(executeQuery(BatchJobOwnerDTO.class, hqlQuery, result, " order by bjo.id asc", parameterList, parameterWithList));
+
+        if(setNames){
+            List<Integer> userIds = result.getData().stream().map(p -> p.getOwnerUserId()).filter(p -> p != null).distinct().collect(Collectors.toList());
+            List<UserPersonNameDTO> personNames = getPersonNameByUserIds(userIds.stream().distinct().collect(Collectors.toList()));
+            for(BatchJobOwnerDTO batchJobOwnerDTO: result.getData()){
+                if (batchJobOwnerDTO.getOwnerUserId() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream()
+                            .filter(p -> p.getUserId().equals(batchJobOwnerDTO.getOwnerUserId())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        batchJobOwnerDTO.setOwnerFamilyName(userPersonNameDTO.get().getFamilyName());
+                        batchJobOwnerDTO.setOwnerGivenName(userPersonNameDTO.get().getGivenName());
+                        batchJobOwnerDTO.setOwnerUserUuid(userPersonNameDTO.get().getUuid());
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public List<BatchJob> getExpiredBatchJobs() {
+        return getSession().createCriteria(BatchJob.class).add(Restrictions.le("expiration", new Date())).list();
+    }
+
+    public void deleteBatchJob(BatchJob batchJob) {
+        DbSession session = getSession();
+        Query query = session.createQuery("DELETE FROM labmanagement.BatchJobOwner WHERE batchJob = :p");
+        query.setParameter("p", batchJob);
+        query.executeUpdate();
+
+        query = session.createQuery("DELETE FROM labmanagement.BatchJob WHERE id = :p");
+        query.setParameter("p", batchJob.getId());
+        query.executeUpdate();
+    }
+
+    public List<Order> getOrdersToMigrate(Integer laboratoryEncounterTypeId, Integer afterOrderId, int limit, Date startDate, Date endDate) {
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        Encounter order;
+
+        StringBuilder hqlQuery = new StringBuilder("select o  from Encounter e join e.orders o\n"
+        );
+
+        StringBuilder hqlFilter = new StringBuilder();
+        appendFilter(hqlFilter, "e.encounterType.id = :ecti and e.voided=0");
+        parameterList.put("ecti", laboratoryEncounterTypeId);
+
+        if (afterOrderId != null) {
+            appendFilter(hqlFilter, "o.id > :oid");
+            parameterList.put("oid", afterOrderId);
+        }
+
+        if(startDate != null){
+            appendFilter(hqlFilter, "o.dateCreated >= :mindc");
+            parameterList.put("mindc", startDate);
+        }
+
+        if(endDate != null){
+            appendFilter(hqlFilter, "o.dateCreated <= :maxdc");
+            parameterList.put("maxdc", endDate);
+        }
+
+        appendFilter(hqlFilter, "o.dateStopped is null");
+        appendFilter(hqlFilter, "not exists(from Order oe where oe.previousOrder = o)");
+        appendFilter(hqlFilter, "not exists(from labmanagement.TestRequestItem tri where tri.order = o)");
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        hqlQuery.append(" order by o.id asc");
+
+        DbSession session = getSession();
+        Query query = session.createQuery(hqlQuery.toString());
+        for (Map.Entry<String, Object> entry : parameterList.entrySet())
+            query.setParameter(entry.getKey(), entry.getValue());
+        query.setFirstResult(0);
+        query.setMaxResults(limit);
+
+        return (List<Order>) query.list();
+    }
+
+    public Order getNextOrder(Order order){
+        DbSession dbSession = getSession();
+        Criteria criteria = dbSession.createCriteria(Order.class, "c");
+        criteria.add(Restrictions.eq("c.previousOrder", order));
+        criteria.setMaxResults(1);
+        criteria.setFirstResult(0);
+        Object result = criteria.uniqueResult();
+        return result == null ? null : (Order) result;
+    }
+
+
+    public Integer getOrderInChainWithTestRequestItem(Order order, List<Order> previousOrders){
+        DbSession session = getSession();
+        Query query = session.createQuery("select tri.order.id from labmanagement.TestRequestItem tri where tri.order in (:os)");
+        previousOrders = previousOrders == null ? new ArrayList<>() : previousOrders.stream().collect(Collectors.toList());
+        previousOrders.add(order);
+        query.setParameter("os", previousOrders);
+        query.setFirstResult(0);
+        query.setMaxResults(1);
+        List<Integer> result = (List<Integer>) query.list();
+        return result == null || result.isEmpty() ? null : result.get(0);
+    }
+
 }

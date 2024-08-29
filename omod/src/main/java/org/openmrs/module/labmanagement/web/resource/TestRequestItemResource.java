@@ -169,6 +169,12 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             }
         }
 
+        param = context.getParameter("itemMatch");
+        if (!StringUtils.isBlank(param)) {
+            RequestItemMatchOptions opStatus = (RequestItemMatchOptions) Enum.valueOf(RequestItemMatchOptions.class, param);
+            filter.setItemMatch(opStatus);
+        }
+
         //filter.setIncludeTestItems(context.getRepresentation() instanceof FullRepresentation);
         Result<TestRequestItemDTO> result = getLabManagementService().findTestRequestItems(filter);
         return toAlreadyPaged(result, context);

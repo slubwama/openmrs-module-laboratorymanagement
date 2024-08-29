@@ -326,6 +326,28 @@
         <description>Health center name that appears on prints.</description>
     </globalProperty>
 
+    <globalProperty>
+        <property>labmanagement.enableDataMigration</property>
+        <defaultValue>true</defaultValue>
+        <description>Enable data migration. true or false</description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.unknownConceptUuid</property>
+        <defaultValue>1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</defaultValue>
+        <description>
+            Concept Id of "Unknown"
+        </description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.lastMigratedOrderId</property>
+        <defaultValue>0</defaultValue>
+        <description>
+            Order id last migrated
+        </description>
+    </globalProperty>
+
     <!-- /Global Properties -->
 </module>
 

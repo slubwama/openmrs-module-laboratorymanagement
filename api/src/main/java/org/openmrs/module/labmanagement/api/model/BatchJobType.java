@@ -13,24 +13,24 @@
  */
 package org.openmrs.module.labmanagement.api.model;
 
-import java.util.Date;
 
-/**
- * The allowable {@link StockOperation} statuses.
- */
 public enum BatchJobType {
 	/**
 	 * The batch job is for generating a report.
 	 */
 	Report(),
 	/**
+	 * Migration batch job.
+	 */
+	Migration(),
+	/**
 	 * Other batch job.
 	 */
 	Other();
-	
+
 	BatchJobType() {
 	}
-	
+
 	public static BatchJobType findByName(String name) {
 		BatchJobType result = null;
 		for (BatchJobType batchJobType : values()) {

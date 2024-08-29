@@ -350,6 +350,8 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             description.addProperty("referralFromFacilityName");
             description.addProperty("referralInExternalRef");
             description.addProperty("permission");
+            description.addProperty("testRequestNo");
+
         }
 
 		if (rep instanceof DefaultRepresentation){
@@ -426,6 +428,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             modelImpl.property("referralFromFacilityUuid", new StringProperty());
             modelImpl.property("referralInExternalRef", new StringProperty());
             modelImpl.property("referralFromFacilityName", new StringProperty());
+            modelImpl.property("testRequestNo", new StringProperty());
 		}
 
 		if (rep instanceof FullRepresentation) {
@@ -483,6 +486,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             simpleObject.add("testShortName",p.getTestShortName());
             simpleObject.add("status", p.getStatus());
             simpleObject.add("urgency", p.getUrgency());
+            simpleObject.add("orderNumber", p.getOrderNumber());
             simpleObject.add("patientUuid", p.getPatientUuid());
             simpleObject.add("patientIdentifier", p.getPatientIdentifier());
             simpleObject.add("patientGivenName", p.getPatientGivenName());

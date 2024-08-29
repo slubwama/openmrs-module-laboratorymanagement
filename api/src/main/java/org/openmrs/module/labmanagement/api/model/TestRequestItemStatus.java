@@ -17,8 +17,7 @@ public enum TestRequestItemStatus {
     }
 
     public  static  boolean isPending(TestRequestItemStatus testRequestItemStatus){
-        return !isCompletedProcess(testRequestItemStatus) && !isCancelled(testRequestItemStatus) &&
-                !testRequestItemStatus.equals(REFERRED_OUT_LAB);
+        return !isCompletedProcess(testRequestItemStatus) && !isCancelled(testRequestItemStatus);
     }
 
     public  static  boolean isCompletedProcess(TestRequestItemStatus testRequestItemStatus){

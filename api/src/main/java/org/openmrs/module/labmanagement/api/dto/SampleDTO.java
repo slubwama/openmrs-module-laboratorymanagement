@@ -67,6 +67,7 @@ public class SampleDTO extends TestRequestSampleDTO {
     private String encounterUuid;
     private Integer testRequestId;
     private String testRequestUuid;
+    private String testRequestNo;
     private Integer testRequestItemId;
     private String testRequestItemSampleUuid;
     private Integer testRequestItemSampleId;
@@ -616,4 +617,13 @@ public class SampleDTO extends TestRequestSampleDTO {
     public void setRequestContextItems(Map<String, Object> requestContextItems) {
         this.requestContextItems = requestContextItems;
     }
+
+    public String getTestRequestNo() {
+        return testRequestNo;
+    }
+
+    public void setTestRequestNo(String testRequestNo) {
+        this.testRequestNo = testRequestNo;
+    }
+
 }

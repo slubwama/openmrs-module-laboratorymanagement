@@ -652,10 +652,10 @@ public class EntityUtil {
 		return dao.findTestConfigurations(new TestConfigSearchFilter()).getData();
 	}
 
-	private void setRequiredTestRequestEnvironment(){
-
-		Context.getAdministrationService().setGlobalProperty(GlobalProperties.LABORATORY_ENCOUNTER_TYPE, getEncounter().getEncounterType().getUuid());
-
+	public void setRequiredTestRequestEnvironment(){
+		String encounterType = getEncounter().getEncounterType().getUuid();
+		EncounterType  types = Context.getEncounterService().getAllEncounterTypes().stream().filter(p->"Laboratory".equalsIgnoreCase(p.getName())).findFirst().orElse(null);
+		Context.getAdministrationService().setGlobalProperty(GlobalProperties.LABORATORY_ENCOUNTER_TYPE, types == null ? encounterType : types.getUuid());
 	}
 
 	public TestRequestDTO newLabRequestReferral(LabManagementDao dao){
