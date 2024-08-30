@@ -1496,7 +1496,7 @@
       SELECT (SELECT iis.id FROM idgen_identifier_source iis WHERE iis.uuid = '66bfa314-4881-11ef-9d0e-00155d78897e'), 100,'0123456789',100,null,null,3,null
     </sql>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-1">
+  <changeSet author="dev" id="labmanagement-1724860264558-1">
     <createTable tableName="labmgmt_batch_job">
       <column autoIncrement="true" name="batch_job_id" type="INT">
         <constraints nullable="false" primaryKey="true"/>
@@ -1546,7 +1546,7 @@
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-2">
+  <changeSet author="dev" id="labmanagement-1724860264558-2">
     <createTable tableName="labmgmt_batch_job_owner">
       <column autoIncrement="true" name="batch_job_owner_id" type="INT">
         <constraints nullable="false" primaryKey="true"/>
@@ -1565,63 +1565,63 @@
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-3">
+  <changeSet author="dev" id="labmanagement-1724860264558-3">
     <createIndex indexName="labmgmt_batch_job_cancelled_by_fk" tableName="labmgmt_batch_job">
       <column name="cancelled_by"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-4">
+  <changeSet author="dev" id="labmanagement-1724860264558-4">
     <createIndex indexName="labmgmt_batch_job_changed_by_fk" tableName="labmgmt_batch_job">
       <column name="changed_by"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-5">
+  <changeSet author="dev" id="labmanagement-1724860264558-5">
     <createIndex indexName="labmgmt_batch_job_creator_fk" tableName="labmgmt_batch_job">
       <column defaultValueNumeric="0" name="creator"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-6">
+  <changeSet author="dev" id="labmanagement-1724860264558-6">
     <createIndex indexName="labmgmt_batch_job_location_fk" tableName="labmgmt_batch_job">
       <column name="location_scope"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-7">
+  <changeSet author="dev" id="labmanagement-1724860264558-7">
     <createIndex indexName="labmgmt_batch_job_owner_batch_job_fk" tableName="labmgmt_batch_job_owner">
       <column name="batch_job_id"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-8">
+  <changeSet author="dev" id="labmanagement-1724860264558-8">
     <createIndex indexName="labmgmt_batch_job_owner_owner_fk" tableName="labmgmt_batch_job_owner">
       <column name="owner"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-9">
+  <changeSet author="dev" id="labmanagement-1724860264558-9">
     <createIndex indexName="labmgmt_batch_job_voided_by_fk" tableName="labmgmt_batch_job">
       <column name="voided_by"/>
     </createIndex>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-10">
+  <changeSet author="dev" id="labmanagement-1724860264558-10">
     <addForeignKeyConstraint baseColumnNames="cancelled_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_cancelled_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-11">
+  <changeSet author="dev" id="labmanagement-1724860264558-11">
     <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-12">
+  <changeSet author="dev" id="labmanagement-1724860264558-12">
     <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-13">
+  <changeSet author="dev" id="labmanagement-1724860264558-13">
     <addForeignKeyConstraint baseColumnNames="location_scope" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-14">
+  <changeSet author="dev" id="labmanagement-1724860264558-14">
     <addForeignKeyConstraint baseColumnNames="batch_job_id" baseTableName="labmgmt_batch_job_owner" constraintName="labmgmt_batch_job_owner_batch_job_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="batch_job_id" referencedTableName="labmgmt_batch_job"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-15">
+  <changeSet author="dev" id="labmanagement-1724860264558-15">
     <addForeignKeyConstraint baseColumnNames="owner" baseTableName="labmgmt_batch_job_owner" constraintName="labmgmt_batch_job_owner_owner_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-16">
+  <changeSet author="dev" id="labmanagement-1724860264558-16">
     <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_batch_job" constraintName="labmgmt_batch_job_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
-  <changeSet author="dev" id="1724860264558-17">
+  <changeSet author="dev" id="labmanagement-1724860264558-17">
     <preConditions onFail="MARK_RAN">
       <sqlCheck expectedResult="0">
         SELECT COUNT(*) FROM scheduler_task_config
@@ -1644,7 +1644,7 @@
       <column name="uuid" value="73eb1d31-6e5e-11ed-9a5b-00155db5005a" />
     </insert>
   </changeSet>
-  <changeSet author="dev" id="1724925089724-1">
+  <changeSet author="dev" id="labmanagement-1724925089724-1">
     <preConditions onFail="MARK_RAN">
       <sqlCheck expectedResult="0">
         SELECT COUNT(*) FROM labmgmt_approval_config
@@ -1669,7 +1669,7 @@
       <column name="uuid" value="2c89e7a6-484c-483b-b056-f67ffb62f24d"/>
     </insert>
   </changeSet>
-  <changeSet author="dev" id="1724925089724-2">
+  <changeSet author="dev" id="labmanagement-1724925089724-2">
     <preConditions onFail="MARK_RAN">
       <sqlCheck expectedResult="0">
         SELECT COUNT(*) FROM labmgmt_approval_flow
@@ -1682,5 +1682,17 @@
       FROM labmgmt_approval_config lac
       WHERE uuid = '2c89e7a6-484c-483b-b056-f67ffb62f24d'
     </sql>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-333">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_test_request_item"/>
+      <not>
+        <columnExists tableName="labmgmt_test_request_item" columnName="completed_date"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_test_request_item">
+      <column name="completed_date" type="datetime">
+      </column>
+    </addColumn>
   </changeSet>
 </databaseChangeLog>

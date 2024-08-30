@@ -84,6 +84,7 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
     private String worksheetNo;
     private String worksheetUuid;
     private Map<String, Object> requestContextItems;
+    private Date completedDate;
 
     public Integer getId() {
         return id;
@@ -632,5 +633,13 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
 
     public void setRequestContextItems(Map<String, Object> requestContextItems) {
         this.requestContextItems = requestContextItems;
+    }
+
+    public Date getCompletedDate() {
+        return completedDate;
+    }
+
+    public void setCompletedDate(Date completedDate) {
+        this.completedDate = completedDate;
     }
 }

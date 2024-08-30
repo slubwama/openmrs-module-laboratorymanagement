@@ -909,9 +909,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                    referralLocationPrefix = null;
                 }
             }
-            testRequest.setRequestNo(String.format("%1s%2s-%3s", "LRN",
-                    (testRequestDTO.getReferredIn() ? "-R": allReferredOut ? "-O": "") + (referralLocationPrefix == null ? "": referralLocationPrefix),
-                    StringUtils.leftPad(Integer.toString(testRequest.getId()), 4, '0')));
+            testRequest.setRequestNo("LRN" +
+                    (testRequestDTO.getReferredIn() ? "-R": allReferredOut ? "-O": "") + (referralLocationPrefix == null ? "": referralLocationPrefix) + "-" +
+                    StringUtils.leftPad(Integer.toString(testRequest.getId()), 4, '0'));
             dao.saveTestRequest(testRequest);
         }
 
@@ -1070,6 +1070,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testOrder.setFulfillerStatus(Order.FulfillerStatus.COMPLETED);
             testRequestItem.setStatus(TestRequestItemStatus.REFERRED_OUT_PROVIDER);
             testRequestItem.setCompleted(true);
+            testRequestItem.setCompletedDate(new Date());
 
         }else{
             testInHouse = true;
@@ -3232,6 +3233,8 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
     private Order onTestResultCompleted(TestResult testResult){
         TestRequestItem testRequestItem = testResult.getTestRequestItemSample().getTestRequestItem();
         testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+        testRequestItem.setCompleted(true);
+        testRequestItem.setCompletedDate(new Date());
         dao.saveTestRequestItem(testRequestItem);
 
         if(testResult.getOrder() != null && ! Order.FulfillerStatus.COMPLETED.equals(testResult.getOrder().getFulfillerStatus())){
@@ -3650,6 +3653,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testResult.setCompletedDate(order.getDateActivated());
             testResult.setCompletedResult(testRequestItem.getStatus().equals(TestRequestItemStatus.COMPLETED));
             testResult.setRequireApproval(false);
+        }
+
+        if(testRequestItem.getCompleted() != null && testRequestItem.getCompleted() && testRequestItem.getCompletedDate() == null){
+            testRequestItem.setCompletedDate(order.getDateActivated());
         }
 
         testRequest = dao.saveTestRequest(testRequest);

@@ -93,6 +93,9 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
     @Column(name = "returnCount")
     private Integer returnCount;
 
+    @Column(name = "completed_date", nullable = true)
+    private Date completedDate;
+
     @OneToMany(mappedBy = "testRequestItem", cascade = CascadeType.ALL)
     private Set<TestRequestItemSample> testRequestItemSamples;
 
@@ -300,5 +303,13 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
         getTestRequestItemSamples().remove(testRequestItemSample);
         testRequestItemSample.setSample(null);
         return testRequestItemSample;
+    }
+
+    public Date getCompletedDate() {
+        return completedDate;
+    }
+
+    public void setCompletedDate(Date completedDate) {
+        this.completedDate = completedDate;
     }
 }

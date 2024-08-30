@@ -261,6 +261,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             description.addProperty("referralOutSampleUuid");
             description.addProperty("returnCount");
             description.addProperty("completed");
+            description.addProperty("completedDate");
             description.addProperty("testRequestUuid");
             description.addProperty("dateCreated");
             description.addProperty("dateChanged");
@@ -354,6 +355,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             modelImpl.property("referralOutSampleUuid", new StringProperty());
             modelImpl.property("returnCount", new IntegerProperty());
             modelImpl.property("completed", new BooleanProperty());
+            modelImpl.property("completedDate", new DateTimeProperty());
             modelImpl.property("testRequestUuid", new StringProperty());
             modelImpl.property("dateCreated", new DateTimeProperty());
             modelImpl.property("dateChanged", new DateTimeProperty());
@@ -393,6 +395,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             simpleObject.add("accessionNumber",p.getAccessionNumber());
             simpleObject.add("providedRef",p.getProvidedRef());
             simpleObject.add("externalRef",p.getExternalRef());
+            simpleObject.add("collectionDate", p.getCollectionDate());
             simpleObject.add("testRequestItemSampleUuid",p.getTestRequestItemSampleUuid());
             return simpleObject;
         }).collect(Collectors.toList());

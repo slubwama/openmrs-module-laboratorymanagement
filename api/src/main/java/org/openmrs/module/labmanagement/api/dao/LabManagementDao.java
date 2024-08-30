@@ -1356,6 +1356,7 @@ public class LabManagementDao extends DaoBase {
                 "e.uuid as encounterUuid,\n" +
                 "ros.uuid as referralOutSampleUuid,\n" +
                 "tri.completed as completed,\n" +
+                "tri.completedDate as completedDate,\n" +
                 "tr.uuid as testRequestUuid,\n" +
                 "tri.creator.userId as creator,\n" +
                 "tri.creator.uuid as creatorUuid,\n" +
@@ -1964,6 +1965,7 @@ public class LabManagementDao extends DaoBase {
                 "s.accessionNumber as accessionNumber,\n" +
                 "s.externalRef as externalRef,\n" +
                 "s.status as status,\n" +
+                "s.collectionDate as collectionDate,\n" +
                 "tris.uuid as testRequestItemSampleUuid,\n" +
                 "tris.testRequestItem.id as testRequestItemId\n" +
                 "from labmanagement.TestRequestItemSample tris join tris.sample s\n");
