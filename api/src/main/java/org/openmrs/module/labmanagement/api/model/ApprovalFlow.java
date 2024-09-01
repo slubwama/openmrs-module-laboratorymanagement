@@ -1,5 +1,6 @@
 package org.openmrs.module.labmanagement.api.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.openmrs.BaseChangeableOpenmrsData;
 import org.openmrs.api.context.Context;
 

@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.module.labmanagement.api.utils.csv.CSVWriter;
@@ -80,12 +81,12 @@ public class DataMigrationJob extends AsyncTaskJob {
             return;
         }
 
-        Properties parameters = null;
+        GenericObject parameters = null;
 
         try {
-            parameters = StringUtils.isBlank(batchJob.getParameters()) ?  new Properties() : GlobalProperties.fromString(batchJob.getParameters());
+            parameters = StringUtils.isBlank(batchJob.getParameters()) ?  new GenericObject() : GenericObject.parseJson(batchJob.getParameters());
         }
-        catch (IOException e) {
+        catch (Exception e) {
             labManagementService.failBatchJob(batchJob.getUuid(), "Failed to read parameters");
             log.error(e.getMessage(), e);
             return;
@@ -93,7 +94,7 @@ public class DataMigrationJob extends AsyncTaskJob {
 
         Date startDate = getStartDate(parameters);
         Date endDate = getEndDate(parameters);
-        Integer afterOrderId =  getLastRecordProcessed(parameters);
+        Integer afterOrderId =  lastRecordProcessed;
         Integer limit = getLimit(parameters);
         if(afterOrderId == null){
             afterOrderId = GlobalProperties.getLastMigratedOrderId();

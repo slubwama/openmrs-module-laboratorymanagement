@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.labmanagement;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -2602,7 +2603,7 @@ tests	[…]
 	}
 
 	@Test
-	public void checkDataMigration(){
+	public void checkDataMigration() throws JsonProcessingException {
 		GlobalProperties.setGlobalProperty(GlobalProperties.ENABLE_DATA_MIGRATION, "true");
 		eu().setRequiredTestRequestEnvironment();
 		BatchJobDTO batchJob=new BatchJobDTO();

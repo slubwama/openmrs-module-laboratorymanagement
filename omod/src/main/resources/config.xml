@@ -348,6 +348,24 @@
         </description>
     </globalProperty>
 
+
+
+    <globalProperty>
+        <property>labmanagement.batchJobExpiryInMinutes</property>
+        <defaultValue>10080</defaultValue>
+        <description>
+            Time in minutes when the queued batch job is considered stale
+        </description>
+    </globalProperty>
+
+    <globalProperty>
+        <property>labmanagement.reportingRecordsPageSize</property>
+        <defaultValue>1000</defaultValue>
+        <description>
+            Reporting: Records page size
+        </description>
+    </globalProperty>
+
     <!-- /Global Properties -->
 </module>
 

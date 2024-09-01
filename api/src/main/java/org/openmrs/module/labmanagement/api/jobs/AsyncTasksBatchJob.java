@@ -8,8 +8,10 @@ import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobType;
+import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.Report;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
+import org.openmrs.module.labmanagement.api.reporting.ReportParameter;
 import org.openmrs.module.labmanagement.api.utils.FileUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.scheduler.SchedulerException;
@@ -131,9 +133,13 @@ public class AsyncTasksBatchJob extends AbstractTask {
 	}
 
 	private void executeReportBatchJob(BatchJob batchJob, LabManagementService labManagementService) {
-		Properties properties = null;
+		GenericObject properties = null;
 		try {
-			properties = GlobalProperties.fromString(batchJob.getParameters());
+			if(StringUtils.isNotBlank(batchJob.getParameters())) {
+				properties = GenericObject.parseJson(batchJob.getParameters());
+			}else{
+				properties=new GenericObject();
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			labManagementService.failBatchJob(batchJob.getUuid(),
@@ -145,7 +151,7 @@ public class AsyncTasksBatchJob extends AbstractTask {
 			allReports = labManagementService.getReports();
 		}
 
-		String reportSystemName = properties.getProperty("param.report");
+		String reportSystemName = (String)properties.getOrDefault("report", null);
 		if (StringUtils.isBlank(reportSystemName)) {
 			labManagementService.failBatchJob(batchJob.getUuid(),
 					String.format(
@@ -176,7 +182,7 @@ public class AsyncTasksBatchJob extends AbstractTask {
 									exception.getMessage()));
 			return;
 		}
-
+		reportGenerator.setParameters(properties);
 		labManagementService.updateBatchJobRunning(batchJob.getUuid());
 
 		reportGenerator.execute(batchJob, p -> {
@@ -198,12 +204,12 @@ public class AsyncTasksBatchJob extends AbstractTask {
 	}
 
 	private void executeDataMigrationBatchJob(BatchJob batchJob, LabManagementService labManagementService) {
-		Properties properties = null;
+		GenericObject properties = null;
 		try {
 			if(StringUtils.isNotBlank(batchJob.getParameters())) {
-				properties = GlobalProperties.fromString(batchJob.getParameters());
+				properties = ReportParameter.parseParameters(batchJob.getParameters());
 			}else{
-				properties=new Properties();
+				properties=new GenericObject();
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

@@ -3079,9 +3079,14 @@ public class LabManagementDao extends DaoBase {
             parameterWithList.put("uuid", filter.getBatchJobUuids());
         }
 
-        if (filter.getBatchJobType() != null) {
-            appendFilter(hqlFilter, "bj.batchJobType = :batchJobType");
-            parameterList.put("batchJobType", filter.getBatchJobType());
+        if (filter.getBatchJobTypes() != null) {
+            if(filter.getBatchJobTypes().size() ==  1){
+                appendFilter(hqlFilter, "bj.batchJobType = :batchJobType");
+                parameterList.put("batchJobType", filter.getBatchJobTypes().get(0));
+            }else{
+                appendFilter(hqlFilter, "bj.batchJobType in :batchJobTypes");
+                parameterWithList.put("batchJobTypes", filter.getBatchJobTypes());
+            }
         }
 
         if (filter.getBatchJobStatus() != null && !filter.getBatchJobStatus().isEmpty()) {

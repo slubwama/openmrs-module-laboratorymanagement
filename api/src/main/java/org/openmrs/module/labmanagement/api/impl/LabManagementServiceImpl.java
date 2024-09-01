@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.labmanagement.api.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -29,8 +30,11 @@ import org.openmrs.module.labmanagement.api.jobs.AsyncTasksBatchJob;
 import org.openmrs.module.labmanagement.api.jobs.TestConfigImportJob;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
+import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.Report;
+import org.openmrs.module.labmanagement.api.reporting.ReportParameterValue;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
+import org.openmrs.module.labmanagement.api.utils.MapUtil;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.parameter.EncounterSearchCriteria;
 import org.openmrs.parameter.EncounterSearchCriteriaBuilder;
@@ -3269,22 +3273,28 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
     }
 
 
-    public BatchJobDTO saveBatchJob(BatchJobDTO batchJobDTO){
+    public BatchJobDTO saveBatchJob(BatchJobDTO batchJobDTO) {
         Location locationScope = null;
-        if(!StringUtils.isBlank(batchJobDTO.getLocationScopeUuid())) {
-            locationScope = Context.getLocationService().getLocationByUuid(batchJobDTO.getLocationScopeUuid());
-            /*if(locationScope == null){
-                invalidRequest(Context.getMessageSourceService().getMessage("labmanagement.batchjob.fieldvaluenotexist"), "report");
-            }*/
+        if(!StringUtils.isBlank(batchJobDTO.getLocationScope())){
+            locationScope = Context.getLocationService().getLocationByUuid(batchJobDTO.getLocationScope());
         }
-
         BatchJobSearchFilter batchJobSearchFilter=new BatchJobSearchFilter();
-        batchJobSearchFilter.setBatchJobType(batchJobDTO.getBatchJobType());
+        batchJobSearchFilter.setBatchJobTypes( Arrays.asList(batchJobDTO.getBatchJobType()));
+
+        Map<?,?> hashMap = batchJobDTO.getReportParameters() == null ? null :
+                batchJobDTO.getReportParameters().entrySet().stream().collect(
+                        Collectors.toMap(Map.Entry::getKey, p -> p.getValue() == null ? new LinkedHashMap<String, Object>() : p.getValue().toMap()));
+        if(hashMap != null){
+            if(batchJobDTO.getParametersMap() != null) {
+                hashMap = MapUtil.deepMerge(batchJobDTO.getParametersMap(), hashMap, 5);
+            }
+        }else{
+            hashMap = batchJobDTO.getParametersMap();
+        }
+        batchJobDTO.setParameters( hashMap == null ? batchJobDTO.getParameters() : GenericObject.toJson(hashMap));
+
         batchJobSearchFilter.setParameters(batchJobDTO.getParameters());
         batchJobSearchFilter.setPrivilegeScope(batchJobDTO.getPrivilegeScope());
-        if(locationScope != null) {
-            batchJobSearchFilter.setLocationScopeIds(Arrays.asList(locationScope.getId()));
-        }
         batchJobSearchFilter.setBatchJobStatus(Arrays.asList(BatchJobStatus.Pending, BatchJobStatus.Running));
         Result<BatchJobDTO> pendingSimilarJobs = findBatchJobs(batchJobSearchFilter);
         BatchJob batchJob = null;
@@ -3311,7 +3321,6 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             batchJob.setExpiration(DateUtils.addMinutes(new Date(), GlobalProperties.getBatchJobExpiryInMinutes()));
             batchJob.setParameters(batchJobDTO.getParameters());
             batchJob.setPrivilegeScope(batchJobDTO.getPrivilegeScope());
-
             if (locationScope != null) {
                 batchJob.setLocationScope(locationScope);
             }

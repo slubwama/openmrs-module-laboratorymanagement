@@ -59,7 +59,11 @@ public class DateUtil {
 	}
 
 	public static String formatDateForJson(Date dateValue) {
-		DateTimeFormatter dtf = DateTimeFormat.forPattern(DATE_FORMAT);
+        return formatDateForJson(dateValue, DATE_FORMAT);
+	}
+
+	public static String formatDateForJson(Date dateValue, String format) {
+		DateTimeFormatter dtf = DateTimeFormat.forPattern(format);
 		return dtf.print(dateValue.getTime());
 	}
 
