@@ -231,8 +231,8 @@ public class EntityUtil {
 		testRequestItem.setRequestApprovalBy(getUser());
 		testRequestItem.setRequestApprovalDate(getRandomDate());
 		testRequestItem.setRequestApprovalRemarks(getRandomString(500));
-		testRequestItem.setInitialSampleId(getRandomInt());
-		testRequestItem.setFinalResultId(getRandomInt());
+		testRequestItem.setInitialSample(null);
+		testRequestItem.setFinalResult(null);
 		testRequestItem.setStatus((TestRequestItemStatus) getRandomEnum(TestRequestItemStatus.class));
 		testRequestItem.setEncounter(getEncounter());
 		TestRequest testRequest=newTestRequest(dao);

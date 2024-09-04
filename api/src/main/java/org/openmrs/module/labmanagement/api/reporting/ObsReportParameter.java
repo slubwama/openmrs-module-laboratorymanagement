@@ -54,6 +54,7 @@ public class ObsReportParameter extends ReportParameterValue<ObsValue> {
         if(concept == null){
             throw new LabManagementException("concept with uuid not found");
         }
+        obsValue.setConceptId(concept.getId());
         obsValue.setConceptUuid(concept.getUuid());
         obsValue.setDisplay(concept.getDisplayString());
         obsValue.setNumeric(concept.isNumeric());
@@ -63,24 +64,38 @@ public class ObsReportParameter extends ReportParameterValue<ObsValue> {
         obsValue.setSet(concept.getSetMembers() != null && !concept.getSetMembers().isEmpty());
 
         if(obsValue.isCoded() || obsValue.isNumeric() || obsValue.isText()) {
-            Object rawValue = attributes.get("value");
-            if(rawValue != null){
-                if(obsValue.isText()){
-                    obsValue.valueText = StringReportParameter.parse(rawValue);
-                }
-                else if(obsValue.isNumeric()){
-                    obsValue.valueNumeric = new BigDecimal(StringReportParameter.parse(rawValue));
-                }else if(obsValue.isCoded){
-                    Map<?, ?> rawValueAttributes = (Map<?, ?>)rawValue;
-                    String rawConceptUuid = StringReportParameter.parse(rawValueAttributes.get("uuid"));
-                    if(StringUtils.isNotBlank(rawConceptUuid)) {
-                        Concept codedConcept = conceptService.getConceptByUuid(rawConceptUuid);
-                        if(codedConcept == null) {
-                            throw new LabManagementException("Coded concept with given uuid not found");
+            if(obsValue.isCoded() || obsValue.isText()) {
+                Object rawValue = attributes.getOrDefault("value", null);
+                if (rawValue != null) {
+                    if (obsValue.isText()) {
+                        obsValue.valueText = StringReportParameter.parse(rawValue);
+                    }else if (obsValue.isCoded) {
+                        Map<?, ?> rawValueAttributes = (Map<?, ?>) rawValue;
+                        String rawConceptUuid = StringReportParameter.parse(rawValueAttributes.getOrDefault("uuid", null));
+
+                        if (StringUtils.isNotBlank(rawConceptUuid)) {
+                            Concept codedConcept = conceptService.getConceptByUuid(rawConceptUuid);
+                            if (codedConcept == null) {
+                                throw new LabManagementException("Coded concept with given uuid not found");
+                            }
+                            obsValue.setValueUuid(codedConcept.getUuid());
+                            obsValue.setValueConceptId(codedConcept.getConceptId());
+                            Object valueDescription = attributes.getOrDefault("valueDescription", null);
+                            if(valueDescription == null) {
+                                    obsValue.setValueDescription(codedConcept.getDisplayString());
+
+                            }
                         }
-                        obsValue.setValueUuid(codedConcept.getUuid());
-                        obsValue.setValueDescription(codedConcept.getDisplayString());
                     }
+                }
+            } else if (obsValue.isNumeric()) {
+                String minValueTxt =  StringReportParameter.parse(attributes.getOrDefault("minValue", null));
+                String maxValueTxt =   StringReportParameter.parse(attributes.getOrDefault("maxValue", null));
+                if(StringUtils.isNotBlank(minValueTxt)) {
+                    obsValue.setMinValue(BigDecimalReportParameter.parse(minValueTxt));
+                }
+                if(StringUtils.isNotBlank(maxValueTxt)) {
+                    obsValue.setMaxValue(BigDecimalReportParameter.parse(maxValueTxt));
                 }
             }
         }

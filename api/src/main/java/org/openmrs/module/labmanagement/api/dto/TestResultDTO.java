@@ -76,6 +76,8 @@ public class TestResultDTO {
     private Boolean canUpdate;
     private List<TestApprovalDTO> approvals;
     private Map<String, Object> requestContextItems;
+    private String atLocationUuid;
+    private String atLocationName;
 
     public Integer getId() {
         return id;
@@ -730,5 +732,21 @@ public class TestResultDTO {
 
     public void setRequestContextItems(Map<String, Object> requestContextItems) {
         this.requestContextItems = requestContextItems;
+    }
+
+    public String getAtLocationUuid() {
+        return atLocationUuid;
+    }
+
+    public void setAtLocationUuid(String atLocationUuid) {
+        this.atLocationUuid = atLocationUuid;
+    }
+
+    public String getAtLocationName() {
+        return atLocationName;
+    }
+
+    public void setAtLocationName(String atLocationName) {
+        this.atLocationName = atLocationName;
     }
 }

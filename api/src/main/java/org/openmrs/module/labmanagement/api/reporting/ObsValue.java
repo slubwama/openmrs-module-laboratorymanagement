@@ -7,11 +7,12 @@ import java.util.List;
 
 public class ObsValue {
     String conceptUuid;
+    Integer conceptId;
     String display;
     String valueDescription;
     String valueText;
     String valueUuid;
-    BigDecimal valueNumeric;
+    Integer valueConceptId;
     BigDecimal minValue;
     BigDecimal maxValue;
     List<ObsValue> groupMembers;
@@ -116,12 +117,20 @@ public class ObsValue {
         this.valueUuid = valueUuid;
     }
 
-    public BigDecimal getValueNumeric() {
-        return valueNumeric;
+    public Integer getValueConceptId() {
+        return valueConceptId;
     }
 
-    public void setValueNumeric(BigDecimal valueNumeric) {
-        this.valueNumeric = valueNumeric;
+    public void setValueConceptId(Integer valueConceptId) {
+        this.valueConceptId = valueConceptId;
+    }
+
+    public Integer getConceptId() {
+        return conceptId;
+    }
+
+    public void setConceptId(Integer conceptId) {
+        this.conceptId = conceptId;
     }
 
     public LinkedHashMap<String, Object> toLinkedHashMap() {
@@ -131,13 +140,12 @@ public class ObsValue {
         linkedHashMap.put("valueDescription", valueDescription);
         if(isText()){
             linkedHashMap.put("value", valueText);
-        }else if(isCoded() && getValueText() != null){
+        }else if(isCoded() && getValueUuid() != null){
             LinkedHashMap<String, Object> uuid=new LinkedHashMap<>();
             uuid.put("uuid", valueUuid);
             linkedHashMap.put("value", uuid);
         }
         else if(isNumeric()){
-            linkedHashMap.put("value", valueNumeric);
             if(minValue != null){
                 linkedHashMap.put("minValue", minValue);
             }

@@ -254,8 +254,6 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             description.addProperty("requestApprovalFamilyName");
             description.addProperty("requestApprovalDate");
             description.addProperty("requestApprovalRemarks");
-            description.addProperty("initialSampleUuid");
-            description.addProperty("finalResultUuid");
             description.addProperty("uuid");
             description.addProperty("encounterUuid");
             description.addProperty("referralOutSampleUuid");

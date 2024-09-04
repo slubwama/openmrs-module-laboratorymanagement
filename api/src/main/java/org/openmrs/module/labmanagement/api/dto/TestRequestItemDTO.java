@@ -48,9 +48,9 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
     private Date requestApprovalDate;
     private String requestApprovalRemarks;
     private Integer initialSampleId;
-    private String initialSampleUuid;
+    /*private String initialSampleUuid;
     private Integer finalResultId;
-    private String finalResultUuid;
+    private String finalResultUuid;*/
     private String uuid;
     private String encounterUuid;
     private String referralOutSampleUuid;
@@ -220,22 +220,6 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
 
     public void setRequestApprovalRemarks(String requestApprovalRemarks) {
         this.requestApprovalRemarks = requestApprovalRemarks;
-    }
-
-    public String getInitialSampleUuid() {
-        return initialSampleUuid;
-    }
-
-    public void setInitialSampleUuid(String initialSampleUuid) {
-        this.initialSampleUuid = initialSampleUuid;
-    }
-
-    public String getFinalResultUuid() {
-        return finalResultUuid;
-    }
-
-    public void setFinalResultUuid(String finalResultUuid) {
-        this.finalResultUuid = finalResultUuid;
     }
 
     public String getUuid() {
@@ -488,14 +472,6 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
 
     public void setInitialSampleId(Integer initialSampleId) {
         this.initialSampleId = initialSampleId;
-    }
-
-    public Integer getFinalResultId() {
-        return finalResultId;
-    }
-
-    public void setFinalResultId(Integer finalResultId) {
-        this.finalResultId = finalResultId;
     }
 
     public List<SampleDTO> getSamples() {

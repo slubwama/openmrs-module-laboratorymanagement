@@ -129,55 +129,12 @@ public class WorksheetTestResultResource extends ResourceBase<WorksheetTestResul
 
         List<TestResultDTO> itemsToUpdate = new ArrayList<>();
 
-        // Some resources do not have delegating resource description
-        /*LabManagementService labManagementService = getLabManagementService();*/
         for (Map<String, ?> item : items) {
             TestResultDTO itemDTO = new TestResultDTO();
-            /*String obsUuid = null;
-            TestResult testResult = null;
-            if(item.containsKey("worksheetItemUuid")){
-                Object object = item.get("worksheetItemUuid");
-                if(object != null && StringUtils.isNotBlank((String) object)){
-                    List<TestResult> testResults = labManagementService.getTestResultByWorksheetItem((String)object);
-                    if(!testResults.isEmpty()){
-                        testResult = testResults.get(0);
-                        obsUuid = testResult.getObs().getUuid();
-                    }
-                }
-            }
-            if(itemDTO.getObs() == null){
-                if(item.containsKey("testRequestItemSampleUuid")){
-                    Object object = item.get("testRequestItemSampleUuid");
-                    if(object != null && StringUtils.isNotBlank((String) object)){
-                        List<TestResult> testResults = labManagementService.getTestResultByTestRequestItemSample((String)object);
-                        if(!testResults.isEmpty()){
-                            testResult = testResults.get(0);
-                            obsUuid = testResult.getObs().getUuid();
-                        }
-                    }
-                }
-            }*/
             for (Map.Entry<String, DelegatingResourceDescription.Property> prop : creatableProperties.getProperties().entrySet()) {
                 if (item.containsKey(prop.getKey()) && !RestConstants.PROPERTY_FOR_TYPE.equals(prop.getKey())) {
                     Object object = item.get(prop.getKey());
-                    /*if(prop.getKey().equals("obs") && object != null && obsUuid != null){
-                        try {
-                            Map<String, Object> objRecord = (Map<String, Object>) object;
-                            objRecord.put("uuid", obsUuid);
-                            if(testResult != null){
-                                handler.setProperty(testResult, prop.getKey(), object);
-                                itemDTO.setObs(testResult.getObs());
-                            }else{
-                                handler.setProperty(itemDTO, prop.getKey(), object);
-                            }
-                        }catch (Exception exception){
-                            handler.setProperty(itemDTO, prop.getKey(), object);
-                            log.error(exception);
-                        }
-                    }else{*/
-                        handler.setProperty(itemDTO, prop.getKey(), object);
-                    /*}*/
-
+                    handler.setProperty(itemDTO, prop.getKey(), object);
                 }
             }
             itemsToUpdate.add(itemDTO);

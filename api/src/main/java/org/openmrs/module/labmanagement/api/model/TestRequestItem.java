@@ -65,11 +65,13 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
     @Column(name = "request_approval_remarks", length = 500)
     private String requestApprovalRemarks;
 
-    @Column(name = "initial_sample_id")
-    private Integer initialSampleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "initial_sample_id", nullable = true)
+    private Sample initialSample;
 
-    @Column(name = "final_result_id")
-    private Integer finalResultId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "final_result_id", nullable = true)
+    private TestResult finalResult;
 
     @Column(name = "status", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
@@ -235,20 +237,20 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
         this.requestApprovalRemarks = requestApprovalRemarks;
     }
 
-    public Integer getInitialSampleId() {
-        return initialSampleId;
+    public Sample getInitialSample() {
+        return initialSample;
     }
 
-    public void setInitialSampleId(Integer initialSampleId) {
-        this.initialSampleId = initialSampleId;
+    public void setInitialSample(Sample initialSample) {
+        this.initialSample = initialSample;
     }
 
-    public Integer getFinalResultId() {
-        return finalResultId;
+    public TestResult getFinalResult() {
+        return finalResult;
     }
 
-    public void setFinalResultId(Integer finalResultId) {
-        this.finalResultId = finalResultId;
+    public void setFinalResult(TestResult finalResult) {
+        this.finalResult = finalResult;
     }
 
     public TestRequestItemStatus getStatus() {

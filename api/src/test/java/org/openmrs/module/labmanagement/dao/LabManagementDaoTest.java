@@ -154,8 +154,8 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedTestRequestItem, hasProperty("requestApprovalBy", is(testRequestItem.getRequestApprovalBy())));
         assertThat(savedTestRequestItem, hasProperty("requestApprovalDate", is(testRequestItem.getRequestApprovalDate())));
         assertThat(savedTestRequestItem, hasProperty("requestApprovalRemarks", is(testRequestItem.getRequestApprovalRemarks())));
-        assertThat(savedTestRequestItem, hasProperty("initialSampleId", is(testRequestItem.getInitialSampleId())));
-        assertThat(savedTestRequestItem, hasProperty("finalResultId", is(testRequestItem.getFinalResultId())));
+        assertThat(savedTestRequestItem, hasProperty("initialSample", is(testRequestItem.getInitialSample())));
+        assertThat(savedTestRequestItem, hasProperty("finalResult", is(testRequestItem.getFinalResult())));
         assertThat(savedTestRequestItem, hasProperty("status", is(testRequestItem.getStatus())));
         assertThat(savedTestRequestItem, hasProperty("encounter", is(testRequestItem.getEncounter())));
         assertThat(savedTestRequestItem, hasProperty("referralOutSample", is(testRequestItem.getReferralOutSample())));
@@ -187,8 +187,8 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedTestRequestItem, hasProperty("requestApprovalBy", is(testRequestItem.getRequestApprovalBy())));
         assertThat(savedTestRequestItem, hasProperty("requestApprovalDate", is(testRequestItem.getRequestApprovalDate())));
         assertThat(savedTestRequestItem, hasProperty("requestApprovalRemarks", is(testRequestItem.getRequestApprovalRemarks())));
-        assertThat(savedTestRequestItem, hasProperty("initialSampleId", is(testRequestItem.getInitialSampleId())));
-        assertThat(savedTestRequestItem, hasProperty("finalResultId", is(testRequestItem.getFinalResultId())));
+        assertThat(savedTestRequestItem, hasProperty("initialSample", is(testRequestItem.getInitialSample())));
+        assertThat(savedTestRequestItem, hasProperty("finalResult", is(testRequestItem.getFinalResult())));
         assertThat(savedTestRequestItem, hasProperty("status", is(testRequestItem.getStatus())));
         assertThat(savedTestRequestItem, hasProperty("encounter", is(testRequestItem.getEncounter())));
         assertThat(savedTestRequestItem, hasProperty("referralOutSample", is(testRequestItem.getReferralOutSample())));

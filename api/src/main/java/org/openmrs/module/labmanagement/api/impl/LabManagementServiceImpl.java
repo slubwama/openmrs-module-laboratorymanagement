@@ -2082,10 +2082,13 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItemSample.setSample(sample);
                 testRequestItemSample.setTestRequestItem(testRequestItems.get(testToAdd));
                 samplesAdded.add(dao.saveTestRequestItemSample(testRequestItemSample));
-                if(testRequestItemSample.getTestRequestItem().getInitialSampleId() == null){
-                    testRequestItemSample.getTestRequestItem().setInitialSampleId(sample.getId());
+
+                if(testRequestItemSample.getTestRequestItem().getInitialSample() == null ||
+                        !testRequestItemSample.getTestRequestItem().getInitialSample().getId().equals(sample.getId())) {
+                    testRequestItemSample.getTestRequestItem().setInitialSample(sample);
                     dao.saveTestRequestItem(testRequestItemSample.getTestRequestItem());
                 }
+
             }
         }
         Map<Integer, String> instructionUpdate = null;
@@ -2244,7 +2247,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItem.setStatus(TestRequestItemStatus.REFERRED_OUT_LAB);
                 testRequestItem.setChangedBy(Context.getAuthenticatedUser());
                 testRequestItem.setDateChanged(new Date());
-                testRequestItem.setInitialSampleId(referredOutSample.get().getId());
+                testRequestItem.setInitialSample(referredOutSample.get());
                 testRequestItem.setReferralOutOrigin(ReferralOutOrigin.Laboratory);
                 testRequestItem.setReferralOutSample(referredOutSample.get());
 
@@ -2266,7 +2269,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItem.setStatus(TestRequestItemStatus.IN_PROGRESS);
                 testRequestItem.setChangedBy(Context.getAuthenticatedUser());
                 testRequestItem.setDateChanged(new Date());
-                testRequestItem.setInitialSampleId(initialSample.get().getId());
+                testRequestItem.setInitialSample(initialSample.get());
                 testRequestItem.setReferralOutOrigin(null);
                 testRequestItem.setReferralOutSample(null);
 
@@ -2914,6 +2917,16 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 invalidRequest("labmanagement.fieldrequired", "Result observations");
             }
 
+            if(StringUtils.isBlank(testResultDTO.getAtLocationUuid())){
+                invalidRequest("labmanagement.fieldrequired", "Current user location");
+            }
+
+            Location atLocation = Context.getLocationService().getLocationByUuid(testResultDTO.getAtLocationUuid());
+            if(atLocation == null){
+                invalidRequest("labmanagement.thingnotexists",  "Current user location");
+            }
+            testResult.setAtLocation(atLocation);
+
         } else {
             testResult = dao.getTestResultByUuid(testResultDTO.getUuid());
             if (testResult == null) {
@@ -3092,8 +3105,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             onTestResultCompleted(testResult);
         }
 
-        if(testResult.getTestRequestItemSample().getTestRequestItem().getFinalResultId() == null){
-            testResult.getTestRequestItemSample().getTestRequestItem().setFinalResultId(testResult.getId());
+        if(testResult.getTestRequestItemSample().getTestRequestItem().getFinalResult() == null ||
+        !testResult.getTestRequestItemSample().getTestRequestItem().getFinalResult().equals(testResult.getId())){
+            testResult.getTestRequestItemSample().getTestRequestItem().setFinalResult(testResult);
             dao.saveTestRequestItem(testResult.getTestRequestItemSample().getTestRequestItem());
         }
 
@@ -3530,13 +3544,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         Obs orderObs = order.getEncounter().getObs().stream().filter(p->p.getOrder() != null &&
                 p.getOrder().getOrderId().equals(order.getOrderId())).max(Comparator.comparing(Obs::getId)).orElse(null);
         testRequestItem.setCompleted(false);
-        if(testRequest.getStatus() == TestRequestStatus.COMPLETED){
-            testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
-            testRequestItem.setCompleted(true);
-        } else if(testRequest.getStatus() == TestRequestStatus.CANCELLED){
-            testRequestItem.setStatus(TestRequestItemStatus.CANCELLED);
-        }
-        else if(testRequestItem.getReferredOut()){
+        if(testRequestItem.getReferredOut()){
             if(orderObs == null){
                 testRequestItem.setStatus(TestRequestItemStatus.REFERRED_OUT_LAB);
             }else{
@@ -3544,7 +3552,13 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
                 testRequestItem.setCompleted(true);
             }
-        }else if(orderObs != null){
+        } else if(testRequest.getStatus() == TestRequestStatus.COMPLETED){
+            testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
+            testRequestItem.setCompleted(true);
+        } else if(testRequest.getStatus() == TestRequestStatus.CANCELLED){
+            testRequestItem.setStatus(TestRequestItemStatus.CANCELLED);
+        }
+        else if(orderObs != null){
             testRequestItem.setStatus(TestRequestItemStatus.IN_PROGRESS);
         } else if(StringUtils.isBlank(order.getAccessionNumber())){
             testRequestItem.setStatus(TestRequestItemStatus.SAMPLE_COLLECTION);
@@ -3602,6 +3616,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testResult.setObs(orderObs);
             testResult.setResultBy(orderObs.getCreator());
             testResult.setStatus("Approval Not Required");
+            testResult.setAtLocation(testRequest.getAtLocation());
             testResult.setResultDate(order.getDateCreated());
             testResult.setCompleted(TestRequestItemStatus.isCompletedProcess(testRequestItem.getStatus()));
             testResult.setCompletedResult(testResult.getCompleted() ? !TestRequestItemStatus.CANCELLED.equals(testRequestItem.getStatus()) :
@@ -3647,6 +3662,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
                 testRequestItem.setCompleted(true);
                 testRequest.setStatus(TestRequestStatus.COMPLETED);
+                testResult.setStatus("Approved");
                 testResult.setCompleted(true);
                 testResult.setRequireApproval(false);
                 testResult.setCompletedDate(order.getDateActivated());
@@ -3659,6 +3675,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testRequestItem.setCompleted(true);
             testRequest.setStatus(TestRequestStatus.COMPLETED);
             testResult.setCompleted(true);
+            testResult.setStatus("Approved");
             testResult.setCompletedDate(order.getDateActivated());
             testResult.setCompletedResult(testRequestItem.getStatus().equals(TestRequestItemStatus.COMPLETED));
             testResult.setRequireApproval(false);
@@ -3696,11 +3713,11 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         boolean saveTestRequest = false;
         if(sample != null) {
-            testRequestItem.setInitialSampleId(sample.getId());
+            testRequestItem.setInitialSample(sample);
             saveTestRequest=true;
         }
         if(testResult != null) {
-            testRequestItem.setFinalResultId(testResult.getId());
+            testRequestItem.setFinalResult(testResult);
             saveTestRequest=true;
         }
 
@@ -3709,5 +3726,64 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
 
         return new Pair<>(true, null);
+    }
+
+    public Result<TestRequestReportItem> findTestRequestReportItems(TestRequestReportItemFilter filter){
+        Result<TestRequestReportItem> result = dao.findTestRequestReportItems(filter);
+        List<UserPersonNameDTO> personNames = dao.getPersonNameByUserIds(result.getData().stream().map(p -> Arrays.asList(
+                p.getCreator(),
+                p.getCollectedBy(),
+                p.getResultBy(),
+                p.getCurrentApprovalBy(),
+                p.getRequestApprovalBy()
+        )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        for (TestRequestReportItem testRequestDTO : result.getData()) {
+            if (testRequestDTO.getCreator() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCreator())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCreatorMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getRequestApprovalBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getRequestApprovalBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setRequestApprovalFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setRequestApprovalMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setRequestApprovalGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getCollectedBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCollectedBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCollectedByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCollectedByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCollectedByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getResultBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getResultBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setResultByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setResultByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setResultByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getCurrentApprovalBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCurrentApprovalBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCurrentApprovalByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCurrentApprovalByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCurrentApprovalByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+        }
+        return result;
+    }
+
+    public Map<Integer, List<ObsDto>> getObservations(List<Integer> orderIds){
+        return dao.getObservations(orderIds);
     }
 }

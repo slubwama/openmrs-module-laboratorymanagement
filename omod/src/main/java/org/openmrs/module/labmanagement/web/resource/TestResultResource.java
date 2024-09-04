@@ -170,6 +170,7 @@ public class TestResultResource extends ResourceBase<TestResultDTO> {
         description.addProperty("testRequestItemSampleUuid");
         description.addProperty("obs");
         description.addProperty("remarks");
+        description.addProperty("atLocationUuid");
         description.addProperty("additionalTestsRequired");
         description.addProperty("archiveSample");
         return description;
@@ -221,6 +222,8 @@ public class TestResultResource extends ResourceBase<TestResultDTO> {
             description.addProperty("completed");
             description.addProperty("completedResult");
             description.addProperty("completedDate");
+            description.addProperty("atLocationUuid");
+            description.addProperty("atLocationName");
             description.addProperty("obs");
             description.addProperty("approvalPrivilege");
             description.addProperty("currentApprovalLevel");
@@ -287,6 +290,8 @@ public class TestResultResource extends ResourceBase<TestResultDTO> {
             modelImpl.property("additionalTestsRequired", new BooleanProperty());
             modelImpl.property("archiveSample", new BooleanProperty());
             modelImpl.property("remarks", new StringProperty());
+            modelImpl.property("atLocationUuid", new StringProperty());
+            modelImpl.property("atLocationName", new StringProperty());
             modelImpl.property("creatorUuid", new StringProperty());
             modelImpl.property("creatorGivenName", new StringProperty());
             modelImpl.property("creatorFamilyName", new StringProperty());

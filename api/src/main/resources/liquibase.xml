@@ -1695,4 +1695,46 @@
       </column>
     </addColumn>
   </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-790">
+    <createIndex indexName="labmgmt_test_request_item_initial_sample_fk" tableName="labmgmt_test_request_item">
+      <column name="initial_sample_id" />
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-791">
+    <createIndex indexName="labmgmt_test_request_item_final_result_fk" tableName="labmgmt_test_request_item">
+      <column name="final_result_id" />
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1791">
+    <addForeignKeyConstraint baseColumnNames="initial_sample_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_initial_sample_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="sample_id" referencedTableName="labmgmt_sample" />
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1792">
+    <addForeignKeyConstraint baseColumnNames="final_result_id" baseTableName="labmgmt_test_request_item" constraintName="labmgmt_test_request_item_final_result_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="test_result_id" referencedTableName="labmgmt_test_result" />
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1793">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_test_result"/>
+      <not>
+        <columnExists tableName="labmgmt_test_result" columnName="at_location_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_test_result">
+      <column name="at_location_id" type="INT">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1794">
+    <createIndex indexName="labmgmt_test_result_at_location_fk" tableName="labmgmt_test_result">
+      <column name="at_location_id" />
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1795">
+    <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_test_result" constraintName="labmgmt_test_result_at_location_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location" />
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-1796">
+    <createIndex indexName="labmgmt_order_concept_idx" tableName="obs">
+      <column name="order_id" />
+      <column name="concept_id" />
+    </createIndex>
+  </changeSet>
 </databaseChangeLog>

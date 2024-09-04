@@ -22,9 +22,11 @@ import java.util.function.Function;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
+import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.module.labmanagement.api.utils.csv.CSVWriter;
+
 import java.io.Writer;
 
 public class DataMigrationJob extends AsyncTaskJob {
@@ -99,6 +101,9 @@ public class DataMigrationJob extends AsyncTaskJob {
         if(afterOrderId == null){
             afterOrderId = GlobalProperties.getLastMigratedOrderId();
         }
+        if(endDate != null){
+            endDate = DateUtil.endOfDay(endDate);
+        }
 
         CSVWriter csvWriter = null;
         Writer writer = null;
@@ -147,10 +152,10 @@ public class DataMigrationJob extends AsyncTaskJob {
                     pageIndex++;
                     Order lastRecord = data.get(data.size() - 1);
                     GlobalProperties.setLastMigratedOrderId(lastRecord.getId());
-                    updateExecutionState(batchJob, executionState, 0, recordsProcessed, lastRecord.getId(),
+                    updateExecutionState(batchJob, executionState, 0, recordsProcessed, lastRecord.getId(),null,
                             labManagementService, null);
                 } else if (pageIndex == 0) {
-                    updateExecutionState(batchJob, executionState, 0, recordsProcessed, null,
+                    updateExecutionState(batchJob, executionState, 0, recordsProcessed, null,null,
                             labManagementService, null);
                 }
 

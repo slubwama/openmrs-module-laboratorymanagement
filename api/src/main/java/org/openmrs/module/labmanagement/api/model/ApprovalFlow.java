@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.api.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import org.openmrs.BaseChangeableOpenmrsData;
 import org.openmrs.api.context.Context;
 
@@ -214,31 +213,31 @@ public class ApprovalFlow extends BaseChangeableOpenmrsData implements Serializa
     public void setNextTestApproval(TestResult testResult, TestApproval currentApproval, Integer currentApprovalLevel) {
         if(currentApprovalLevel <= 0 ){
             if(levelOne == null){
-                testResult.completeTestResult();
+                testResult.completeTestResult("Approved Not Required");
             }else{
                 setNextTestApproval(testResult,currentApproval, getLevelOne(),1);
             }
         }else if(currentApprovalLevel <= 1 ){
             if(levelTwo == null){
-                testResult.completeTestResult();
+                testResult.completeTestResult("Approved");
             }else{
                 setNextTestApproval(testResult,currentApproval, getLevelTwo(),2);
             }
         }else if(currentApprovalLevel <= 2){
             if(levelThree == null){
-                testResult.completeTestResult();
+                testResult.completeTestResult("Approved");
             }else{
                 setNextTestApproval(testResult,currentApproval, getLevelThree(),3);
             }
         }
         else if(currentApprovalLevel <= 3){
             if(levelFour == null){
-                testResult.completeTestResult();
+                testResult.completeTestResult("Approved");
             }else{
                 setNextTestApproval(testResult,currentApproval, getLevelFour(),4);
             }
         }else{
-            testResult.completeTestResult();
+            testResult.completeTestResult("Approved");
         }
     }
 }

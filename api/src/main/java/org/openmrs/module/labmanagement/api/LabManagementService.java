@@ -325,4 +325,8 @@ public interface LabManagementService extends OpenmrsService {
 
     @Transactional
     Pair<Boolean, String> migrateOrder(Order order);
+
+    Result<TestRequestReportItem> findTestRequestReportItems(TestRequestReportItemFilter filter);
+
+    Map<Integer, List<ObsDto>> getObservations(List<Integer> orderIds);
 }

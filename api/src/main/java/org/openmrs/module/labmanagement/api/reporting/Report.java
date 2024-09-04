@@ -4,6 +4,7 @@ import liquibase.pro.packaged.B;
 import org.openmrs.module.labmanagement.api.jobs.AsyncTaskJob;
 import org.openmrs.module.labmanagement.api.jobs.DataMigrationJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobType;
+import org.openmrs.module.labmanagement.api.reporting.impl.DailyTestRegisterReport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +98,9 @@ public class Report {
 	public static List<Report> getAllReports(){
         List<Report> reports = new ArrayList<>();
 		reports.add(new Report("2ca9be51-6770-11ef-b6d8-00155d50337b", 1000, BatchJobType.Migration,"Data Migration","DATA_MIGRATION_REPORT", new ParameterRule[]{isRequired(ReportParameter.StartDate), isRequired(ReportParameter.EndDate)}, DataMigrationJob.class));
+		reports.add(new Report("2ca9be51-6771-11ef-b6d8-00155d50337b", 1, BatchJobType.Report,"Daily Test Register","DAILY_TEST_REGISTER_REPORT", new ParameterRule[]{isRequired(ReportParameter.StartDate), isRequired(ReportParameter.EndDate)
+				, isOptional(ReportParameter.TestType), isOptional(ReportParameter.TestApprover), isOptional(ReportParameter.TestOutcome)
+				, isOptional(ReportParameter.Patient), isOptional(ReportParameter.ReferralLocation), isOptional(ReportParameter.DiagnosticLocation)}, DailyTestRegisterReport.class));
 
         return reports;
     }

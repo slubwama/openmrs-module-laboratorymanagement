@@ -1,8 +1,10 @@
 package org.openmrs.module.labmanagement.api.jobs;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.openmrs.module.labmanagement.api.LabManagementService;
+import org.openmrs.module.labmanagement.api.dto.ObsDto;
 import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobStatus;
 import org.openmrs.module.labmanagement.api.reporting.*;
@@ -18,8 +20,12 @@ import java.io.Writer;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class AsyncTaskJob {
     private volatile boolean stopExecution = false;
@@ -29,6 +35,7 @@ public abstract class AsyncTaskJob {
     protected Integer recordsProcessed = 0;
 
     protected Integer lastRecordProcessed = 0;
+    protected Integer lastTestRequestProcessed = 0;
 
     protected Integer executionStep = 0;
 
@@ -92,12 +99,17 @@ public abstract class AsyncTaskJob {
         return null;
     }
 
+    public void setLastTestRequestProcessed(GenericObject properties, Integer lastTestRequestProcessed) {
+        setParameter(properties, "LastTestRequestProcessed", "Last Test Request Processed", lastTestRequestProcessed.toString(),
+                NumberFormatUtil.integerDisplayFormat(lastTestRequestProcessed));
+    }
+
     public void setLastRecordProcessed(GenericObject properties, Integer lastRecordProcessed) {
         setParameter(properties, "LastRecordProcessed", "Last Record Processed", lastRecordProcessed.toString(),
                 NumberFormatUtil.integerDisplayFormat(lastRecordProcessed));
     }
 
-    public void setExecutionStep(GenericObject properties, Integer lastRecordProcessed) {
+    public void setExecutionStep(GenericObject properties, Integer executionStep) {
         setParameter(properties, "ExecutionStep", "Execution Step", executionStep.toString(),
                 NumberFormatUtil.integerDisplayFormat(executionStep));
     }
@@ -105,6 +117,19 @@ public abstract class AsyncTaskJob {
     public Integer getExecutionStep(GenericObject properties) {
         try {
             String key = "ExecutionStep";
+            if (properties.containsKey(key)) {
+                StringReportParameter stringReportParameter=new StringReportParameter();
+                stringReportParameter.setValueFromMap(properties.get(key));
+                return  stringReportParameter.isValueSet() ?  Integer.parseInt(stringReportParameter.getValue()) : null;
+            }
+        }
+        catch (Exception exception) {}
+        return null;
+    }
+
+    public Integer getLastTestRequestProcessed(GenericObject properties) {
+        try {
+            String key = "LastTestRequestProcessed";
             if (properties.containsKey(key)) {
                 StringReportParameter stringReportParameter=new StringReportParameter();
                 stringReportParameter.setValueFromMap(properties.get(key));
@@ -217,6 +242,10 @@ public abstract class AsyncTaskJob {
         return getReportParameterString(properties, ReportParameter.TestType);
     }
 
+    public String getReferralLocation(GenericObject properties) {
+        return getReportParameterString(properties, ReportParameter.ReferralLocation);
+    }
+
     public String getTestApprover(GenericObject properties) {
         return getReportParameterString(properties, ReportParameter.TestApprover);
     }
@@ -258,6 +287,7 @@ public abstract class AsyncTaskJob {
                 pageIndex = getCurrentPageIndex(executionState);
                 recordsProcessed = getRecordsProcessed(executionState);
                 lastRecordProcessed = getLastRecordProcessed(executionState);
+                lastTestRequestProcessed = getLastTestRequestProcessed(executionState);
                 executionStep = getExecutionStep(executionState);
                 hasRestoredExecutionState = true;
             }
@@ -268,6 +298,7 @@ public abstract class AsyncTaskJob {
         pageIndex = pageIndex == null ? 0 : pageIndex;
         recordsProcessed = recordsProcessed == null ? 0 : recordsProcessed;
         lastRecordProcessed = lastRecordProcessed == null ? 0 : lastRecordProcessed;
+        lastTestRequestProcessed = lastTestRequestProcessed == null ? 0 : lastTestRequestProcessed;
         resultsFile = new File(FileUtil.getBatchJobFolder(), batchJob.getUuid());
         if (resetExecutionState) {
             executionState = null;
@@ -294,27 +325,34 @@ public abstract class AsyncTaskJob {
     protected void updateExecutionState(BatchJob batchJob, GenericObject properties, Integer currentPageIndex,
                                         Integer recordsProcessed, Integer lastRecordProcessed, LabManagementService labManagementService)
             throws IOException {
-        updateExecutionState(batchJob, properties, currentPageIndex, recordsProcessed, lastRecordProcessed,
+        updateExecutionState(batchJob, properties, currentPageIndex, recordsProcessed, lastRecordProcessed, null,
                 labManagementService, null);
     }
 
     protected void updateExecutionState(BatchJob batchJob, GenericObject properties, Integer currentPageIndex,
-                                        Integer recordsProcessed, Integer lastRecordProcessed,
+                                        Integer recordsProcessed, Integer lastRecordProcessed, Integer lastTestRequestProcessed,
                                         LabManagementService labManagementService, Integer executionStep) throws IOException {
 
         setCurrentPageIndex(properties, currentPageIndex);
         if (recordsProcessed != null) {
             setRecordsProcessed(properties, recordsProcessed);
         }
+
         if (lastRecordProcessed != null) {
             setLastRecordProcessed(properties, lastRecordProcessed);
         }
+
+        if(lastTestRequestProcessed != null){
+            setLastTestRequestProcessed(properties, lastTestRequestProcessed);
+        }
+
         if (executionStep != null) {
             setExecutionStep(properties, executionStep);
         }
         pageIndex = currentPageIndex;
         this.recordsProcessed = recordsProcessed;
         this.lastRecordProcessed = lastRecordProcessed;
+        this.lastTestRequestProcessed = lastTestRequestProcessed;
         this.executionStep = executionStep;
 
         if (executionState != null) {
@@ -352,5 +390,34 @@ public abstract class AsyncTaskJob {
 
     public void setParameters(GenericObject parameters) {
         this.parameters = parameters;
+    }
+
+    protected String formatName(String familyName, String middleName, String givenName){
+        return Stream.of(familyName,middleName, givenName).filter(Objects::nonNull).collect(Collectors.joining(" "));
+    }
+
+    protected String formatTestName(String name, String shortName){
+        return StringUtils.isNotBlank(shortName) ? (shortName + (StringUtils.isBlank(name) ? "" : ("("+name+")"))) : name;
+    }
+
+    protected String formatResult(List<ObsDto> obsDtos){
+        if(obsDtos == null || obsDtos.isEmpty()){
+            return null;
+        }
+        return obsDtos.stream().sorted((x,y)-> x.getObsId().compareTo(y.getObsId())).
+                map(this::formatSingleObs).filter(Objects::nonNull).collect(Collectors.joining(", "));
+    }
+
+    protected String formatSingleObs(ObsDto obsDto){
+        if(obsDto == null){return null;}
+        return String.format("%1s: %2s", obsDto.getConceptName() ,getObsDtoValue(obsDto));
+    }
+
+    protected String getObsDtoValue(ObsDto obsDto){
+        if(obsDto == null){return null;}
+        if(obsDto.getValueCodedName() != null){return obsDto.getValueCodedName();}
+        if(obsDto.getValueText() != null){return obsDto.getValueText();}
+        if(obsDto.getValueNumeric() != null){return obsDto.getValueNumeric().toString();}
+        return null;
     }
 }

@@ -1,9 +1,6 @@
 package org.openmrs.module.labmanagement.api.model;
 
-import org.openmrs.BaseChangeableOpenmrsData;
-import org.openmrs.Obs;
-import org.openmrs.Order;
-import org.openmrs.User;
+import org.openmrs.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -71,6 +68,10 @@ public class TestResult extends BaseChangeableOpenmrsData implements Serializabl
 
     @Column(name = "completed_date", nullable = true)
     private Date completedDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "at_location_id", nullable = true)
+    private Location atLocation;
 
     public String getRemarks() {
         return remarks;
@@ -209,7 +210,16 @@ public class TestResult extends BaseChangeableOpenmrsData implements Serializabl
         this.completedDate = completedDate;
     }
 
-    public void completeTestResult(){
+    public Location getAtLocation() {
+        return atLocation;
+    }
+
+    public void setAtLocation(Location atLocation) {
+        this.atLocation = atLocation;
+    }
+
+    public void completeTestResult(String status){
+        setStatus(status);
         setCompleted(true);
         setCompletedResult(true);
         setCompletedDate(new Date());
