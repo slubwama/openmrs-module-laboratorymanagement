@@ -5,17 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 
 public enum ReportParameter {
-	Date(DateReportParameter.class, true, false, false, false, false, false, false, false, false),
-	StartDate(DateReportParameter.class,true, false, false, false, false, false, false, false, false),
-	EndDate(DateReportParameter.class,true, false, false, false, false, false, false, false, false),
-	Location(LocationReportParameter.class, false, true, false, false , false, false, false, false, false),
-	Patient(PatientReportParameter.class,false, false, false, true, false, false, false, false, false),
-	ReferralLocation(ReferralLocationReportParameter.class,false, false, false, false , true, false, false, false, true),
-	Limit(IntegerReportParameter.class, false, false, false, false , false, false, false, false, false),
-	DiagnosticLocation(LocationReportParameter.class,false, false, false, false , true, false, false, false, false),
-	TestType(ConceptReportParameter.class, false, false, false, false , false, true, false, false, false),
-	TestOutcome(ObsReportParameter.class, false, false, false, false , false, false, true, false, false),
-	TestApprover(UserReportParameter.class, false, false, false, false , false, false, false, true, false);
+	Date(DateReportParameter.class, true, false, false, false, false, false, false, false, false, false),
+	StartDate(DateReportParameter.class,true, false, false, false, false, false, false, false, false, false),
+	EndDate(DateReportParameter.class,true, false, false, false, false, false, false, false, false, false),
+	Location(LocationReportParameter.class, false, true, false, false , false, false, false, false, false, false),
+	Patient(PatientReportParameter.class,false, false, false, true, false, false, false, false, false, false),
+	ReferralLocation(ReferralLocationReportParameter.class,false, false, false, false , true, false, false, false, true, false),
+	Limit(IntegerReportParameter.class, false, false, false, false , false, false, false, false, false, false),
+	DiagnosticLocation(LocationReportParameter.class,false, false, false, false , true, false, false, false, false, false),
+	TestType(ConceptReportParameter.class, false, false, false, false , false, true, false, false, false, false),
+	TestOutcome(ObsReportParameter.class, false, false, false, false , false, false, true, false, false, false),
+	TestApprover(UserReportParameter.class, false, false, false, false , false, false, false, true, false, false),
+	Tester(UserReportParameter.class, false, false, false, false , false, false, false, false, false, true);
 
 
 	private final boolean isDate;
@@ -26,12 +27,13 @@ public enum ReportParameter {
 	private final boolean isTestType;
 	private final boolean isTestOutcome;
 	private final boolean isTestApprover;
+	private final boolean isTester;
 	private final boolean isReferralLocation;
 	private final Class parameterParserClass;
 
 
 	ReportParameter(Class parameterParserClass, boolean isDate, boolean isLocation, boolean isBoolean,
-					boolean isPatient, boolean isDiagnosticLocation, boolean isTestType, boolean isTestOutcome, boolean isTestApprover, boolean isReferralLocation) {
+					boolean isPatient, boolean isDiagnosticLocation, boolean isTestType, boolean isTestOutcome, boolean isTestApprover, boolean isReferralLocation, boolean isTester) {
 		this.isDate = isDate;
 		this.isLocation = isLocation;
 		this.isBoolean = isBoolean;
@@ -42,6 +44,7 @@ public enum ReportParameter {
 		this.isTestApprover = isTestApprover;
 		this.parameterParserClass = parameterParserClass;
 		this.isReferralLocation = isReferralLocation;
+		this.isTester = isTester;
 
 	}
 
@@ -118,5 +121,9 @@ public enum ReportParameter {
 		}
 		ObjectMapper objectMapper = new ObjectMapper();
 		return objectMapper.readValue(parameters, GenericObject.class);
+	}
+
+	public boolean isTester() {
+		return isTester;
 	}
 }

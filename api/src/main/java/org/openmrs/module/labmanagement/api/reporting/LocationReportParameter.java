@@ -24,7 +24,7 @@ public class LocationReportParameter extends ReportParameterValue<String> {
         if(StringUtils.isBlank(locationUuid)){
             return locationUuid;
         }
-        Location locationEntity = Context.getLocationService().getLocation(locationUuid);
+        Location locationEntity = Context.getLocationService().getLocationByUuid(locationUuid);
         if(locationEntity == null){
             throw new LabManagementException("Location with uuid not found");
         }

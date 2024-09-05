@@ -12,6 +12,7 @@ public class TestRequestReportItemFilter {
     Integer testConceptId;
     ObsValue obsValue;
     Integer referralLocationId;
+    Integer testerUserId;
     Integer approverUserId;
     Integer limit;
     Integer startIndex;
@@ -112,5 +113,13 @@ public class TestRequestReportItemFilter {
 
     public void setStartIndex(Integer startIndex) {
         this.startIndex = startIndex;
+    }
+
+    public Integer getTesterUserId() {
+        return testerUserId;
+    }
+
+    public void setTesterUserId(Integer testerUserId) {
+        this.testerUserId = testerUserId;
     }
 }

@@ -13,12 +13,14 @@ import org.openmrs.module.labmanagement.api.dto.ObsDto;
 import org.openmrs.module.labmanagement.api.dto.Result;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItem;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItemFilter;
-import org.openmrs.module.labmanagement.api.model.*;
+import org.openmrs.module.labmanagement.api.model.BatchJob;
+import org.openmrs.module.labmanagement.api.model.ReferralLocation;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.ObsValue;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
 import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
+import org.openmrs.module.labmanagement.api.utils.TurnAroundTimeCalculator;
 import org.openmrs.module.labmanagement.api.utils.csv.CSVWriter;
 
 import java.io.IOException;
@@ -30,7 +32,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class TestRegisterReport extends ReportGenerator {
+public class DetailTurnAroundTimeReport extends ReportGenerator {
 
 	protected final Log log = LogFactory.getLog(this.getClass());
 
@@ -66,11 +68,9 @@ public abstract class TestRegisterReport extends ReportGenerator {
 		Date endDate = getEndDate(parameters);
 		String diagnosticLocationUuid = getDiagnosticLocation(parameters);
 		String testTypeUuid = getTestType(parameters);
-		ObsValue testOutcome = getTestOutcome(parameters);
 		String patientUuid = getPatient(parameters);
 		String referralLocationUuid = getReferralLocation(parameters);
 		String testerUuid = getTester(parameters);
-		String testApproverUuid = getTestApprover(parameters);
 
 		CSVWriter csvWriter = null;
 		Writer writer = null;
@@ -120,30 +120,6 @@ public abstract class TestRegisterReport extends ReportGenerator {
 				filter.setTestConceptId(testConcept.getId());
 			}
 
-			if(testOutcome != null && StringUtils.isNotBlank(testOutcome.getConceptUuid())) {
-				Concept concept = Context.getConceptService().getConceptByUuid(testOutcome.getConceptUuid());
-				if(concept == null) {
-					labManagementService.failBatchJob(batchJob.getUuid(), "Report test outcome concept parameter not found");
-					return;
-				}
-				if(testConcept == null){
-					testConcept = concept;
-				}else if(!testConcept.getId().equals(concept.getId())){
-					labManagementService.failBatchJob(batchJob.getUuid(), "Report test type and outcome concept parameter do not match");
-					return;
-				}
-				filter.setObsValue(testOutcome);
-			}
-
-
-			if (!StringUtils.isBlank(testApproverUuid)) {
-				User user = Context.getUserService().getUserByUuid(testApproverUuid);
-				if (user == null) {
-					labManagementService.failBatchJob(batchJob.getUuid(), "Report test approver parameter not found");
-					return;
-				}
-				filter.setApproverUserId(user.getId());
-			}
 
 			if (!StringUtils.isBlank(testerUuid)) {
 				User user = Context.getUserService().getUserByUuid(testerUuid);
@@ -155,7 +131,6 @@ public abstract class TestRegisterReport extends ReportGenerator {
 			}
 
 			filter.setLimit(pageSize);
-			setFilters(filter, parameters);
 
 			boolean hasAppendedHeaders = false;
 			while (hasMoreRecords) {
@@ -240,10 +215,37 @@ public abstract class TestRegisterReport extends ReportGenerator {
 
 	}
 
+	protected void writeRow(CSVWriter csvWriter, TestRequestReportItem row, Map<Integer, List<ObsDto>> observations) {
 
-	protected abstract void setFilters(TestRequestReportItemFilter filter, GenericObject parameters);
+		Long turnAroundTime = TurnAroundTimeCalculator.getTurnAroundTime(
+				row.getCollectionDate() != null ? row.getCollectionDate() : row.getRequestApprovalDate() != null ? row.getRequestApprovalDate() : row.getDateCreated(),
+		row.getResultDate() != null ? row.getResultDate() : row.getCompletedDate());
 
-	protected abstract void writeRow(CSVWriter csvWriter, TestRequestReportItem row, Map<Integer, List<ObsDto>> observations);
+		writeLineToCsv(csvWriter, TIMESTAMP_FORMATTER.format(row.getDateCreated()),
+				row.getRequestNo(),
+				row.getOrderNumber(),
+				row.getReferredIn() != null && row.getReferredIn() ? "Referral" : "Patient",
+				row.getReferredIn() != null && row.getReferredIn() ? row.getReferralFromFacilityName() :
+						formatName(row.getPatientFamilyName(), row.getPatientMiddleName(), row.getPatientGivenName()),
+				row.getReferredIn() != null && row.getReferredIn() ? row.getReferralInExternalRef() : row.getPatientIdentifier(),
+				formatTestName(row.getTestName(), row.getTestShortName()),
+				formatName(row.getResultByFamilyName(), row.getResultByMiddleName(), row.getResultByGivenName()),
+				TurnAroundTimeCalculator.formatTurnAroundTime(turnAroundTime),
+				String.format("%.0f", Math.floor((double) turnAroundTime / 60000))
+				);
+	}
 
-	protected abstract void writeHeaders(CSVWriter csvWriter);
+
+	protected void writeHeaders(CSVWriter csvWriter) {
+		writeLineToCsv(csvWriter, "Date Created",
+				"Request Number",
+				"Order Number",
+				"Type",
+				"Entity",
+				"Identity",
+				"Test",
+				"Results By",
+				"Turn Around Time",
+				"Turn Around Time Minutes");
+	}
 }

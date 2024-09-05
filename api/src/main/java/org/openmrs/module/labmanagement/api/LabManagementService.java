@@ -329,4 +329,12 @@ public interface LabManagementService extends OpenmrsService {
     Result<TestRequestReportItem> findTestRequestReportItems(TestRequestReportItemFilter filter);
 
     Map<Integer, List<ObsDto>> getObservations(List<Integer> orderIds);
+
+    List<SummarizedTestReportItem> getSummarizedTestReport(Date startDate, Date endDate, Integer diagnosticLocation);
+
+    List<SummarizedTestReportItem> getIndividualPerformanceReport(Date startDate, Date endDate, Integer diagnosticLocation, Integer userId);
+
+    Result<TestRequestReportItem> findTurnAroundTestRequestReportItems(TestRequestReportItemFilter filter);
+
+    Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter);
 }

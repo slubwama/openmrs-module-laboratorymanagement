@@ -218,6 +218,8 @@ public class TestResult extends BaseChangeableOpenmrsData implements Serializabl
         this.atLocation = atLocation;
     }
 
+
+
     public void completeTestResult(String status){
         setStatus(status);
         setCompleted(true);

@@ -1080,6 +1080,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testInHouse = true;
         }
 
+        if(sample != null){
+            testRequestItem.setInitialSample(sample);
+        }
+
         testRequestItem.setOrder(testOrder);
         orders.add(testOrder);
         testRequestItems.add(testRequestItem);
@@ -3095,7 +3099,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
 
         if(testResult.getWorksheetItem() != null) {
-            if (WorksheetItemStatus.RESULTED_REJECTED.equals(testResult.getWorksheetItem().getStatus())) {
+            if (!WorksheetItemStatus.RESULTED.equals(testResult.getWorksheetItem().getStatus())) {
                 testResult.getWorksheetItem().setStatus(WorksheetItemStatus.RESULTED);
                 dao.saveWorksheetItem(testResult.getWorksheetItem());
             }
@@ -3108,6 +3112,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         if(testResult.getTestRequestItemSample().getTestRequestItem().getFinalResult() == null ||
         !testResult.getTestRequestItemSample().getTestRequestItem().getFinalResult().equals(testResult.getId())){
             testResult.getTestRequestItemSample().getTestRequestItem().setFinalResult(testResult);
+            testResult.getTestRequestItemSample().getTestRequestItem().setResultDate(testResult.getResultDate());
             dao.saveTestRequestItem(testResult.getTestRequestItemSample().getTestRequestItem());
         }
 
@@ -3718,6 +3723,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
         if(testResult != null) {
             testRequestItem.setFinalResult(testResult);
+            testRequestItem.setResultDate(testResult.getResultDate());
             saveTestRequest=true;
         }
 
@@ -3785,5 +3791,72 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
     public Map<Integer, List<ObsDto>> getObservations(List<Integer> orderIds){
         return dao.getObservations(orderIds);
+    }
+
+    public List<SummarizedTestReportItem> getSummarizedTestReport(Date startDate, Date endDate, Integer diagnosticLocation){
+        return dao.getSummarizedTestReport(startDate, endDate, diagnosticLocation);
+    }
+
+    public List<SummarizedTestReportItem> getIndividualPerformanceReport(Date startDate, Date endDate, Integer diagnosticLocation, Integer testerUserId){
+        return dao.getIndividualPerformanceReport(startDate, endDate, diagnosticLocation, testerUserId);
+    }
+
+    public Result<TestRequestReportItem> findTurnAroundTestRequestReportItems(TestRequestReportItemFilter filter){
+        return dao.findTurnAroundTestRequestReportItems(filter);
+    }
+
+    public Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter){
+        Result<TestRequestReportItem> result = dao.findAuditReportReportItems(filter);
+        List<UserPersonNameDTO> personNames = dao.getPersonNameByUserIds(result.getData().stream().map(p -> Arrays.asList(
+                p.getCreator(),
+                p.getCollectedBy(),
+                p.getResultBy(),
+                p.getCurrentApprovalBy(),
+                p.getRequestApprovalBy()
+        )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        for (TestRequestReportItem testRequestDTO : result.getData()) {
+            if (testRequestDTO.getCreator() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCreator())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCreatorMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getRequestApprovalBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getRequestApprovalBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setRequestApprovalFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setRequestApprovalMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setRequestApprovalGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getCollectedBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCollectedBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCollectedByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCollectedByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCollectedByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getResultBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getResultBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setResultByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setResultByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setResultByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (testRequestDTO.getCurrentApprovalBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestDTO.getCurrentApprovalBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    testRequestDTO.setCurrentApprovalByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    testRequestDTO.setCurrentApprovalByMiddleName(userPersonNameDTO.get().getMiddleName());
+                    testRequestDTO.setCurrentApprovalByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+        }
+        return result;
     }
 }

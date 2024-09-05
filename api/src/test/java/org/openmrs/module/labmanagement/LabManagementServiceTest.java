@@ -2708,6 +2708,197 @@ tests	[…]
 		Map<Integer, List<ObsDto>> obsData = labManagementService.getObservations( reportResult.getData()
 				.stream().map(TestRequestReportItem::getOrderId).distinct().collect(Collectors.toList()));
 		Assert.assertTrue(obsData.size() > 0);
+
+
+		List<SummarizedTestReportItem> summary = labManagementService.getSummarizedTestReport(DateUtils.addDays(new Date(), -1), DateUtils.addDays(new Date(), 1), null);
+		Assert.assertTrue(summary.size() > 0);
+
+		summary = labManagementService.getSummarizedTestReport(DateUtils.addDays(new Date(), -1), DateUtils.addDays(new Date(), 1), 1000000);
+		Assert.assertTrue(summary.isEmpty());
+
+		summary = labManagementService.getIndividualPerformanceReport(DateUtils.addDays(new Date(), -1), DateUtils.addDays(new Date(), 1), null, null);
+		Assert.assertTrue(summary.size() > 0);
+
+		summary = labManagementService.getIndividualPerformanceReport(DateUtils.addDays(new Date(), -1), DateUtils.addDays(new Date(), 1), null, Context.getAuthenticatedUser().getUserId());
+		Assert.assertTrue(!summary.isEmpty());
+
+		summary = labManagementService.getIndividualPerformanceReport(DateUtils.addDays(new Date(), -1), DateUtils.addDays(new Date(), 1), 1000, Context.getAuthenticatedUser().getUserId());
+		Assert.assertTrue(summary.isEmpty());
+
+
+		// Turn around time
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setPatientId(testRequest.getPatient().getId());
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setDiagonisticLocationId(worksheet.getAtLocation().getId());
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setStartDate(DateUtils.addDays(new Date(), -1));
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setEndDate(DateUtils.addDays(new Date(), 1));
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportItem = dao().getTestRequestItemsByTestRequestId(Collections.singletonList(testRequest.getId()), false)
+				.stream()
+				.findFirst().orElse(null);
+		testRequestReportItemFilter.setTestConceptId(reportItem.getOrder().getConcept().getConceptId());
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setReferralLocationId(testRequest.getReferralFromFacility().getId());
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setLimit(1);
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setStartIndex(0);
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setTestRequestItemIdMin(reportItem.getId()-1);
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setTestRequestIdMin(testRequest.getId() - 1);
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setPatientId(testRequest.getPatient().getId());
+		testRequestReportItemFilter.setDiagonisticLocationId(worksheet.getAtLocation().getId());
+		testRequestReportItemFilter.setStartDate(DateUtils.addDays(new Date(), -1));
+		testRequestReportItemFilter.setEndDate(DateUtils.addDays(new Date(), 1));
+		reportItem = dao().getTestRequestItemsByTestRequestId(Collections.singletonList(testRequest.getId()), false)
+				.stream()
+				.findFirst().orElse(null);
+		testRequestReportItemFilter.setTestConceptId(reportItem.getOrder().getConcept().getConceptId());
+		testRequestReportItemFilter.setReferralLocationId(testRequest.getReferralFromFacility().getId());
+		testRequestReportItemFilter.setLimit(1);
+		testRequestReportItemFilter.setStartIndex(0);
+		testRequestReportItemFilter.setTestRequestItemIdMin(reportItem.getId()-1);
+		testRequestReportItemFilter.setTestRequestIdMin(testRequest.getId()-1);
+		reportResult = labManagementService.findTurnAroundTestRequestReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setPatientId(testRequest.getPatient().getId());
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setDiagonisticLocationId(worksheet.getAtLocation().getId());
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setStartDate(DateUtils.addDays(new Date(), -1));
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setEndDate(DateUtils.addDays(new Date(), 1));
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		reportItem = dao().getTestRequestItemsByTestRequestId(Collections.singletonList(testRequest.getId()), false)
+				.stream()
+				.findFirst().orElse(null);
+		testRequestReportItemFilter.setTestConceptId(reportItem.getOrder().getConcept().getConceptId());
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setReferralLocationId(testRequest.getReferralFromFacility().getId());
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setApproverUserId(Context.getAuthenticatedUser().getUserId());
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() == 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setLimit(1);
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setStartIndex(0);
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setTestRequestItemIdMin(reportItem.getId()-1);
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setTestRequestIdMin(testRequest.getId() - 1);
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		testRequestReportItemFilter=new TestRequestReportItemFilter();
+		testRequestReportItemFilter.setPatientId(testRequest.getPatient().getId());
+		testRequestReportItemFilter.setDiagonisticLocationId(worksheet.getAtLocation().getId());
+		testRequestReportItemFilter.setStartDate(DateUtils.addDays(new Date(), -1));
+		testRequestReportItemFilter.setEndDate(DateUtils.addDays(new Date(), 1));
+		reportItem = dao().getTestRequestItemsByTestRequestId(Collections.singletonList(testRequest.getId()), false)
+				.stream()
+				.findFirst().orElse(null);
+		testRequestReportItemFilter.setTestConceptId(reportItem.getOrder().getConcept().getConceptId());
+		testRequestReportItemFilter.setReferralLocationId(testRequest.getReferralFromFacility().getId());
+		testRequestReportItemFilter.setLimit(1);
+		testRequestReportItemFilter.setStartIndex(0);
+		testRequestReportItemFilter.setTestRequestItemIdMin(reportItem.getId()-1);
+		testRequestReportItemFilter.setTestRequestIdMin(testRequest.getId()-1);
+		reportResult = labManagementService.findAuditReportReportItems(testRequestReportItemFilter);
+		Assert.assertTrue(reportResult.getData().size() > 0);
+
 	}
 
 	@Test
@@ -2723,5 +2914,6 @@ tests	[…]
 		AsyncTasksBatchJob asyncTasksBatchJob=new AsyncTasksBatchJob();
 		asyncTasksBatchJob.execute();
 	}
+
 
 }

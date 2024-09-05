@@ -98,6 +98,9 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
     @Column(name = "completed_date", nullable = true)
     private Date completedDate;
 
+    @Column(name = "result_date", nullable = true)
+    private Date resultDate;
+
     @OneToMany(mappedBy = "testRequestItem", cascade = CascadeType.ALL)
     private Set<TestRequestItemSample> testRequestItemSamples;
 
@@ -313,5 +316,13 @@ public class TestRequestItem extends BaseChangeableOpenmrsData implements Serial
 
     public void setCompletedDate(Date completedDate) {
         this.completedDate = completedDate;
+    }
+
+    public Date getResultDate() {
+        return resultDate;
+    }
+
+    public void setResultDate(Date resultDate) {
+        this.resultDate = resultDate;
     }
 }

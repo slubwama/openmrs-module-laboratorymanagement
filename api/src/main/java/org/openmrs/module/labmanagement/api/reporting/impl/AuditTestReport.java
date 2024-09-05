@@ -13,7 +13,8 @@ import org.openmrs.module.labmanagement.api.dto.ObsDto;
 import org.openmrs.module.labmanagement.api.dto.Result;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItem;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItemFilter;
-import org.openmrs.module.labmanagement.api.model.*;
+import org.openmrs.module.labmanagement.api.model.BatchJob;
+import org.openmrs.module.labmanagement.api.model.ReferralLocation;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.ObsValue;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
@@ -30,7 +31,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class TestRegisterReport extends ReportGenerator {
+public class AuditTestReport extends ReportGenerator {
 
 	protected final Log log = LogFactory.getLog(this.getClass());
 
@@ -66,7 +67,6 @@ public abstract class TestRegisterReport extends ReportGenerator {
 		Date endDate = getEndDate(parameters);
 		String diagnosticLocationUuid = getDiagnosticLocation(parameters);
 		String testTypeUuid = getTestType(parameters);
-		ObsValue testOutcome = getTestOutcome(parameters);
 		String patientUuid = getPatient(parameters);
 		String referralLocationUuid = getReferralLocation(parameters);
 		String testerUuid = getTester(parameters);
@@ -120,22 +120,6 @@ public abstract class TestRegisterReport extends ReportGenerator {
 				filter.setTestConceptId(testConcept.getId());
 			}
 
-			if(testOutcome != null && StringUtils.isNotBlank(testOutcome.getConceptUuid())) {
-				Concept concept = Context.getConceptService().getConceptByUuid(testOutcome.getConceptUuid());
-				if(concept == null) {
-					labManagementService.failBatchJob(batchJob.getUuid(), "Report test outcome concept parameter not found");
-					return;
-				}
-				if(testConcept == null){
-					testConcept = concept;
-				}else if(!testConcept.getId().equals(concept.getId())){
-					labManagementService.failBatchJob(batchJob.getUuid(), "Report test type and outcome concept parameter do not match");
-					return;
-				}
-				filter.setObsValue(testOutcome);
-			}
-
-
 			if (!StringUtils.isBlank(testApproverUuid)) {
 				User user = Context.getUserService().getUserByUuid(testApproverUuid);
 				if (user == null) {
@@ -155,7 +139,6 @@ public abstract class TestRegisterReport extends ReportGenerator {
 			}
 
 			filter.setLimit(pageSize);
-			setFilters(filter, parameters);
 
 			boolean hasAppendedHeaders = false;
 			while (hasMoreRecords) {
@@ -166,12 +149,10 @@ public abstract class TestRegisterReport extends ReportGenerator {
 				filter.setTestRequestItemIdMin(lastRecordProcessed);
 				filter.setTestRequestIdMin(lastTestRequestProcessed);
 
-				Result<TestRequestReportItem> data = labManagementService.findTestRequestReportItems(filter);
+				Result<TestRequestReportItem> data = labManagementService.findAuditReportReportItems(filter);
 				if (shouldStopExecution.apply(batchJob)) {
 					return;
 				}
-				Map<Integer, List<ObsDto>> observations =  labManagementService.getObservations(data.getData().stream()
-						.map(TestRequestReportItem::getOrderId).distinct().collect(Collectors.toList()));
 
 				if (shouldStopExecution.apply(batchJob)) {
 					return;
@@ -192,7 +173,7 @@ public abstract class TestRegisterReport extends ReportGenerator {
 				}
 				if (!data.getData().isEmpty()) {
 					for (TestRequestReportItem row : data.getData()) {
-						writeRow(csvWriter, row, observations);
+						writeRow(csvWriter, row);
 					}
 					csvWriter.flush();
 					recordsProcessed += data.getData().size();
@@ -241,9 +222,66 @@ public abstract class TestRegisterReport extends ReportGenerator {
 	}
 
 
-	protected abstract void setFilters(TestRequestReportItemFilter filter, GenericObject parameters);
+	protected void writeRow(CSVWriter csvWriter, TestRequestReportItem row) {
+		List<String> columnValues = new ArrayList<>(Arrays.asList(TIMESTAMP_FORMATTER.format(row.getDateCreated()),
+				formatName(row.getCreatorFamilyName(), row.getCreatorMiddleName(), row.getCreatorGivenName()),
+				row.getAtLocationName(),
+				row.getRequestNo(),
+				row.getOrderNumber(),
+				row.getReferredIn() != null && row.getReferredIn() ? "Referral" : "Patient",
+				row.getReferredIn() != null && row.getReferredIn() ? row.getReferralFromFacilityName() :
+						formatName(row.getPatientFamilyName(), row.getPatientMiddleName(), row.getPatientGivenName()),
+				row.getReferredIn() != null && row.getReferredIn() ? row.getReferralInExternalRef() : row.getPatientIdentifier(),
+				formatTestName(row.getTestName(), row.getTestShortName()),
+				//row.getRequireRequestApproval() != null && row.getRequireRequestApproval()  ? "Yes" : row.getRequireRequestApproval() != null ? "No" : "",
+				formatName(row.getRequestApprovalFamilyName(), row.getRequestApprovalMiddleName(), row.getRequestApprovalGivenName()),
+				row.getRequestApprovalDate() == null ? null : TIMESTAMP_FORMATTER.format(row.getRequestApprovalDate()),
+				row.getSampleTypeName(),
+				row.getSampleAccessionNumber(),
+				row.getCollectionDate() == null ?  null : TIMESTAMP_FORMATTER.format(row.getCollectionDate()),
+				formatName(row.getCollectedByFamilyName(), row.getCollectedByMiddleName(), row.getCollectedByGivenName()),
+				row.getSampleAtLocationName(),
+				row.getReferredOut() != null && row.getReferredOut() ? "Yes" : row.getReferredOut() != null ? "No" : "",
+				formatName(row.getReferralOutByFamilyName(), row.getReferralOutByMiddleName(), row.getReferralOutByGivenName()),
+				row.getReferralToFacilityName(),
+				row.getReferralOutDate() == null ? null : TIMESTAMP_FORMATTER.format(row.getReferralOutDate()),
+				row.getWorksheetAtLocationName() != null ? row.getWorksheetAtLocationName() : row.getResultAtLocationName() != null ? row.getResultAtLocationName() :  row.getSampleAtLocationName() ,
+				formatName(row.getResultByFamilyName(), row.getResultByMiddleName(), row.getResultByGivenName()),
+				row.getResultDate() == null ? null : TIMESTAMP_FORMATTER.format(row.getResultDate()),
+				//row.getResultRequireApproval() != null &&  row.getResultRequireApproval() ? "Yes" : row.getResultRequireApproval() != null ? "No" : "",
+				formatName(row.getCurrentApprovalByFamilyName(), row.getCurrentApprovalByMiddleName(), row.getCurrentApprovalByGivenName()),
+				row.getResultApprovalDate() == null ? null : TIMESTAMP_FORMATTER.format(row.getResultApprovalDate())
+		));
 
-	protected abstract void writeRow(CSVWriter csvWriter, TestRequestReportItem row, Map<Integer, List<ObsDto>> observations);
+		writeLineToCsv(csvWriter,columnValues.toArray(new String[0]));
+	}
 
-	protected abstract void writeHeaders(CSVWriter csvWriter);
+	protected void writeHeaders(CSVWriter csvWriter) {
+
+		List<String> headers = new ArrayList<>(Arrays.asList("Date Created", "Created By",
+				"Location",
+				"Request Number",
+				"Order Number",
+				"Type",
+				"Entity",
+				"Identity",
+				"Test",
+				"Request Approved By",
+				"Request Approved Date",
+				"Sample Type",
+				"Sample ID",
+				"Collection Date",
+				"Collected By",
+				"Collected At",
+				"Referred Out",
+				"Referred Out By",
+				"Reference Location",
+				"Referred Date",
+				"Diagnostic Center",
+				"Results By",
+				"Results Date",
+				"Results Last Approved By",
+				"Results Last Approved Date"));
+		writeLineToCsv(csvWriter, headers.toArray(new String[0]));
+	}
 }

@@ -260,6 +260,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             description.addProperty("returnCount");
             description.addProperty("completed");
             description.addProperty("completedDate");
+            description.addProperty("resultDate");
             description.addProperty("testRequestUuid");
             description.addProperty("dateCreated");
             description.addProperty("dateChanged");
@@ -354,6 +355,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             modelImpl.property("returnCount", new IntegerProperty());
             modelImpl.property("completed", new BooleanProperty());
             modelImpl.property("completedDate", new DateTimeProperty());
+            modelImpl.property("resultDate", new DateTimeProperty());
             modelImpl.property("testRequestUuid", new StringProperty());
             modelImpl.property("dateCreated", new DateTimeProperty());
             modelImpl.property("dateChanged", new DateTimeProperty());

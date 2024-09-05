@@ -21,7 +21,6 @@ import org.openmrs.*;
 import org.openmrs.Order;
 import org.openmrs.api.ConceptNameType;
 import org.openmrs.api.db.hibernate.DbSession;
-import org.openmrs.logic.op.Or;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
@@ -1355,6 +1354,7 @@ public class LabManagementDao extends DaoBase {
                 "ros.uuid as referralOutSampleUuid,\n" +
                 "tri.completed as completed,\n" +
                 "tri.completedDate as completedDate,\n" +
+                "tri.resultDate as resultDate,\n" +
                 "tr.uuid as testRequestUuid,\n" +
                 "tri.creator.userId as creator,\n" +
                 "tri.creator.uuid as creatorUuid,\n" +
@@ -3344,7 +3344,7 @@ public class LabManagementDao extends DaoBase {
         }
         result.setLoadRecordCount(false);
 
-        result.setData(executeQuery(TestRequestReportItem.class, hqlQuery, result, " order by tr.id desc, tri.id desc ", parameterList, parameterWithList));
+        result.setData(executeQuery(TestRequestReportItem.class, hqlQuery, result, " order by tr.id asc, tri.id asc ", parameterList, parameterWithList));
 
         if (!result.getData().isEmpty()) {
             List<Integer> conceptNamesToFetch = result.getData()
@@ -3474,6 +3474,260 @@ public class LabManagementDao extends DaoBase {
             obsDto.setValueCodedName(getConceptName(conceptNameDTOs,obsDto.getValueCoded(), ConceptNameType.FULLY_SPECIFIED));
         }
         return resultList;
+    }
+
+    public List<SummarizedTestReportItem> getSummarizedTestReport(Date startDate, Date endDate, Integer diagnosticLocation){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder(
+                "SELECT  tri.order.concept.conceptId as orderConceptId," +
+                "COUNT(*) as testsCompleted\n" +
+                "FROM labmanagement.TestRequestItem tri\n" +
+                 (diagnosticLocation != null ? " left join tri.finalResult fr left join  tri.testRequestItemSamples tris left join tris.worksheetItems wsi left join wsi.worksheet ws " : "") +
+                "where tri.dateCreated >= :startDate and tri.dateCreated <= :endDate and tri.finalResult.id is not null \n" +
+                (diagnosticLocation != null ? " and ((wsi.id is not null and ws.atLocation.id = :wallid) or (wsi.id is null and fr.atLocation.id = :wallid))" : "") + " group by tri.order.concept.conceptId"
+        );
+
+        parameterList.put("startDate", startDate);
+        parameterList.put("endDate", endDate);
+        if(diagnosticLocation != null){
+            parameterList.put("wallid", diagnosticLocation);
+        }
+
+        Result<SummarizedTestReportItem> result = new Result<>();
+        result.setLoadRecordCount(false);
+        List<SummarizedTestReportItem> data = executeQuery(SummarizedTestReportItem.class, hqlQuery, result, "", parameterList, new HashMap<>());
+        if (!data.isEmpty()) {
+            List<Integer> conceptNamesToFetch = data
+                    .stream()
+                    .map(SummarizedTestReportItem::getOrderConceptId)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesAndShortsByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            for (SummarizedTestReportItem summarizedTestReportItem : data) {
+                summarizedTestReportItem.setTestName(getConceptName(conceptNameDTOs,summarizedTestReportItem.getOrderConceptId(), ConceptNameType.FULLY_SPECIFIED));
+                summarizedTestReportItem.setTestShortName(getConceptName(conceptNameDTOs,summarizedTestReportItem.getOrderConceptId(), ConceptNameType.SHORT));
+            }
+        }
+        return data;
+    }
+
+    public List<SummarizedTestReportItem> getIndividualPerformanceReport(Date startDate, Date endDate, Integer diagnosticLocation, Integer testerUserId){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder(
+                "SELECT  tri.order.concept.conceptId as orderConceptId, fr.resultBy.userId as testerUserId, " +
+                        "COUNT(*) as testsCompleted\n" +
+                        "FROM labmanagement.TestRequestItem tri  left join tri.finalResult fr\n" +
+                        (diagnosticLocation != null ? " left join  tri.testRequestItemSamples tris left join tris.worksheetItems wsi left join wsi.worksheet ws " : "") +
+                        "where tri.dateCreated >= :startDate and tri.dateCreated <= :endDate and tri.finalResult.id is not null \n" +
+                        (testerUserId != null ? " and fr.resultBy.userId = :userId" : "") +
+                        (diagnosticLocation != null ? " and ((wsi.id is not null and ws.atLocation.id = :wallid) or (wsi.id is null and fr.atLocation.id = :wallid))" : "") + " group by tri.order.concept.conceptId, fr.resultBy.userId"
+        );
+
+        parameterList.put("startDate", startDate);
+        parameterList.put("endDate", endDate);
+        if(diagnosticLocation != null){
+            parameterList.put("wallid", diagnosticLocation);
+        }
+        if(testerUserId != null){
+            parameterList.put("userId", testerUserId);
+        }
+
+        Result<SummarizedTestReportItem> result = new Result<>();
+        result.setLoadRecordCount(false);
+        List<SummarizedTestReportItem> data = executeQuery(SummarizedTestReportItem.class, hqlQuery, result, "", parameterList, new HashMap<>());
+        if (!data.isEmpty()) {
+            List<Integer> conceptNamesToFetch = data
+                    .stream()
+                    .map(SummarizedTestReportItem::getOrderConceptId)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+            List<UserPersonNameDTO> personNames = getPersonNameByUserIds(data.stream()
+                    .map(SummarizedTestReportItem::getTesterUserId)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesAndShortsByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            for (SummarizedTestReportItem summarizedTestReportItem : data) {
+                summarizedTestReportItem.setTestName(getConceptName(conceptNameDTOs,summarizedTestReportItem.getOrderConceptId(), ConceptNameType.FULLY_SPECIFIED));
+                summarizedTestReportItem.setTestShortName(getConceptName(conceptNameDTOs,summarizedTestReportItem.getOrderConceptId(), ConceptNameType.SHORT));
+                if(summarizedTestReportItem.getTesterUserId() != null){
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(summarizedTestReportItem.getTesterUserId())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        summarizedTestReportItem.setTesterFamilyName(userPersonNameDTO.get().getFamilyName());
+                        summarizedTestReportItem.setTesterMiddleName(userPersonNameDTO.get().getMiddleName());
+                        summarizedTestReportItem.setTesterGivenName(userPersonNameDTO.get().getGivenName());
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+
+
+    public Result<TestRequestReportItem> findTurnAroundTestRequestReportItems(TestRequestReportItemFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+
+        StringBuilder hqlQuery = new TurnAroundTimeReportItemQueryBuilder().build(filter,parameterList, parameterWithList, this::appendFilter);
+        Result<TestRequestReportItem> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setLoadRecordCount(false);
+
+        result.setData(executeQuery(TestRequestReportItem.class, hqlQuery, result, " order by tr.id asc, tri.id asc ", parameterList, parameterWithList));
+
+        if (!result.getData().isEmpty()) {
+            List<Integer> conceptNamesToFetch = result.getData()
+                    .stream()
+                    .map(p-> Arrays.asList(p.getOrderConceptId(),
+                                    (p.getReferralFromFacilityId() != null && StringUtils.isBlank(p.getReferralFromFacilityName()) ? p.getReferralFromFacilityId() : null)))
+                    .flatMap(Collection::stream)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+            List<Integer> patientIds = result.getData().stream().map(TestRequestReportItem::getPatientId).filter(Objects::nonNull).collect(Collectors.toList());
+            Map<Integer,List<UserPersonNameDTO>> patientNames = getPatientNameByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), false).stream().collect(Collectors.groupingBy(p -> p.getPatientId()));
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesAndShortsByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            List<String> patientIdentifierTypeIds = new ArrayList<>();
+            String patientIdentifierSetting = GlobalProperties.getPatientIdentifierTypes();
+            Map<Integer, List<PatientIdentifierDTO>> patientIdentifiers = null;
+            if(StringUtils.isNotBlank(patientIdentifierSetting)) {
+                patientIdentifierTypeIds = Arrays.stream(patientIdentifierSetting.split(",")).map(p->p.trim()).collect(Collectors.toList());
+                patientIdentifiers = getPatientIdentifiersByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), patientIdentifierTypeIds).stream().collect(Collectors.groupingBy(PatientIdentifierDTO::getPatientId));
+            }
+            List<UserPersonNameDTO> personNames = getPersonNameByUserIds(result.getData().stream()
+                    .map(TestRequestReportItem::getResultBy)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+            for (TestRequestReportItem testRequestItemDTO : result.getData()) {
+
+                testRequestItemDTO.setTestName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.FULLY_SPECIFIED));
+                testRequestItemDTO.setTestShortName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.SHORT));
+
+                if (testRequestItemDTO.getResultBy() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(testRequestItemDTO.getResultBy())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        testRequestItemDTO.setResultByFamilyName(userPersonNameDTO.get().getFamilyName());
+                        testRequestItemDTO.setResultByMiddleName(userPersonNameDTO.get().getMiddleName());
+                        testRequestItemDTO.setResultByGivenName(userPersonNameDTO.get().getGivenName());
+                    }
+                }
+
+                if (testRequestItemDTO.getPatientId() != null) {
+                    List<UserPersonNameDTO> userPersonNameDTO = patientNames.get(testRequestItemDTO.getPatientId());
+                    if (userPersonNameDTO != null) {
+                        testRequestItemDTO.setPatientFamilyName(userPersonNameDTO.get(0).getFamilyName());
+                        testRequestItemDTO.setPatientMiddleName(userPersonNameDTO.get(0).getMiddleName());
+                        testRequestItemDTO.setPatientGivenName(userPersonNameDTO.get(0).getGivenName());
+                    }
+                }
+
+                if (patientIdentifiers != null && !patientIdentifiers.isEmpty()) {
+                    List<PatientIdentifierDTO> identifiers = patientIdentifiers.get(testRequestItemDTO.getPatientId());
+                    if (identifiers != null && !identifiers.isEmpty()) {
+                        for (String patientIdentifier : patientIdentifierTypeIds) {
+                            Optional<PatientIdentifierDTO> identifier = identifiers.stream()
+                                    .filter(p -> patientIdentifier.equals(p.getIdentifierTypeUuid())).findFirst();
+                            if (identifier.isPresent()) {
+                                testRequestItemDTO.setPatientIdentifier(identifier.get().getIdentifier());
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (StringUtils.isBlank(testRequestItemDTO.getReferralFromFacilityName())) {
+                    testRequestItemDTO.setReferralFromFacilityName(getConceptName(conceptNameDTOs,testRequestItemDTO.getReferralFromFacilityId(), ConceptNameType.FULLY_SPECIFIED));
+                }
+            }
+        }
+        return result;
+    }
+
+    public Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+
+        StringBuilder hqlQuery = new AuditReportItemQueryBuilder().build(filter,parameterList, parameterWithList, this::appendFilter);
+        Result<TestRequestReportItem> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setLoadRecordCount(false);
+
+        result.setData(executeQuery(TestRequestReportItem.class, hqlQuery, result, " order by tr.id asc, tri.id asc ", parameterList, parameterWithList));
+
+        if (!result.getData().isEmpty()) {
+            List<Integer> conceptNamesToFetch = result.getData()
+                    .stream()
+                    .map(p-> Arrays.asList(p.getOrderConceptId(),
+                            p.getSampleTypeId(),
+                            p.getReferralToFacilityId() != null && StringUtils.isBlank(p.getReferralToFacilityName()) ? p.getReferralToFacilityId() : null,
+                            p.getReferralFromFacilityId() != null && StringUtils.isBlank(p.getReferralFromFacilityName()) ? p.getReferralFromFacilityId() : null))
+                    .flatMap(Collection::stream)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+            List<Integer> patientIds = result.getData().stream().map(TestRequestReportItem::getPatientId).filter(Objects::nonNull).collect(Collectors.toList());
+            List<Integer> personIds = result.getData().stream().map(TestRequestReportItem::getProviderId).filter(Objects::nonNull).collect(Collectors.toList());
+            Map<Integer,List<UserPersonNameDTO>> patientNames = getPatientNameByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), false).stream().collect(Collectors.groupingBy(p -> p.getPatientId()));
+            Map<Integer,List<UserPersonNameDTO>> personNames = getPersonNameByPersonIds(personIds.stream().distinct().collect(Collectors.toList())).stream().collect(Collectors.groupingBy(p -> p.getPersonId()));
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesAndShortsByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            List<String> patientIdentifierTypeIds = new ArrayList<>();
+            String patientIdentifierSetting = GlobalProperties.getPatientIdentifierTypes();
+            Map<Integer, List<PatientIdentifierDTO>> patientIdentifiers = null;
+            if(StringUtils.isNotBlank(patientIdentifierSetting)) {
+                patientIdentifierTypeIds = Arrays.stream(patientIdentifierSetting.split(",")).map(p->p.trim()).collect(Collectors.toList());
+                patientIdentifiers = getPatientIdentifiersByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), patientIdentifierTypeIds).stream().collect(Collectors.groupingBy(PatientIdentifierDTO::getPatientId));
+            }
+
+            for (TestRequestReportItem testRequestItemDTO : result.getData()) {
+                if (StringUtils.isBlank(testRequestItemDTO.getReferralToFacilityName())) {
+                    testRequestItemDTO.setReferralToFacilityName(getConceptName(conceptNameDTOs,testRequestItemDTO.getReferralToFacilityId(), ConceptNameType.FULLY_SPECIFIED));
+                }
+                testRequestItemDTO.setTestName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.FULLY_SPECIFIED));
+                testRequestItemDTO.setTestShortName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.SHORT));
+                testRequestItemDTO.setSampleTypeName(getConceptName(conceptNameDTOs,testRequestItemDTO.getSampleTypeId(), ConceptNameType.FULLY_SPECIFIED));
+
+                if (testRequestItemDTO.getPatientId() != null) {
+                    List<UserPersonNameDTO> userPersonNameDTO = patientNames.get(testRequestItemDTO.getPatientId());
+                    if (userPersonNameDTO != null) {
+                        testRequestItemDTO.setPatientFamilyName(userPersonNameDTO.get(0).getFamilyName());
+                        testRequestItemDTO.setPatientMiddleName(userPersonNameDTO.get(0).getMiddleName());
+                        testRequestItemDTO.setPatientGivenName(userPersonNameDTO.get(0).getGivenName());
+                    }
+                }
+
+                if (testRequestItemDTO.getProviderId() != null) {
+                    List<UserPersonNameDTO> userPersonNameDTO = personNames.get(testRequestItemDTO.getProviderId());
+                    if (userPersonNameDTO != null) {
+                        testRequestItemDTO.setProviderFamilyName(userPersonNameDTO.get(0).getFamilyName());
+                        testRequestItemDTO.setProviderMiddleName(userPersonNameDTO.get(0).getMiddleName());
+                        testRequestItemDTO.setProviderGivenName(userPersonNameDTO.get(0).getGivenName());
+                    }
+                }
+
+                if (StringUtils.isBlank(testRequestItemDTO.getReferralFromFacilityName())) {
+                    testRequestItemDTO.setReferralFromFacilityName(getConceptName(conceptNameDTOs,testRequestItemDTO.getReferralFromFacilityId(), ConceptNameType.FULLY_SPECIFIED));
+                }
+
+                if (patientIdentifiers != null && !patientIdentifiers.isEmpty()) {
+                    List<PatientIdentifierDTO> identifiers = patientIdentifiers.get(testRequestItemDTO.getPatientId());
+                    if (identifiers != null && !identifiers.isEmpty()) {
+                        for (String patientIdentifier : patientIdentifierTypeIds) {
+                            Optional<PatientIdentifierDTO> identifier = identifiers.stream()
+                                    .filter(p -> patientIdentifier.equals(p.getIdentifierTypeUuid())).findFirst();
+                            if (identifier.isPresent()) {
+                                testRequestItemDTO.setPatientIdentifier(identifier.get().getIdentifier());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
 }

@@ -23,10 +23,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/report", supportedClass = Report.class, supportedOpenmrsVersions = {
@@ -51,7 +48,8 @@ public class ReportResource extends ResourceBase<Report> {
 
 	@Override
 	protected PageableResult doGetAll(RequestContext context) throws ResponseException {
-		return toAlreadyPaged(getLabManagementService().getReports(), context);
+		return toAlreadyPaged(getLabManagementService().getReports().stream()
+				.sorted(Comparator.comparingInt(Report::getOrder)).collect(Collectors.toList()), context);
 	}
 
 	@Override

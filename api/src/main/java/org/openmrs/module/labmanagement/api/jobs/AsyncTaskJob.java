@@ -250,6 +250,10 @@ public abstract class AsyncTaskJob {
         return getReportParameterString(properties, ReportParameter.TestApprover);
     }
 
+    public String getTester(GenericObject properties) {
+        return getReportParameterString(properties, ReportParameter.Tester);
+    }
+
     public String getDiagnosticLocation(GenericObject properties) {
         return getReportParameterString(properties, ReportParameter.DiagnosticLocation);
     }
@@ -277,6 +281,33 @@ public abstract class AsyncTaskJob {
         stringReportParameter.setValue(value);
         stringReportParameter.setDescription(parameterDescription);
         properties.put(parameterName, stringReportParameter.toMap());
+    }
+
+    protected boolean resetExecutionState(BatchJob batchJob, LabManagementService labManagementService, Log log){
+        boolean resetExecutionState = true;
+        pageIndex = 0;
+        recordsProcessed = 0;
+        lastRecordProcessed = 0;
+        lastTestRequestProcessed = 0;
+        resultsFile = new File(FileUtil.getBatchJobFolder(), batchJob.getUuid());
+        executionState = null;
+        if (resultsFile.exists()) {
+            try {
+                resultsFile.delete();
+                hasRestoredExecutionState = false;
+            }
+            catch (Exception exception) {
+                hasRestoredExecutionState = false;
+                labManagementService.failBatchJob(batchJob.getUuid(), "Failed to delete the existing results file "
+                        + resultsFile.toString());
+                log.error(exception.getMessage(), exception);
+                return false;
+            }
+        }
+        if (executionState == null) {
+            executionState = new GenericObject();
+        }
+        return true;
     }
 
     protected boolean restoreExecutionState(BatchJob batchJob, LabManagementService labManagementService, Log log) {
@@ -409,7 +440,7 @@ public abstract class AsyncTaskJob {
     }
 
     protected String formatSingleObs(ObsDto obsDto){
-        if(obsDto == null){return null;}
+        if(obsDto == null || getObsDtoValue(obsDto) == null){return null;}
         return String.format("%1s: %2s", obsDto.getConceptName() ,getObsDtoValue(obsDto));
     }
 

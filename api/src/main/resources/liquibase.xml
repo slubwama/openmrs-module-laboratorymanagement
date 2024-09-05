@@ -1695,6 +1695,18 @@
       </column>
     </addColumn>
   </changeSet>
+  <changeSet author="dev" id="labmanagement-1758855877841-333-1">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_test_request_item"/>
+      <not>
+        <columnExists tableName="labmgmt_test_request_item" columnName="result_date"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_test_request_item">
+      <column name="result_date" type="datetime">
+      </column>
+    </addColumn>
+  </changeSet>
   <changeSet author="dev" id="labmanagement-1758855877841-790">
     <createIndex indexName="labmgmt_test_request_item_initial_sample_fk" tableName="labmgmt_test_request_item">
       <column name="initial_sample_id" />
