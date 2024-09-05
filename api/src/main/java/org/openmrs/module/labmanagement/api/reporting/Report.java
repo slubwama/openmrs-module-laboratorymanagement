@@ -116,10 +116,10 @@ public class Report {
 		reports.add(new Report("2ca9be51-6769-11ef-b6d8-00155d50437b", 41, BatchJobType.Report,"Detail Turnaround Time","DETAIL_TAT_REPORT", new ParameterRule[]{isRequired(ReportParameter.StartDate), isRequired(ReportParameter.EndDate)
 				, isOptional(ReportParameter.TestType), isOptional(ReportParameter.Tester)
 				, isOptional(ReportParameter.Patient), isOptional(ReportParameter.ReferralLocation), isOptional(ReportParameter.DiagnosticLocation)}, DetailTurnAroundTimeReport.class));
-/*
+
 		reports.add(new Report("2ca9be51-6776-11ef-b6d8-00155d50437b", 50, BatchJobType.Report,"Chain of Custody For Sample Movement","SAMPLE_MOVEMENT_REPORT", new ParameterRule[]{isRequired(ReportParameter.StartDate), isRequired(ReportParameter.EndDate),
-				isOptional(ReportParameter.DiagnosticLocation), isOptional(ReportParameter.Tester)}, SummarizedTestReport.class));
-*/
+				isOptional(ReportParameter.DiagnosticLocation), isOptional(ReportParameter.Patient), isOptional(ReportParameter.Tester), isOptional(ReportParameter.ReferenceNumber)}, SampleCustodyReport.class));
+
 		reports.add(new Report("2ca9be51-6777-11ef-b6d8-00155d50437b", 60, BatchJobType.Report,"System Audit Trail Reports","AUDIT_TRAIL_REPORT", new ParameterRule[]{isRequired(ReportParameter.StartDate), isRequired(ReportParameter.EndDate),
 				isOptional(ReportParameter.TestType), isOptional(ReportParameter.Tester)
 				, isOptional(ReportParameter.Patient), isOptional(ReportParameter.ReferralLocation), isOptional(ReportParameter.DiagnosticLocation)}, AuditTestReport.class));

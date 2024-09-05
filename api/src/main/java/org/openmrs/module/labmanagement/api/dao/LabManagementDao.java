@@ -24,6 +24,7 @@ import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
+import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.patientqueueing.model.PatientQueue;
 import org.openmrs.util.OpenmrsUtil;
@@ -3095,23 +3096,23 @@ public class LabManagementDao extends DaoBase {
         }
 
         if (filter.getDateCreatedMin() != null) {
-            appendFilter(hqlFilter, "bj.dateCreated >= :ldc");
-            parameterList.putIfAbsent("ldc", filter.getDateCreatedMin());
+            appendFilter(hqlFilter, "bj.dateCreated >= :ldc0");
+            parameterList.putIfAbsent("ldc0", filter.getDateCreatedMin());
         }
 
         if (filter.getDateCreatedMax() != null) {
-            appendFilter(hqlFilter, "bj.dateCreated <= :ldcx");
-            parameterList.putIfAbsent("ldcx", filter.getDateCreatedMax());
+            appendFilter(hqlFilter, "bj.dateCreated <= :ldcx0");
+            parameterList.putIfAbsent("ldcx0", DateUtil.endOfDay(filter.getDateCreatedMax()));
         }
 
         if (filter.getCompletedDateMin() != null) {
-            appendFilter(hqlFilter, "bj.completedDate >= :lcd");
-            parameterList.putIfAbsent("lcd", filter.getCompletedDateMin());
+            appendFilter(hqlFilter, "bj.endTime >= :lcd1");
+            parameterList.putIfAbsent("lcd1", filter.getCompletedDateMin());
         }
 
         if (filter.getCompletedDateMax() != null) {
-            appendFilter(hqlFilter, "bj.completedDate <= :lcdx");
-            parameterList.putIfAbsent("lcdx", filter.getCompletedDateMax());
+            appendFilter(hqlFilter, "bj.endTime <= :lcdx1");
+            parameterList.putIfAbsent("lcdx1", DateUtil.endOfDay(filter.getCompletedDateMax()));
         }
 
         List<Integer> locationIdsToFilter = null;
@@ -3650,6 +3651,91 @@ public class LabManagementDao extends DaoBase {
         HashMap<String, Collection> parameterWithList = new HashMap<>();
 
         StringBuilder hqlQuery = new AuditReportItemQueryBuilder().build(filter,parameterList, parameterWithList, this::appendFilter);
+        Result<TestRequestReportItem> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setLoadRecordCount(false);
+
+        result.setData(executeQuery(TestRequestReportItem.class, hqlQuery, result, " order by tr.id asc, tri.id asc ", parameterList, parameterWithList));
+
+        if (!result.getData().isEmpty()) {
+            List<Integer> conceptNamesToFetch = result.getData()
+                    .stream()
+                    .map(p-> Arrays.asList(p.getOrderConceptId(),
+                            p.getSampleTypeId(),
+                            p.getReferralToFacilityId() != null && StringUtils.isBlank(p.getReferralToFacilityName()) ? p.getReferralToFacilityId() : null,
+                            p.getReferralFromFacilityId() != null && StringUtils.isBlank(p.getReferralFromFacilityName()) ? p.getReferralFromFacilityId() : null))
+                    .flatMap(Collection::stream)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+            List<Integer> patientIds = result.getData().stream().map(TestRequestReportItem::getPatientId).filter(Objects::nonNull).collect(Collectors.toList());
+            List<Integer> personIds = result.getData().stream().map(TestRequestReportItem::getProviderId).filter(Objects::nonNull).collect(Collectors.toList());
+            Map<Integer,List<UserPersonNameDTO>> patientNames = getPatientNameByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), false).stream().collect(Collectors.groupingBy(p -> p.getPatientId()));
+            Map<Integer,List<UserPersonNameDTO>> personNames = getPersonNameByPersonIds(personIds.stream().distinct().collect(Collectors.toList())).stream().collect(Collectors.groupingBy(p -> p.getPersonId()));
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesAndShortsByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            List<String> patientIdentifierTypeIds = new ArrayList<>();
+            String patientIdentifierSetting = GlobalProperties.getPatientIdentifierTypes();
+            Map<Integer, List<PatientIdentifierDTO>> patientIdentifiers = null;
+            if(StringUtils.isNotBlank(patientIdentifierSetting)) {
+                patientIdentifierTypeIds = Arrays.stream(patientIdentifierSetting.split(",")).map(p->p.trim()).collect(Collectors.toList());
+                patientIdentifiers = getPatientIdentifiersByPatientIds(patientIds.stream().distinct().collect(Collectors.toList()), patientIdentifierTypeIds).stream().collect(Collectors.groupingBy(PatientIdentifierDTO::getPatientId));
+            }
+
+            for (TestRequestReportItem testRequestItemDTO : result.getData()) {
+                if (StringUtils.isBlank(testRequestItemDTO.getReferralToFacilityName())) {
+                    testRequestItemDTO.setReferralToFacilityName(getConceptName(conceptNameDTOs,testRequestItemDTO.getReferralToFacilityId(), ConceptNameType.FULLY_SPECIFIED));
+                }
+                testRequestItemDTO.setTestName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.FULLY_SPECIFIED));
+                testRequestItemDTO.setTestShortName(getConceptName(conceptNameDTOs,testRequestItemDTO.getOrderConceptId(), ConceptNameType.SHORT));
+                testRequestItemDTO.setSampleTypeName(getConceptName(conceptNameDTOs,testRequestItemDTO.getSampleTypeId(), ConceptNameType.FULLY_SPECIFIED));
+
+                if (testRequestItemDTO.getPatientId() != null) {
+                    List<UserPersonNameDTO> userPersonNameDTO = patientNames.get(testRequestItemDTO.getPatientId());
+                    if (userPersonNameDTO != null) {
+                        testRequestItemDTO.setPatientFamilyName(userPersonNameDTO.get(0).getFamilyName());
+                        testRequestItemDTO.setPatientMiddleName(userPersonNameDTO.get(0).getMiddleName());
+                        testRequestItemDTO.setPatientGivenName(userPersonNameDTO.get(0).getGivenName());
+                    }
+                }
+
+                if (testRequestItemDTO.getProviderId() != null) {
+                    List<UserPersonNameDTO> userPersonNameDTO = personNames.get(testRequestItemDTO.getProviderId());
+                    if (userPersonNameDTO != null) {
+                        testRequestItemDTO.setProviderFamilyName(userPersonNameDTO.get(0).getFamilyName());
+                        testRequestItemDTO.setProviderMiddleName(userPersonNameDTO.get(0).getMiddleName());
+                        testRequestItemDTO.setProviderGivenName(userPersonNameDTO.get(0).getGivenName());
+                    }
+                }
+
+                if (StringUtils.isBlank(testRequestItemDTO.getReferralFromFacilityName())) {
+                    testRequestItemDTO.setReferralFromFacilityName(getConceptName(conceptNameDTOs,testRequestItemDTO.getReferralFromFacilityId(), ConceptNameType.FULLY_SPECIFIED));
+                }
+
+                if (patientIdentifiers != null && !patientIdentifiers.isEmpty()) {
+                    List<PatientIdentifierDTO> identifiers = patientIdentifiers.get(testRequestItemDTO.getPatientId());
+                    if (identifiers != null && !identifiers.isEmpty()) {
+                        for (String patientIdentifier : patientIdentifierTypeIds) {
+                            Optional<PatientIdentifierDTO> identifier = identifiers.stream()
+                                    .filter(p -> patientIdentifier.equals(p.getIdentifierTypeUuid())).findFirst();
+                            if (identifier.isPresent()) {
+                                testRequestItemDTO.setPatientIdentifier(identifier.get().getIdentifier());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public Result<TestRequestReportItem> findSampleCustodyReportItems(TestRequestReportItemFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+
+        StringBuilder hqlQuery = new SampleReportItemQueryBuilder().build(filter,parameterList, parameterWithList, this::appendFilter);
         Result<TestRequestReportItem> result = new Result<>();
         if (filter.getLimit() != null) {
             result.setPageIndex(filter.getStartIndex());

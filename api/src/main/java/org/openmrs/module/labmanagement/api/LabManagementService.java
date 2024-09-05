@@ -337,4 +337,6 @@ public interface LabManagementService extends OpenmrsService {
     Result<TestRequestReportItem> findTurnAroundTestRequestReportItems(TestRequestReportItemFilter filter);
 
     Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter);
+
+    Result<TestRequestReportItem> findSampleCustodyReportItems(TestRequestReportItemFilter filter);
 }

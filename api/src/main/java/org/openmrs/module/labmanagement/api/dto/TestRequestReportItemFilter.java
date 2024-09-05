@@ -18,6 +18,7 @@ public class TestRequestReportItemFilter {
     Integer startIndex;
     Integer testRequestItemIdMin;
     Integer testRequestIdMin;
+    String referenceNumber;
 
     public Integer getPatientId() {
         return patientId;
@@ -121,5 +122,13 @@ public class TestRequestReportItemFilter {
 
     public void setTesterUserId(Integer testerUserId) {
         this.testerUserId = testerUserId;
+    }
+
+    public String getReferenceNumber() {
+        return referenceNumber;
+    }
+
+    public void setReferenceNumber(String referenceNumber) {
+        this.referenceNumber = referenceNumber;
     }
 }
