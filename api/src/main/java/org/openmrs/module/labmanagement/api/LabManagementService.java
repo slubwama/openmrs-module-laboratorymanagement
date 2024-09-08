@@ -339,4 +339,15 @@ public interface LabManagementService extends OpenmrsService {
     Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter);
 
     Result<TestRequestReportItem> findSampleCustodyReportItems(TestRequestReportItemFilter filter);
+
+    @Transactional(readOnly = true)
+    @Authorized(Privileges.APP_LABMANAGEMENT_TESTRESULTS)
+    TestResultImportConfig getTestResultImportConfigByHeaderHash(String headerHash, Concept test);
+
+    @Transactional(readOnly = true)
+    TestConfig getTestConfigByConcept(Integer conceptId);
+
+    @Transactional
+    @Authorized(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE)
+    TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig);
 }

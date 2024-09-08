@@ -3816,4 +3816,39 @@ public class LabManagementDao extends DaoBase {
         return result;
     }
 
+    public TestResultImportConfig getTestResultImportConfigById(Integer id) {
+        return (TestResultImportConfig) getSession().createCriteria(TestResultImportConfig.class).add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    public TestResultImportConfig getTestResultImportConfigByUuid(String uuid) {
+        return (TestResultImportConfig) getSession().createCriteria(TestResultImportConfig.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+    }
+
+    public TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig) {
+        getSession().saveOrUpdate(testResultImportConfig);
+
+        DbSession session = getSession();
+        Query query = session.createQuery("Update labmanagement.TestResultImportConfig set voided=1, dateVoided = :date, voidedBy = :user WHERE test = :test and headerHash = :hash and uuid != :uuid and voided=0 ");
+        query.setParameter("date", new Date());
+        query.setParameter("user", testResultImportConfig.getCreator());
+        query.setParameter("test", testResultImportConfig.getTest());
+        query.setParameter("uuid", testResultImportConfig.getUuid());
+        query.setParameter("hash", testResultImportConfig.getHeaderHash());
+        int affectedRows = query.executeUpdate();
+
+        return testResultImportConfig;
+    }
+
+    public TestResultImportConfig getTestResultImportConfigByHeaderHash(String headerHash, Concept test) {
+        return (TestResultImportConfig) getSession().
+                createCriteria(TestResultImportConfig.class)
+                .add(Restrictions.eq("headerHash", headerHash))
+                .add(Restrictions.eq("test", test))
+                .add(Restrictions.eq("voided", false))
+                .addOrder(org.hibernate.criterion.Order.desc("id"))
+                .setFirstResult(0)
+                .setMaxResults(1)
+                .uniqueResult();
+    }
+
 }

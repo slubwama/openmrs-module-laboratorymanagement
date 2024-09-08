@@ -3916,4 +3916,18 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         return result;
     }
 
+    public TestResultImportConfig getTestResultImportConfigByHeaderHash(String headerHash, Concept test){
+        return dao.getTestResultImportConfigByHeaderHash(headerHash, test);
+    }
+
+    public TestConfig getTestConfigByConcept(Integer conceptId){
+        return dao.getTestConfigByConcept(conceptId);
+    }
+
+
+    public TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig){
+        TestResultImportConfig result = dao.saveTestResultImportConfig(testResultImportConfig);
+        return result;
+    }
+
 }

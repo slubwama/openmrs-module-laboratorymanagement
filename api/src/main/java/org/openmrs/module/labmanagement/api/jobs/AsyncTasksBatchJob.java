@@ -1,6 +1,7 @@
 package org.openmrs.module.labmanagement.api.jobs;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
@@ -12,6 +13,7 @@ import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.Report;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
 import org.openmrs.module.labmanagement.api.reporting.ReportParameter;
+import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.FileUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.scheduler.SchedulerException;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 public class AsyncTasksBatchJob extends AbstractTask {
 
@@ -291,6 +294,21 @@ public class AsyncTasksBatchJob extends AbstractTask {
 			silentDelete(file);
 			labManagementService.deleteBatchJob(batchJob);
 		}
+
+		File workingDir = FileUtil.getWorkingDirectory();
+		File[] temporaryFiles = workingDir.listFiles();
+		if(temporaryFiles != null && temporaryFiles.length > 0) {
+			long cutOffTime = DateUtils.addDays(new Date(), -1).getTime();
+			for (File temporaryFile : temporaryFiles) {
+				if(temporaryFile.isDirectory()) {
+					continue;
+				}
+				if(temporaryFile.lastModified() < cutOffTime){
+					silentDelete(temporaryFile);
+				}
+			}
+		}
+
 	}
 
 }

@@ -3004,5 +3004,22 @@ tests	[…]
 		asyncTasksBatchJob.execute();
 	}
 
+	@Test
+	public void testResultImportConfigTest(){
+		TestResultImportConfig testResultImportConfig= eu().newTestResultImportConfig(dao());
+		labManagementService.saveTestResultImportConfig(testResultImportConfig);
+
+		TestResultImportConfig newtestResultImportConfig= eu().newTestResultImportConfig(dao());
+		newtestResultImportConfig.setTest(testResultImportConfig.getTest());
+		newtestResultImportConfig.setHeaderHash(testResultImportConfig.getHeaderHash());
+		labManagementService.saveTestResultImportConfig(newtestResultImportConfig);
+
+		Context.flushSession();
+		Context.flushSession();
+
+		testResultImportConfig = dao().getTestResultImportConfigByUuid(testResultImportConfig.getUuid());
+		dao().getSession().refresh(testResultImportConfig);
+		Assert.assertTrue(testResultImportConfig.getVoided());
+	}
 
 }

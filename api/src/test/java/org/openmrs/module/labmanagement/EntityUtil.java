@@ -840,4 +840,15 @@ public class EntityUtil {
 		return sampleDTO;
 	}
 
+
+	public TestResultImportConfig newTestResultImportConfig(LabManagementDao dao){
+		TestResultImportConfig testResultImportConfig=new TestResultImportConfig();
+		testResultImportConfig.setCreator(getUser());
+		testResultImportConfig.setDateCreated(getRandomDate());
+		testResultImportConfig.setTest(getConcept());
+		testResultImportConfig.setHeaderHash(getRandomString(500));
+		testResultImportConfig.setFieldMapping(getRandomString(2000));
+		return  testResultImportConfig;
+	}
+
 }

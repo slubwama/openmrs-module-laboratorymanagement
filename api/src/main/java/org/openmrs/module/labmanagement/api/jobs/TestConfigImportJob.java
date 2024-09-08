@@ -1,18 +1,21 @@
 package org.openmrs.module.labmanagement.api.jobs;
 
 import liquibase.util.csv.opencsv.CSVReader;
+import org.apache.commons.io.ByteOrderMark;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.Concept;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.dto.ImportResult;
 import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.ApprovalFlow;
 import org.openmrs.module.labmanagement.api.model.TestConfig;
 
-import java.io.File;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -335,17 +338,29 @@ public class TestConfigImportJob {
         boolean hasErrors = false;
         try {
             try(Writer writer = Files.newBufferedWriter( new File(file.toString() + "_errors").toPath())) {
-                try (Reader reader = Files.newBufferedReader(file)) {
-                    csvReader = new CSVReader(reader, ',', '\"', hasHeader ? 1 : 0);
+                try(InputStream inputStream = Files.newInputStream(file)) {
+                    BOMInputStream bomInputStream = new BOMInputStream(inputStream, ByteOrderMark.UTF_8, ByteOrderMark.UTF_16LE, ByteOrderMark.UTF_16BE, ByteOrderMark.UTF_32LE, ByteOrderMark.UTF_32BE);
+                    Charset charset;
+                    if (!bomInputStream.hasBOM()) charset = StandardCharsets.UTF_8;
+                    else if (bomInputStream.hasBOM(ByteOrderMark.UTF_8)) charset = StandardCharsets.UTF_8;
+                    else if (bomInputStream.hasBOM(ByteOrderMark.UTF_16LE)) charset = StandardCharsets.UTF_16LE;
+                    else if (bomInputStream.hasBOM(ByteOrderMark.UTF_16BE)) charset = StandardCharsets.UTF_16BE;
+                    else {
+                        throw new LabManagementException("The charset of the file is not supported.");
+                    }
+
+                    try (Reader streamReader = new InputStreamReader(bomInputStream, charset);
+                         BufferedReader bufferedReader = new BufferedReader(streamReader);) {
+                    csvReader = new CSVReader(bufferedReader, ',', '\"', hasHeader ? 1 : 0);
                     String[] csvLine = null;
                     boolean processedPending = false;
                     Map<Integer, Object[]> list = new HashMap<>();
                     while ((csvLine = csvReader.readNext()) != null) {
                         row++;
                         processedPending = false;
-                        if(result.getErrors().size() > 10){
-                            hasErrors=true;
-                            for(String error: result.getErrors()){
+                        if (result.getErrors().size() > 10) {
+                            hasErrors = true;
+                            for (String error : result.getErrors()) {
                                 writer.append(error);
                                 writer.append("\r\n");
                             }
@@ -372,8 +387,8 @@ public class TestConfigImportJob {
                         updateTestConfigs(list);
                     }
                 }
-                if(hasErrors){
-                    for(String error: result.getErrors()){
+                if (hasErrors) {
+                    for (String error : result.getErrors()) {
                         writer.append(error);
                         writer.append("\r\n");
                     }
@@ -383,6 +398,7 @@ public class TestConfigImportJob {
                 } else if (result.getErrors().isEmpty()) {
                     result.setSuccess(true);
                 }
+            }
             }
         } catch (Exception exception) {
             result.getErrors().add(0, "Stopped processing at row " + Integer.toString(row));

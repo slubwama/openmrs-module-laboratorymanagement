@@ -1749,4 +1749,64 @@
       <column name="concept_id" />
     </createIndex>
   </changeSet>
+  <changeSet author="dev" id="1725681317997-1">
+    <createTable tableName="labmgmt_test_result_import_config">
+      <column autoIncrement="true" name="test_result_import_config_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="test_id" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="header_hash" type="VARCHAR(500)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="field_mapping" type="TEXT">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="0" name="creator" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changed_by" type="INT"/>
+      <column name="date_changed" type="datetime"/>
+      <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="voided_by" type="INT"/>
+      <column name="date_voided" type="datetime"/>
+      <column name="void_reason" type="VARCHAR(255)"/>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-2">
+    <createIndex indexName="labmgmt_test_result_impconf_changed_by_fk" tableName="labmgmt_test_result_import_config">
+      <column name="changed_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-3">
+    <createIndex indexName="labmgmt_test_result_impconf_creator_fk" tableName="labmgmt_test_result_import_config">
+      <column defaultValueNumeric="0" name="creator"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-4">
+    <createIndex indexName="labmgmt_test_result_impconf_voided_by_fk" tableName="labmgmt_test_result_import_config">
+      <column name="voided_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-5">
+    <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_test_result_import_config" constraintName="labmgmt_test_result_impconf_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-6">
+    <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_test_result_import_config" constraintName="labmgmt_test_result_impconf_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-7">
+    <addForeignKeyConstraint baseColumnNames="test_id" baseTableName="labmgmt_test_result_import_config" constraintName="labmgmt_test_result_impconf_test_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="concept_id" referencedTableName="concept"/>
+  </changeSet>
+  <changeSet author="dev" id="1725681317997-8">
+    <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_result_import_config" constraintName="labmgmt_test_result_impconf_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
 </databaseChangeLog>

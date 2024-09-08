@@ -9,3 +9,4 @@ delete from labmgmt_test_request_item_sample ltris where  ltris.test_request_ite
 delete from labmgmt_test_request_item where test_request_item_id  > @start;
 delete from labmgmt_sample ls where ls.test_request_id  in (select tr.test_request_id  from labmgmt_test_request tr where (select count(*) from labmgmt_test_request_item tri where tri.test_request_id = tr.test_request_id) = 0);
 delete from labmgmt_test_request tr where (select count(*) from labmgmt_test_request_item tri where tri.test_request_id = tr.test_request_id) = 0;
+DROP TABLE esmugemr.labmgmt_test_result_import_config;

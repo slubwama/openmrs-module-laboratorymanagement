@@ -53,6 +53,7 @@ public class GlobalProperties {
 	public static final String UNKNOWN_CONCEPT_UUID = ModuleConstants.MODULE_ID + ".unknownConceptUuid";
 
 	public static final String TEST_CONFIGS_MAX_UPLOAD_FILE_SIZE = ModuleConstants.MODULE_ID + ".testConfigsMaxUploadFileSize";
+	public static final String TEST_RESULTS_MAX_UPLOAD_FILE_SIZE = ModuleConstants.MODULE_ID + ".testResultsMaxUploadFileSize";
 
 	public static final String DEFAULT_VISIT_TYPE = ModuleConstants.MODULE_ID + ".defaultVisitType";
 
@@ -119,6 +120,15 @@ public class GlobalProperties {
 	public static long getTestConfigsMaxUploadSize() {
 		try {
 			return Long.parseLong(getGlobalProperty(TEST_CONFIGS_MAX_UPLOAD_FILE_SIZE));
+		}
+		catch (Exception exception) {}
+		return 2;
+
+	}
+
+	public static long getTestResultsMaxUploadSize() {
+		try {
+			return Long.parseLong(getGlobalProperty(TEST_RESULTS_MAX_UPLOAD_FILE_SIZE));
 		}
 		catch (Exception exception) {}
 		return 2;

@@ -207,6 +207,14 @@
     </globalProperty>
 
     <globalProperty>
+        <property>labmanagement.testResultsMaxUploadFileSize</property>
+        <defaultValue>2</defaultValue>
+        <description>
+            Test results file maximum import size
+        </description>
+    </globalProperty>
+
+    <globalProperty>
         <property>labmanagement.laboratoryReferalDestinationUuid</property>
         <defaultValue>b1f8b6c8-c255-4518-89f5-4236ab76025b</defaultValue>
         <description>Concept uuid for laboratory referrals destinations</description>
