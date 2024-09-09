@@ -63,6 +63,9 @@ public class GlobalProperties {
 
 	public static final String BATCH_JOB_EXPIRY_IN_MINUTES = ModuleConstants.MODULE_ID + ".batchJobExpiryInMinutes";
 
+	public static final String TEST_RESULT_NOTIFICATION_TIMEOUT = ModuleConstants.MODULE_ID + ".testResultNotificationTimeout";
+
+
 	public static final String APPLICATION_ROOT_URL = ModuleConstants.MODULE_ID + ".applicationRootUrl";
 
 	public static final String ENABLE_DATA_MIGRATION = ModuleConstants.MODULE_ID + ".enableDataMigration";
@@ -272,6 +275,14 @@ public class GlobalProperties {
 		}
 		catch (Exception exception) {}
 		return 1440;
+	}
+
+	public static Integer getTestResultNotificationTimeout() {
+		try {
+			return Math.max(0, Integer.parseInt(getGlobalProperty(TEST_RESULT_NOTIFICATION_TIMEOUT)));
+		}
+		catch (Exception exception) {}
+		return 28860;
 	}
 
 	public static String getApplicationRootUrl() {

@@ -36,6 +36,7 @@ import org.openmrs.module.labmanagement.api.reporting.ReportParameterValue;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.MapUtil;
 import org.openmrs.module.labmanagement.api.utils.Pair;
+import org.openmrs.notification.Alert;
 import org.openmrs.parameter.EncounterSearchCriteria;
 import org.openmrs.parameter.EncounterSearchCriteriaBuilder;
 import org.openmrs.util.LocaleUtility;
@@ -3257,14 +3258,32 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         TestRequestItem testRequestItem = testResult.getTestRequestItemSample().getTestRequestItem();
         testRequestItem.setStatus(TestRequestItemStatus.COMPLETED);
         testRequestItem.setCompleted(true);
+        boolean sendAlert = testRequestItem.getCompletedDate() == null && testRequestItem.getDateCreated().after(DateUtils.addMinutes(new Date(),-1 * GlobalProperties.getTestResultNotificationTimeout()));
         testRequestItem.setCompletedDate(new Date());
         dao.saveTestRequestItem(testRequestItem);
-
+        Order toReturn = null;
         if(testResult.getOrder() != null && ! Order.FulfillerStatus.COMPLETED.equals(testResult.getOrder().getFulfillerStatus())){
-            return Context.getOrderService().updateOrderFulfillerStatus(testResult.getOrder(),
+            toReturn = Context.getOrderService().updateOrderFulfillerStatus(testResult.getOrder(),
                     Order.FulfillerStatus.COMPLETED,testResult.getOrder().getFulfillerComment());
         }
-        return null;
+        if(sendAlert && testRequestItem.getTestRequest().getReferredIn() != null && !testRequestItem.getTestRequest().getReferredIn()) {
+            Provider provider = testRequestItem.getTestRequest().getProvider();
+            List<User> usersToNotify = new ArrayList<>();
+            usersToNotify.add(testRequestItem.getCreator());
+            if (provider != null && provider.getPerson() != null) {
+                List<User> providerUser = Context.getUserService().getUsersByPerson(provider.getPerson(), false);
+                if (providerUser != null && !providerUser.isEmpty() && !usersToNotify.get(0).getUserId().equals(providerUser.get(0).getUserId())) {
+                    usersToNotify.add(providerUser.get(0));
+                }
+            }
+
+            Patient patient = testRequestItem.getTestRequest().getPatient();
+            String name = patient != null ? patient.getPatientIdentifier().getIdentifier() + " - " + patient.getPersonName().getFullName() : "Unknown";
+            Alert alert = new Alert(String.format("%1s results are ready for %2s", testResult.getObs().getConcept().getDisplayString(), name), usersToNotify);
+            alert.setDateToExpire(DateUtils.addDays(new Date(), 1));
+            Context.getAlertService().saveAlert(alert);
+        }
+        return toReturn;
     }
 
     public Result<TestApprovalDTO> findTestApprovals(TestApprovalSearchFilter filter){

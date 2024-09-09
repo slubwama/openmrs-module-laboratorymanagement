@@ -75,6 +75,7 @@
     <role_privilege  role="Laboratory Request Approver" privilege="Task: labmanagement.testrequests.approve"/>
     <role_privilege  role="Laboratory Request Approver" privilege="Edit Orders" />
 
+
     <!--* Laboratory Phlebotomist *-->
     <role_role parent_role="Lab Management Base Role"  child_role="Laboratory Phlebotomist"/>
     <role_privilege  role="Laboratory Phlebotomist" privilege="Get Encounters" />
@@ -108,6 +109,7 @@
     <!--* Laboratory Results Approver *-->
     <role_role parent_role="Laboratory Reporting"  child_role="Laboratory Results Approver"/>
     <role_privilege  role="Laboratory Results Approver" privilege="Task: labmanagement.testresults.approve"/>
+    <role_privilege  role="Laboratory Results Approver" privilege="Manage Alerts" />
 
     <!--* Laboratory Administrator *-->
     <role_role parent_role="Laboratory Technician"  child_role="Laboratory Administrator"/>
@@ -116,6 +118,8 @@
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testresults.approve"/>
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testrequests.approve"/>
     <role_privilege  role="Laboratory Administrator" privilege="Manage Locations"/>
+    <role_privilege  role="Laboratory Administrator" privilege="Manage Alerts" />
+
 
 </dataset>
 
