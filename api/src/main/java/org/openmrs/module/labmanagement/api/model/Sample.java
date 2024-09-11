@@ -108,6 +108,10 @@ public class Sample extends BaseChangeableOpenmrsData implements Serializable {
     @Column(name = "referral_to_facility_name")
     private String referralToFacilityName;
 
+    @JoinColumn(name = "storage_unit_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    private StorageUnit storageUnit;
+
     public TestRequest getTestRequest() {
         return testRequest;
     }
@@ -310,5 +314,13 @@ public class Sample extends BaseChangeableOpenmrsData implements Serializable {
 
     public void setReferralToFacilityName(String referralToFacilityName) {
         this.referralToFacilityName = referralToFacilityName;
+    }
+
+    public StorageUnit getStorageUnit() {
+        return storageUnit;
+    }
+
+    public void setStorageUnit(StorageUnit storageUnit) {
+        this.storageUnit = storageUnit;
     }
 }

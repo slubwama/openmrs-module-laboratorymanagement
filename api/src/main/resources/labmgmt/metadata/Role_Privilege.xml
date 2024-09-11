@@ -18,6 +18,9 @@
     <privilege  privilege="Task: labmanagement.samples.collect"  description="Able to collect lab samples"  uuid="9956be6d-35c8-11ef-9df0-00155d919f83"/>
     <privilege  privilege="Task: labmanagement.samples.mutate"  description="Able to create, update and reuse lab samples"  uuid="9e00a163-35c8-11ef-9df0-00155d919f83"/>
 
+    <privilege  privilege="App: labmanagement.storage"  description="Able to view lab storage"  uuid="4b765300-6f52-11ef-81e5-00155d503f06"/>
+    <privilege  privilege="Task: labmanagement.storage.mutate"  description="Able to create and update lab storage"  uuid="529e083b-6f52-11ef-81e5-00155d503f06"/>
+
     <privilege  privilege="App: labmanagement.worksheets"  description="Able to view lab worksheets"  uuid="a3d58dab-35c8-11ef-9df0-00155d919f83"/>
     <privilege  privilege="Task: labmanagement.worksheets.mutate"  description="Able to create and update lab worksheets"  uuid="a8cd8e78-35c8-11ef-9df0-00155d919f83"/>
 
@@ -45,6 +48,7 @@
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.dashboard"/>
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.approvalconfigurations"/>
     <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.testconfigurations"/>
+    <role_privilege  role="Lab Management Base Role" privilege="App: labmanagement.storage"/>
     <role_privilege  role="Lab Management Base Role" privilege="Get Concepts"/>
     <role_privilege  role="Lab Management Base Role" privilege="Get Locations"/>
     <role_privilege  role="Lab Management Base Role" privilege="Get Users"/>
@@ -115,8 +119,9 @@
     <role_role parent_role="Laboratory Technician"  child_role="Laboratory Administrator"/>
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.approvalconfigurations.mutate"/>
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testconfigurations.mutate"/>
+    <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testconfigurations.mutate"/>
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testresults.approve"/>
-    <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.testrequests.approve"/>
+    <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.storage.mutate"/>
     <role_privilege  role="Laboratory Administrator" privilege="Manage Locations"/>
     <role_privilege  role="Laboratory Administrator" privilege="Manage Alerts" />
 

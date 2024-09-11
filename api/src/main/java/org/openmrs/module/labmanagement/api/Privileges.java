@@ -61,6 +61,16 @@ public class Privileges {
 	public static final String TASK_LABMANAGEMENT_SAMPLES_MUTATE = "Task: labmanagement.samples.mutate";
 
 	/**
+	 * App: labmanagement.storage: Able to view lab storage
+	 */
+	public static final String APP_LABMANAGEMENT_STORAGE = "App: labmanagement.storage";
+
+	/**
+	 * Task: labmanagement.storage.mutate: Able to create and update lab storage
+	 */
+	public static final String TASK_LABMANAGEMENT_STORAGE_MUTATE = "Task: labmanagement.storage.mutate";
+
+	/**
 	 * App: labmanagement.worksheets: Able to view lab worksheets
 	 */
 	public static final String APP_LABMANAGEMENT_WORKSHEETS = "App: labmanagement.worksheets";
@@ -108,6 +118,8 @@ public class Privileges {
 	APP_LABMANAGEMENT_SAMPLES,
 	TASK_LABMANAGEMENT_SAMPLES_COLLECT,
 	TASK_LABMANAGEMENT_SAMPLES_MUTATE,
+	APP_LABMANAGEMENT_STORAGE,
+	TASK_LABMANAGEMENT_STORAGE_MUTATE,
 	APP_LABMANAGEMENT_WORKSHEETS,
 	TASK_LABMANAGEMENT_WORKSHEETS_MUTATE,
 	APP_LABMANAGEMENT_TESTRESULTS,

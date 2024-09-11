@@ -3021,5 +3021,116 @@ tests	[…]
 		dao().getSession().refresh(testResultImportConfig);
 		Assert.assertTrue(testResultImportConfig.getVoided());
 	}
+	@Test
+	public void saveStorage_shouldSucceedOnAllFilters() {
+		Storage storage = eu().newStorage(dao());
+		StorageDTO dto = new StorageDTO();
+		dto.setName(storage.getName());
+		dto.setAtLocationUuid(storage.getAtLocation().getUuid());
+		dto.setDescription(storage.getDescription());
+		dto.setActive(storage.getActive());
+		dto.setCapacity(81);
+
+		Storage entity = labManagementService.saveStorage(dto);
+		Context.flushSession();
+
+		dto = new StorageDTO();
+		dto.setUuid(entity.getUuid());
+		dto.setName(storage.getName());
+		dto.setAtLocationUuid(storage.getAtLocation().getUuid());
+		dto.setDescription(storage.getDescription());
+		dto.setActive(storage.getActive());
+		dto.setCapacity(81);
+		entity = labManagementService.saveStorage(dto);
+		Context.flushSession();
+
+		StorageSearchFilter storageSearchFilter = new StorageSearchFilter();
+		storageSearchFilter.setStorageId(entity.getId());
+		Result<StorageUnitDTO> storageUnits = labManagementService.findStorageUnits(storageSearchFilter);
+		Assert.assertEquals(storageUnits.getData().size(), 81);
+
+		dto.setCapacity(10);
+		entity = labManagementService.saveStorage(dto);
+		Context.flushSession();
+
+		storageSearchFilter = new StorageSearchFilter();
+		storageSearchFilter.setStorageId(entity.getId());
+		storageUnits = labManagementService.findStorageUnits(storageSearchFilter);
+		Assert.assertEquals(storageUnits.getData().size(), 10);
+
+		Storage storage1 = labManagementService.getStorageById(entity.getId());
+		Sample sample = eu().newSample(dao());
+		sample.setStorageUnit(labManagementService.getStorageUnitById(storageUnits.getData().get(0).getId()));
+		dao().saveSample(sample);
+
+		dto.setCapacity(9);
+		StorageDTO finalDto = dto;
+		Assert.assertThrows(LabManagementException.class, ()-> labManagementService.saveStorage(finalDto));
+
+	}
+
+	@Test
+	public void findStorage_shouldSucceedOnAllFilters() {
+		Storage storage = eu().newStorage(dao());
+		StorageDTO dto = new StorageDTO();
+		dto.setName(storage.getName());
+		dto.setAtLocationUuid(storage.getAtLocation().getUuid());
+		dto.setDescription(storage.getDescription());
+		dto.setActive(storage.getActive());
+		dto.setCapacity(10);
+
+		Storage entity = labManagementService.saveStorage(dto);
+		Context.flushSession();
+		Context.flushSession();
+
+		StorageSearchFilter filter = new StorageSearchFilter();
+		filter.setStorageId(entity.getId());
+		Result<StorageDTO> result = labManagementService.findStorages(filter);
+		assertTrue(result.getData().stream().anyMatch(p -> p.getId().equals(entity.getId())));
+		assertEquals(result.getData().size(), 1);
+
+		filter = new StorageSearchFilter();
+		filter.setVoided(!entity.getVoided());
+		result = labManagementService.findStorages(filter);
+		assertFalse(result.getData().stream().anyMatch(p -> p.getUuid().equalsIgnoreCase(entity.getUuid()) && entity.getVoided().equals(p.getVoided())));
+		assertTrue(result.getData().isEmpty());
+
+		filter = new StorageSearchFilter();
+		filter.setVoided(entity.getVoided());
+		result = labManagementService.findStorages(filter);
+		assertTrue(result.getData().stream().anyMatch(p -> p.getUuid().equalsIgnoreCase(entity.getUuid()) && entity.getVoided().equals(p.getVoided())));
+		assertFalse(result.getData().isEmpty());
+
+		StorageDTO dbDto = result.getData().get(0);
+		filter = new StorageSearchFilter();
+		filter.setSearchText(dbDto.getName());
+		result = labManagementService.findStorages(filter);
+		assertTrue(result.getData().stream().anyMatch(p -> p.getId().equals(entity.getId())));
+		assertEquals(result.getData().size(), 1);
+		filter = new StorageSearchFilter();
+		filter.setSearchText(UUID.randomUUID().toString());
+		result = labManagementService.findStorages(filter);
+		assertFalse(result.getData().stream().anyMatch(p -> p.getId().equals(entity.getId())));
+		assertEquals(result.getData().size(), 0);
+
+		filter = new StorageSearchFilter();
+		filter.setLimit(10);
+		result = labManagementService.findStorages(filter);
+		assertTrue(result.getData().stream().anyMatch(p -> p.getUuid().equalsIgnoreCase(entity.getUuid()) && entity.getVoided().equals(p.getVoided())));
+		assertFalse(result.getData().isEmpty());
+
+		filter = new StorageSearchFilter();
+		filter.setLimit(10);
+		filter.setStartIndex(Integer.MAX_VALUE / 1000);
+		result = labManagementService.findStorages(filter);
+		assertFalse(result.getData().stream().anyMatch(p -> p.getUuid().equalsIgnoreCase(entity.getUuid()) && entity.getVoided().equals(p.getVoided())));
+		assertTrue(result.getData().isEmpty());
+
+		labManagementService.deleteStorage(entity.getUuid());
+		filter = new StorageSearchFilter();
+		filter.setLimit(10);
+		result = labManagementService.findStorages(filter);
+		assertTrue(result.getData().isEmpty());
+	}
 
 }

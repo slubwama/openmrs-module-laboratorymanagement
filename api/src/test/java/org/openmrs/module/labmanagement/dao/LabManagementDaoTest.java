@@ -944,4 +944,96 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedReferralLocation, hasProperty("name", is(referralLocation.getName())));
         assertThat(savedReferralLocation, hasProperty("acronym", is(referralLocation.getAcronym())));
     }
+
+
+    @Test
+    public void saveStorage_shouldSaveAllProperties(){
+//Given
+        Storage storage=eu().newStorage(dao());
+
+//When
+        dao().saveStorage(storage);
+
+//Let's clean up the cache to be sure getStorageByUuid fetches from DB and not from cache
+        Context.flushSession();
+        Context.flushSession();
+
+//Then
+        Storage savedStorage = dao().getStorageByUuid(storage.getUuid());
+        assertThat(savedStorage, hasProperty("uuid", is(storage.getUuid())));
+        assertThat(savedStorage, hasProperty("creator", is(storage.getCreator())));
+        assertThat(savedStorage, hasProperty("dateCreated", is(storage.getDateCreated())));
+        assertThat(savedStorage, hasProperty("changedBy", is(storage.getChangedBy())));
+        assertThat(savedStorage, hasProperty("dateChanged", is(storage.getDateChanged())));
+        assertThat(savedStorage, hasProperty("voided", is(storage.getVoided())));
+        assertThat(savedStorage, hasProperty("dateVoided", is(storage.getDateVoided())));
+        assertThat(savedStorage, hasProperty("voidedBy", is(storage.getVoidedBy())));
+        assertThat(savedStorage, hasProperty("voidReason", is(storage.getVoidReason())));
+        assertThat(savedStorage, hasProperty("atLocation", is(storage.getAtLocation())));
+        assertThat(savedStorage, hasProperty("name", is(storage.getName())));
+        assertThat(savedStorage, hasProperty("active", is(storage.getActive())));
+        assertThat(savedStorage, hasProperty("capacity", is(storage.getCapacity())));
+        assertThat(savedStorage, hasProperty("description", is(storage.getDescription())));
+
+        savedStorage = dao().getStorageById(storage.getId());
+        assertThat(savedStorage, hasProperty("uuid", is(storage.getUuid())));
+        assertThat(savedStorage, hasProperty("creator", is(storage.getCreator())));
+        assertThat(savedStorage, hasProperty("dateCreated", is(storage.getDateCreated())));
+        assertThat(savedStorage, hasProperty("changedBy", is(storage.getChangedBy())));
+        assertThat(savedStorage, hasProperty("dateChanged", is(storage.getDateChanged())));
+        assertThat(savedStorage, hasProperty("voided", is(storage.getVoided())));
+        assertThat(savedStorage, hasProperty("dateVoided", is(storage.getDateVoided())));
+        assertThat(savedStorage, hasProperty("voidedBy", is(storage.getVoidedBy())));
+        assertThat(savedStorage, hasProperty("voidReason", is(storage.getVoidReason())));
+        assertThat(savedStorage, hasProperty("atLocation", is(storage.getAtLocation())));
+        assertThat(savedStorage, hasProperty("name", is(storage.getName())));
+        assertThat(savedStorage, hasProperty("active", is(storage.getActive())));
+        assertThat(savedStorage, hasProperty("capacity", is(storage.getCapacity())));
+        assertThat(savedStorage, hasProperty("description", is(storage.getDescription())));
+    }
+
+
+    @Test
+    public void saveStorageUnit_shouldSaveAllProperties(){
+//Given
+        StorageUnit storageUnit=eu().newStorageUnit(dao());
+
+//When
+        dao().saveStorageUnit(storageUnit);
+
+//Let's clean up the cache to be sure getStorageUnitByUuid fetches from DB and not from cache
+        Context.flushSession();
+        Context.flushSession();
+
+//Then
+        StorageUnit savedStorageUnit = dao().getStorageUnitByUuid(storageUnit.getUuid());
+        assertThat(savedStorageUnit, hasProperty("uuid", is(storageUnit.getUuid())));
+        assertThat(savedStorageUnit, hasProperty("creator", is(storageUnit.getCreator())));
+        assertThat(savedStorageUnit, hasProperty("dateCreated", is(storageUnit.getDateCreated())));
+        assertThat(savedStorageUnit, hasProperty("changedBy", is(storageUnit.getChangedBy())));
+        assertThat(savedStorageUnit, hasProperty("dateChanged", is(storageUnit.getDateChanged())));
+        assertThat(savedStorageUnit, hasProperty("voided", is(storageUnit.getVoided())));
+        assertThat(savedStorageUnit, hasProperty("dateVoided", is(storageUnit.getDateVoided())));
+        assertThat(savedStorageUnit, hasProperty("voidedBy", is(storageUnit.getVoidedBy())));
+        assertThat(savedStorageUnit, hasProperty("voidReason", is(storageUnit.getVoidReason())));
+        assertThat(savedStorageUnit, hasProperty("storage", is(storageUnit.getStorage())));
+        assertThat(savedStorageUnit, hasProperty("unitName", is(storageUnit.getUnitName())));
+        assertThat(savedStorageUnit, hasProperty("description", is(storageUnit.getDescription())));
+        assertThat(savedStorageUnit, hasProperty("active", is(storageUnit.getActive())));
+
+        savedStorageUnit = dao().getStorageUnitById(storageUnit.getId());
+        assertThat(savedStorageUnit, hasProperty("uuid", is(storageUnit.getUuid())));
+        assertThat(savedStorageUnit, hasProperty("creator", is(storageUnit.getCreator())));
+        assertThat(savedStorageUnit, hasProperty("dateCreated", is(storageUnit.getDateCreated())));
+        assertThat(savedStorageUnit, hasProperty("changedBy", is(storageUnit.getChangedBy())));
+        assertThat(savedStorageUnit, hasProperty("dateChanged", is(storageUnit.getDateChanged())));
+        assertThat(savedStorageUnit, hasProperty("voided", is(storageUnit.getVoided())));
+        assertThat(savedStorageUnit, hasProperty("dateVoided", is(storageUnit.getDateVoided())));
+        assertThat(savedStorageUnit, hasProperty("voidedBy", is(storageUnit.getVoidedBy())));
+        assertThat(savedStorageUnit, hasProperty("voidReason", is(storageUnit.getVoidReason())));
+        assertThat(savedStorageUnit, hasProperty("storage", is(storageUnit.getStorage())));
+        assertThat(savedStorageUnit, hasProperty("unitName", is(storageUnit.getUnitName())));
+        assertThat(savedStorageUnit, hasProperty("description", is(storageUnit.getDescription())));
+        assertThat(savedStorageUnit, hasProperty("active", is(storageUnit.getActive())));
+    }
 }

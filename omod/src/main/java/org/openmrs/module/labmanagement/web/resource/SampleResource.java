@@ -351,7 +351,10 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             description.addProperty("referralInExternalRef");
             description.addProperty("permission");
             description.addProperty("testRequestNo");
-
+            description.addProperty("storageUnitUuid");
+            description.addProperty("storageUnitName");
+            description.addProperty("storageUuid");
+            description.addProperty("storageName");
         }
 
 		if (rep instanceof DefaultRepresentation){
@@ -429,6 +432,10 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             modelImpl.property("referralInExternalRef", new StringProperty());
             modelImpl.property("referralFromFacilityName", new StringProperty());
             modelImpl.property("testRequestNo", new StringProperty());
+            modelImpl.property("storageUnitUuid", new StringProperty());
+            modelImpl.property("storageUnitName", new StringProperty());
+            modelImpl.property("storageUuid", new StringProperty());
+            modelImpl.property("storageName", new StringProperty());
 		}
 
 		if (rep instanceof FullRepresentation) {

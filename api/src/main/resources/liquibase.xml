@@ -1809,4 +1809,177 @@
   <changeSet author="dev" id="1725681317997-8">
     <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_test_result_import_config" constraintName="labmgmt_test_result_impconf_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
   </changeSet>
+  <changeSet author="dev" id="1725950199884-1">
+    <createTable tableName="labmgmt_storage">
+      <column autoIncrement="true" name="storage_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="at_location_id" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="active" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="capacity" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="description" type="VARCHAR(500)"/>
+      <column defaultValueNumeric="0" name="creator" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changed_by" type="INT"/>
+      <column name="date_changed" type="datetime"/>
+      <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="voided_by" type="INT"/>
+      <column name="date_voided" type="datetime"/>
+      <column name="void_reason" type="VARCHAR(255)"/>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-2">
+    <createTable tableName="labmgmt_storage_unit">
+      <column autoIncrement="true" name="storage_unit_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="storage_id" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="unit_name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="description" type="VARCHAR(500)"/>
+      <column name="active" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="0" name="creator" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changed_by" type="INT"/>
+      <column name="date_changed" type="datetime"/>
+      <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="voided_by" type="INT"/>
+      <column name="date_voided" type="datetime"/>
+      <column name="void_reason" type="VARCHAR(255)"/>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-3">
+    <addUniqueConstraint columnNames="storage_id, unit_name" constraintName="labmgmt_storage_unit_name_uq" tableName="labmgmt_storage_unit"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-4">
+    <createIndex indexName="labmgmt_storage_FK" tableName="labmgmt_storage">
+      <column name="at_location_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-5">
+    <createIndex indexName="labmgmt_storage_changed_by_fk" tableName="labmgmt_storage">
+      <column name="changed_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-6">
+    <createIndex indexName="labmgmt_storage_creator_fk" tableName="labmgmt_storage">
+      <column defaultValueNumeric="0" name="creator"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-7">
+    <createIndex indexName="labmgmt_storage_unit_changed_by_fk" tableName="labmgmt_storage_unit">
+      <column name="changed_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-8">
+    <createIndex indexName="labmgmt_storage_unit_creator_fk" tableName="labmgmt_storage_unit">
+      <column defaultValueNumeric="0" name="creator"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-9">
+    <createIndex indexName="labmgmt_storage_unit_voided_by_fk" tableName="labmgmt_storage_unit">
+      <column name="voided_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-10">
+    <createIndex indexName="labmgmt_storage_voided_by_fk" tableName="labmgmt_storage">
+      <column name="voided_by"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-11">
+    <addForeignKeyConstraint baseColumnNames="at_location_id" baseTableName="labmgmt_storage" constraintName="labmgmt_storage_FK" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="location_id" referencedTableName="location"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-12">
+    <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_storage" constraintName="labmgmt_storage_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-13">
+    <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_storage" constraintName="labmgmt_storage_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-14">
+    <addForeignKeyConstraint baseColumnNames="storage_id" baseTableName="labmgmt_storage_unit" constraintName="labmgmt_storage_unit_FK" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="storage_id" referencedTableName="labmgmt_storage"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-15">
+    <addForeignKeyConstraint baseColumnNames="changed_by" baseTableName="labmgmt_storage_unit" constraintName="labmgmt_storage_unit_changed_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-16">
+    <addForeignKeyConstraint baseColumnNames="creator" baseTableName="labmgmt_storage_unit" constraintName="labmgmt_storage_unit_creator_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-17">
+    <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_storage_unit" constraintName="labmgmt_storage_unit_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="1725950199884-18">
+    <addForeignKeyConstraint baseColumnNames="voided_by" baseTableName="labmgmt_storage" constraintName="labmgmt_storage_voided_by_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-20">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample"/>
+      <not>
+        <columnExists tableName="labmgmt_sample" columnName="storage_unit_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample">
+      <column name="storage_unit_id" type="INT">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-21">
+    <createIndex indexName="labmgmt_sample_storage_unit_fk" tableName="labmgmt_sample">
+      <column name="storage_unit_id" />
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-22">
+    <addForeignKeyConstraint baseColumnNames="storage_unit_id" baseTableName="labmgmt_sample" constraintName="labmgmt_sample_storage_unit_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="storage_unit_id" referencedTableName="labmgmt_storage_unit" />
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-23">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample_activity"/>
+      <not>
+        <columnExists tableName="labmgmt_sample_activity" columnName="storage_unit_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample_activity">
+      <column name="storage_unit_id" type="INT">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-24">
+    <createIndex indexName="labmgmt_sample_activity_storage_unit_fk" tableName="labmgmt_sample_activity">
+      <column name="storage_unit_id" />
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-25">
+    <addForeignKeyConstraint baseColumnNames="storage_unit_id" baseTableName="labmgmt_sample_activity" constraintName="labmgmt_sample_activity_storage_unit_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="storage_unit_id" referencedTableName="labmgmt_storage_unit" />
+  </changeSet>
 </databaseChangeLog>

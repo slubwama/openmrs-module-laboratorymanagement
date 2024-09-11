@@ -9,11 +9,11 @@
  */
 package org.openmrs.module.labmanagement.api.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.criterion.Restrictions;
 import org.openmrs.*;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.*;
@@ -32,7 +32,6 @@ import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.Report;
-import org.openmrs.module.labmanagement.api.reporting.ReportParameterValue;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.MapUtil;
 import org.openmrs.module.labmanagement.api.utils.Pair;
@@ -510,7 +509,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             invalidRequest("labmanagement.approvalconfig.inuseflow");
         }
 
-        if(dao.CheckApprovalConfigUsage(approvalConfig.getId())){
+        if(dao.checkApprovalConfigUsage(approvalConfig)){
             invalidRequest("labmanagement.approvalconfig.inuseapprovals");
         }
         approvalConfig.setVoided(true);
@@ -3947,6 +3946,225 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
     public TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig){
         TestResultImportConfig result = dao.saveTestResultImportConfig(testResultImportConfig);
         return result;
+    }
+
+    public Result<StorageUnitDTO> findStorageUnits(StorageSearchFilter filter){
+        Result<StorageUnitDTO> result = dao.findStorageUnits(filter);
+
+        List<UserPersonNameDTO> personNames = dao.getPersonNameByUserIds(result.getData().stream().map(p -> Arrays.asList(
+                p.getCreator(),
+                p.getChangedBy()
+        )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+        for (StorageUnitDTO storageUnitDTO : result.getData()) {
+            if (storageUnitDTO.getCreator() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(storageUnitDTO.getCreator())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    storageUnitDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                    storageUnitDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (storageUnitDTO.getChangedBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(storageUnitDTO.getChangedBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    storageUnitDTO.setChangedByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    storageUnitDTO.setChangedByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Result<StorageDTO> findStorages(StorageSearchFilter filter){
+        Result<StorageDTO> result = dao.findStorages(filter);
+
+        Map<Integer, List<StorageUnitDTO>> storageUnits = null;
+        if(!result.getData().isEmpty() && filter.getIncludeUnits() != null && filter.getIncludeUnits()){
+            StorageSearchFilter storageSearchFilter=new StorageSearchFilter();
+            storageSearchFilter.setStorageIds(result.getData().stream().map(p->p.getId()).distinct().collect(Collectors.toList()));
+            storageUnits = dao.findStorageUnits(storageSearchFilter).getData().stream().collect(Collectors.groupingBy(StorageUnitDTO::getStorageId));
+        }
+        List<UserPersonNameDTO> personNames = dao.getPersonNameByUserIds(result.getData().stream().map(p -> Arrays.asList(
+                p.getCreator(),
+                p.getChangedBy()
+        )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+        for (StorageDTO storageDTO : result.getData()) {
+            if (storageDTO.getCreator() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(storageDTO.getCreator())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    storageDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                    storageDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+            if (storageDTO.getChangedBy() != null) {
+                Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(storageDTO.getChangedBy())).findFirst();
+                if (userPersonNameDTO.isPresent()) {
+                    storageDTO.setChangedByFamilyName(userPersonNameDTO.get().getFamilyName());
+                    storageDTO.setChangedByGivenName(userPersonNameDTO.get().getGivenName());
+                }
+            }
+
+            if(storageUnits != null){
+                storageDTO.setUnits(storageUnits.getOrDefault(storageDTO.getId(), null));
+            }
+        }
+        return result;
+    }
+
+    public Storage getStorageById(Integer id) {
+        return dao.getStorageById(id);
+    }
+
+    public Storage getStorageByUuid(String uuid) {
+        return dao.getStorageByUuid(uuid);
+    }
+
+    public Storage saveStorage(Storage storage){
+        return dao.saveStorage(storage);
+    }
+
+    public void  deleteStorage(String storageUuid){
+        Storage storage = dao.getStorageByUuid(storageUuid);
+        if(storage == null) return;
+        if(dao.checkStorageUsage(storage.getId())){
+            invalidRequest("labmanagement.thinginuse", "Storage", "Samples");
+        }
+        /*List<StorageUnit> storageUnitsToDelete =  dao.getStorageUnitsByStorage(storage);
+        for(StorageUnit storageUnit : storageUnitsToDelete){
+            dao.deleteStorageUnitById(storageUnit.getId());
+        }*/
+        dao.deleteStorageUnitsByStorageId(storage.getId());
+        dao.deleteStorageById(storage.getId());
+    }
+
+    public Storage saveStorage(StorageDTO storageDTO){
+        Storage storage;
+        boolean isNew;
+        if (storageDTO.getUuid() == null) {
+            isNew = true;
+            storage = new Storage();
+            storage.setCreator(Context.getAuthenticatedUser());
+            storage.setDateCreated(new Date());
+        } else {
+            isNew = false;
+            storage =  getStorageByUuid(storageDTO.getUuid());
+            if (storage == null) {
+                invalidRequest("labmanagement.thingnotexists", "Storage");
+            }
+
+            storage.setChangedBy(Context.getAuthenticatedUser());
+            storage.setDateChanged(new Date());
+        }
+
+        Location location = null;
+        if(StringUtils.isBlank(storageDTO.getAtLocationUuid())){
+            invalidRequest("labmanagement.fieldrequired", "Lab Section");
+        }else{
+            location = Context.getLocationService().getLocationByUuid(storageDTO.getAtLocationUuid());
+            if(location == null){
+                invalidRequest("labmanagement.thingnotexists",  "Lab Section");
+            }
+        }
+
+        if(StringUtils.isBlank(storageDTO.getName())){
+            invalidRequest("labmanagement.fieldrequired", "Name");
+        }else{
+            StorageSearchFilter searchFilter = new StorageSearchFilter();
+            searchFilter.setStorageName(storageDTO.getName());
+            searchFilter.setLocationId(location.getLocationId());
+            if(findStorages(searchFilter).getData().stream().anyMatch(p-> isNew || !p.getId().equals(storage.getId()))){
+                invalidRequest("labmanagement.storage.nameexists");
+            }
+        }
+
+        boolean capacityHasChanged = false;
+        Integer capacity = storage.getCapacity();
+        Integer oldCapacity = storage.getCapacity();
+        if(isNew){
+            if(storageDTO.getCapacity() == null){
+                invalidRequest("labmanagement.fieldrequired", "Capacity");
+            }
+            if(storageDTO.getCapacity() <= 0){
+                invalidRequest("labmanagement.fieldinvalid", "Capacity");
+            }
+            capacity = storageDTO.getCapacity();
+        }
+        else{
+            if(storageDTO.getCapacity() != null && !storageDTO.getCapacity().equals(capacity)){
+                capacityHasChanged = true;
+                if(dao.checkStorageUsage(storage.getId())){
+                    invalidRequest("labmanagement.storage.inusecapacitynochange", "Capacity");
+                }
+                capacity = storageDTO.getCapacity();
+            }
+        }
+
+        storage.setName(storageDTO.getName());
+        storage.setDescription(storageDTO.getDescription());
+        storage.setActive(storageDTO.getActive() == null || storageDTO.getActive());
+        storage.setAtLocation(location);
+        storage.setCapacity(capacity);
+        storage.setCreator(Context.getAuthenticatedUser());
+        storage.setDateCreated(new Date());
+        dao.saveStorage(storage);
+
+        List<StorageUnit> storageUnits = null;
+        if(isNew || capacityHasChanged){
+            if(isNew){
+                storageUnits = new ArrayList<>();
+                Integer unitsToCreate = storage.getCapacity();
+                for(int index = 1; index <= unitsToCreate; index++){
+                    StorageUnit storageUnit=new StorageUnit();
+                    storageUnit.setStorage(storage);
+                    storageUnit.setActive(true);
+                    storageUnit.setUnitName(Integer.toString(index));
+                    storageUnit.setDescription(null);
+                    storageUnit.setCreator(Context.getAuthenticatedUser());
+                    storageUnit.setDateCreated(new Date());
+                    storageUnits.add(storageUnit);
+                }
+            }else if(oldCapacity != null){
+                if(oldCapacity < storage.getCapacity()){
+                    storageUnits = new ArrayList<>();
+                    for(int index = oldCapacity + 1; index <= storage.getCapacity(); index++){
+                        StorageUnit storageUnit=new StorageUnit();
+                        storageUnit.setStorage(storage);
+                        storageUnit.setActive(true);
+                        storageUnit.setUnitName(Integer.toString(index));
+                        storageUnit.setDescription(null);
+                        storageUnit.setCreator(Context.getAuthenticatedUser());
+                        storageUnit.setDateCreated(new Date());
+                        storageUnits.add(storageUnit);
+
+                    }
+                }else{
+                    List<StorageUnit> storageUnitsToDelete =  dao.getStorageUnitsByStorage(storage).stream().sorted(Comparator.comparing(StorageUnit::getId)).skip(storage.getCapacity()).collect(Collectors.toList());
+                    for(StorageUnit storageUnit : storageUnitsToDelete){
+                        dao.deleteStorageUnitById(storageUnit.getId());
+                    }
+                    dao.saveStorage(storage);
+                }
+            }
+
+        }
+
+        if(storageUnits != null){
+            for(StorageUnit storageUnit : storageUnits){
+                storage.addStorageUnit(storageUnit);
+                dao.saveStorageUnit(storageUnit);
+            }
+            dao.saveStorage(storage);
+        }
+
+        return storage;
+    }
+
+    public StorageUnit getStorageUnitById(Integer id) {
+        return dao.getStorageUnitById(id);
+    }
+
+    public StorageUnit getStorageUnitByUuid(String uuid){
+        return dao.getStorageUnitByUuid(uuid);
     }
 
 }

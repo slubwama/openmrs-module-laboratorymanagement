@@ -64,6 +64,10 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
     @Column(name = "thaw_cycles")
     private Integer thawCycles;
 
+    @JoinColumn(name = "storage_unit_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    private StorageUnit storageUnit;
+
     public Integer getId() {
         return id;
     }
@@ -182,5 +186,13 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
 
     public void setVolumeUnit(Concept volumeUnit) {
         this.volumeUnit = volumeUnit;
+    }
+
+    public StorageUnit getStorageUnit() {
+        return storageUnit;
+    }
+
+    public void setStorageUnit(StorageUnit storageUnit) {
+        this.storageUnit = storageUnit;
     }
 }

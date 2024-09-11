@@ -46,8 +46,8 @@ public class LabManagementDao extends DaoBase {
     public void deleteTestRequestItemSamples(List<Integer> testRequestItemSamplesIds) {
         if(testRequestItemSamplesIds == null || testRequestItemSamplesIds.isEmpty()) return ;
         DbSession session = getSession();
-        Query query = session.createQuery("Update labmanagement.TestRequestItem as tri set tri.initialSampleId = null WHERE tri.id in (" +
-                "select tris.testRequestItem.id from labmanagement.TestRequestItemSample tris where tris.id in :id ) and tri.initialSampleId in (" +
+        Query query = session.createQuery("Update labmanagement.TestRequestItem as tri set tri.initialSample = null WHERE tri.id in (" +
+                "select tris.testRequestItem.id from labmanagement.TestRequestItemSample tris where tris.id in :id ) and tri.initialSample.id in (" +
                 "select tris.sample.id from labmanagement.TestRequestItemSample tris where tris.id in :id )");
         query.setParameterList("id", testRequestItemSamplesIds);
         query.executeUpdate();
@@ -800,11 +800,10 @@ public class LabManagementDao extends DaoBase {
         return result;
     }
 
-    public boolean CheckApprovalConfigUsage(Integer approvalConfigId){
+    public boolean checkApprovalConfigUsage(ApprovalConfig approvalConfig){
         DbSession dbSession = getSession();
         Criteria criteria = dbSession.createCriteria(TestApproval.class, "c");
-        criteria.add(Restrictions.eq("c.id", approvalConfigId));
-        criteria.add(Restrictions.eq("c.voided", false));
+        criteria.add(Restrictions.eq("c.approvalConfig", approvalConfig));
         criteria.setMaxResults(1);
         criteria.setFirstResult(0);
         Object result = criteria.uniqueResult();
@@ -1668,6 +1667,10 @@ public class LabManagementDao extends DaoBase {
                 "coalesce(tr.referralFromFacilityName, rff.name) as referralFromFacilityName,\n" +
                 "tr.referralInExternalRef as referralInExternalRef,\n" +
                 "tr.requestNo as testRequestNo,\n" +
+                "su.uuid as storageUnitUuid,\n" +
+                "su.unitName as storageUnitName,\n" +
+                "sus.uuid as storageUuid,\n" +
+                "sus.name as storageName,\n" +
                 "s.creator.userId as creator,\n" +
                 "s.creator.uuid as creatorUuid,\n" +
                 "s.dateCreated as dateCreated,\n" +
@@ -1691,6 +1694,8 @@ public class LabManagementDao extends DaoBase {
                 " tr.referralFromFacility rff left join\n" +
                 " s.parentSample ps left join\n" +
                 " s.encounter e left join\n" +
+                " s.storageUnit su left join\n" +
+                " su.storage sus left join\n" +
                 " s.changedBy cb\n");
 
         StringBuilder hqlFilter = new StringBuilder();
@@ -3849,6 +3854,250 @@ public class LabManagementDao extends DaoBase {
                 .setFirstResult(0)
                 .setMaxResults(1)
                 .uniqueResult();
+    }
+
+    public Result<StorageDTO> findStorages(StorageSearchFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        boolean filteringBasedOnUnits = (StringUtils.isNotBlank(filter.getStorageUnitUuId()) || filter.getStorageUnitId() != null);
+        StringBuilder hqlQuery = new StringBuilder("select s.uuid as uuid, s.id as id,\n" +
+                "s.name as name,\n" +
+                "al.uuid as atLocationUuid,\n" +
+                "al.name as atLocationName,\n" +
+                "s.active as active,\n" +
+                "s.capacity as capacity,\n" +
+                "s.description as description,\n" +
+                "s.creator.userId as creator,\n" +
+                "s.creator.uuid as creatorUuid,\n" +
+                "s.dateCreated as dateCreated,\n" +
+                "cb.userId as changedBy,\n" +
+                "cb.uuid as changedByUuid,\n" +
+                "s.dateChanged as dateChanged,\n" +
+                "s.voided as voided\n" +
+                ( filteringBasedOnUnits ? "from labmanagement.StorageUnit su join su.storage s left join\n" :
+                "from labmanagement.Storage s left join\n") +
+                " s.atLocation al left join\n" +
+                " s.creator cb left join s.changedBy cb\n");
+
+        StringBuilder hqlFilter = new StringBuilder();
+
+
+        if (!StringUtils.isBlank(filter.getStorageUnitUuId())) {
+            appendFilter(hqlFilter, "su.uuid = :suuid");
+            parameterList.put("suuid", filter.getStorageUnitUuId());
+        }
+
+        if (filter.getStorageUnitId() != null) {
+            appendFilter(hqlFilter, "su.id = :sid");
+            parameterList.put("sid", filter.getStorageUnitId());
+        }
+
+        if (!StringUtils.isBlank(filter.getStorageUuId())) {
+            appendFilter(hqlFilter, "s.uuid = :uuid");
+            parameterList.put("uuid", filter.getStorageUuId());
+        }
+
+        if (filter.getStorageId() != null) {
+            appendFilter(hqlFilter, "s.id = :id");
+            parameterList.put("id", filter.getStorageId());
+        }
+
+        if(!StringUtils.isBlank(filter.getStorageName())){
+            appendFilter(hqlFilter, "s.name = :name");
+            parameterList.put("name", filter.getStorageName());
+        }
+
+        if(filter.getLocationId() != null){
+            appendFilter(hqlFilter, "al.id = :locid");
+            parameterList.put("locid", filter.getLocationId());
+        }
+
+        if (!StringUtils.isBlank(filter.getSearchText())) {
+            appendFilter(hqlFilter,  (filteringBasedOnUnits ? "lower(su.unitName) like :q or" : "")+ "lower(s.name) like :q" );
+            parameterList.put("q", "%" + filter.getSearchText().toLowerCase() + "%");
+        }
+
+        if(filter.getActive() != null){
+            appendFilter(hqlFilter, "s.active = :active");
+            parameterList.put("active", filter.getActive());
+        }
+
+        if(filter.getVoided() != null){
+            appendFilter(hqlFilter, "s.voided = :voided");
+            parameterList.put("voided", filter.getVoided());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        Result<StorageDTO> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setData(executeQuery(StorageDTO.class, hqlQuery, result, " order by s.name asc", parameterList, parameterWithList));
+
+        return result;
+    }
+
+    public Result<StorageUnitDTO> findStorageUnits(StorageSearchFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select su.uuid as uuid, su.id as id,\n" +
+                "su.unitName as unitName,\n" +
+                "al.uuid as atLocationUuid,\n" +
+                "al.name as atLocationName,\n" +
+                "su.active as active,\n" +
+                "su.description as description,\n" +
+                "s.id as storageId, s.uuid as storageUuid, s.name as storageName,\n" +
+                "su.creator.userId as creator,\n" +
+                "su.creator.uuid as creatorUuid,\n" +
+                "su.dateCreated as dateCreated,\n" +
+                "cb.userId as changedBy,\n" +
+                "cb.uuid as changedByUuid,\n" +
+                "su.dateChanged as dateChanged,\n" +
+                "su.voided as voided\n" +
+                "from labmanagement.StorageUnit su join su.storage s left join\n" +
+                " s.atLocation al left join\n" +
+                " su.creator cb left join su.changedBy cb\n");
+
+        StringBuilder hqlFilter = new StringBuilder();
+
+        if (!StringUtils.isBlank(filter.getStorageUnitUuId())) {
+            appendFilter(hqlFilter, "su.uuid = :suuid");
+            parameterList.put("suuid", filter.getStorageUnitUuId());
+        }
+
+        if (filter.getStorageUnitId() != null) {
+            appendFilter(hqlFilter, "su.id = :sid");
+            parameterList.put("sid", filter.getStorageUnitId());
+        }
+
+        if(filter.getStorageIds() != null && !filter.getStorageIds().isEmpty()){
+            appendFilter(hqlFilter, "su.id in ( :sids )");
+            parameterWithList.put("sids", filter.getStorageIds());
+        }
+
+        if (!StringUtils.isBlank(filter.getStorageUuId())) {
+            appendFilter(hqlFilter, "s.uuid = :uuid");
+            parameterList.put("uuid", filter.getStorageUuId());
+        }
+
+        if (filter.getStorageId() != null) {
+            appendFilter(hqlFilter, "s.id = :id");
+            parameterList.put("id", filter.getStorageId());
+        }
+
+
+        if(!StringUtils.isBlank(filter.getStorageName())){
+            appendFilter(hqlFilter, "s.name = :name");
+            parameterList.put("name", filter.getStorageName());
+        }
+
+        if(filter.getLocationId() != null){
+            appendFilter(hqlFilter, "al.id = :locid");
+            parameterList.put("locid", filter.getLocationId());
+        }
+
+        if (!StringUtils.isBlank(filter.getSearchText())) {
+            appendFilter(hqlFilter,  "lower(su.unitName) like :q" );
+            parameterList.put("q", "%" + filter.getSearchText().toLowerCase() + "%");
+        }
+
+        if(filter.getActive() != null){
+            appendFilter(hqlFilter, "su.active = :active");
+            parameterList.put("active", filter.getActive());
+        }
+
+        if(filter.getVoided() != null){
+            appendFilter(hqlFilter, "su.voided = :voided");
+            parameterList.put("voided", filter.getVoided());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        Result<StorageUnitDTO> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setData(executeQuery(StorageUnitDTO.class, hqlQuery, result, " order by su.id asc", parameterList, parameterWithList));
+
+        return result;
+    }
+
+
+    public Storage getStorageById(Integer id) {
+        return (Storage) getSession().createCriteria(Storage.class).add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    public Storage getStorageByUuid(String uuid) {
+        return (Storage) getSession().createCriteria(Storage.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+    }
+
+    public Storage saveStorage(Storage storage) {
+        getSession().saveOrUpdate(storage);
+        return storage;
+    }
+
+
+    public StorageUnit getStorageUnitById(Integer id) {
+        return (StorageUnit) getSession().createCriteria(StorageUnit.class).add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    public StorageUnit getStorageUnitByUuid(String uuid) {
+        return (StorageUnit) getSession().createCriteria(StorageUnit.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+    }
+
+    public StorageUnit saveStorageUnit(StorageUnit storageUnit) {
+        getSession().saveOrUpdate(storageUnit);
+        return storageUnit;
+    }
+
+    public boolean checkStorageUsage(Integer storageId){
+        DbSession session = getSession();
+        Query query = session.createQuery("select s from labmanagement.Storage s join s.storageUnits su left join su.samples sus left join su.sampleActivities susa where s.id = :id and (sus.id is not null or susa.id is not null)");
+        query.setParameter("id", storageId);
+        query.setFirstResult(0);
+        query.setMaxResults(1);
+        List<TestResult> result = (List<TestResult>) query.list();
+        return result != null && !result.isEmpty();
+    }
+
+
+    public void deleteStorageById(Integer storageId) {
+        if(storageId == null) return ;
+        DbSession session = getSession();
+        Query query = session.createQuery("DELETE labmanagement.Storage WHERE id in :id");
+        query.setParameter("id", storageId);
+        query.executeUpdate();
+    }
+
+    public void deleteStorageUnitsByStorageId(Integer storageId) {
+        if(storageId == null) return ;
+        DbSession session = getSession();
+        Query query = session.createQuery("DELETE labmanagement.StorageUnit WHERE storage.id = :id");
+        query.setParameter("id", storageId);
+        query.executeUpdate();
+    }
+
+
+    public void deleteStorageUnitById(Integer storageUnitId) {
+        if(storageUnitId == null) return ;
+        DbSession session = getSession();
+        Query query = session.createQuery("DELETE labmanagement.StorageUnit WHERE id = :id");
+        query.setParameter("id", storageUnitId);
+        query.executeUpdate();
+    }
+
+    public List<StorageUnit> getStorageUnitsByStorage(Storage storage) {
+        if(storage == null) return Collections.emptyList();
+        return (List<StorageUnit>) getSession().createCriteria(StorageUnit.class).add(Restrictions.eq("storage", storage)).list();
     }
 
 }

@@ -85,6 +85,10 @@ public class SampleDTO extends TestRequestSampleDTO {
     private Date dateChanged;
     private Set<String> sampleTestItemUuids;
     private Map<String, Object> requestContextItems;
+    private String StorageUnitUuid;
+    private String StorageUnitName;
+    private String StorageUuid;
+    private String StorageName;
 
     public Integer getId() {
         return id;
@@ -626,4 +630,35 @@ public class SampleDTO extends TestRequestSampleDTO {
         this.testRequestNo = testRequestNo;
     }
 
+    public String getStorageUnitUuid() {
+        return StorageUnitUuid;
+    }
+
+    public void setStorageUnitUuid(String storageUnitUuid) {
+        StorageUnitUuid = storageUnitUuid;
+    }
+
+    public String getStorageUnitName() {
+        return StorageUnitName;
+    }
+
+    public void setStorageUnitName(String storageUnitName) {
+        StorageUnitName = storageUnitName;
+    }
+
+    public String getStorageUuid() {
+        return StorageUuid;
+    }
+
+    public void setStorageUuid(String storageUuid) {
+        StorageUuid = storageUuid;
+    }
+
+    public String getStorageName() {
+        return StorageName;
+    }
+
+    public void setStorageName(String storageName) {
+        StorageName = storageName;
+    }
 }

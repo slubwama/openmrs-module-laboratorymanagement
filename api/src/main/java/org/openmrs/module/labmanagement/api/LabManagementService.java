@@ -350,4 +350,21 @@ public interface LabManagementService extends OpenmrsService {
     @Transactional
     @Authorized(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE)
     TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = Privileges.APP_LABMANAGEMENT_STORAGE)
+    Result<StorageUnitDTO> findStorageUnits(StorageSearchFilter filter);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = Privileges.APP_LABMANAGEMENT_STORAGE)
+    Result<StorageDTO> findStorages(StorageSearchFilter filter);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_STORAGE_MUTATE)
+    Storage saveStorage(StorageDTO storageDTO);
+
+    @Transactional
+    @Authorized(value = Privileges.TASK_LABMANAGEMENT_STORAGE_MUTATE)
+    void  deleteStorage(String storageUuid);
+
 }

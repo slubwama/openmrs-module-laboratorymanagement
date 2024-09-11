@@ -851,4 +851,43 @@ public class EntityUtil {
 		return  testResultImportConfig;
 	}
 
+
+	public Storage newStorage(LabManagementDao dao){
+		Storage storage=new Storage();
+		storage.setCreator(getUser());
+		storage.setDateCreated(getRandomDate());
+		storage.setChangedBy(getUser());
+		storage.setDateChanged(getRandomDate());
+		storage.setVoided(getRandomBool());
+		storage.setDateVoided(getRandomDate());
+		storage.setVoidedBy(getUser());
+		storage.setVoidReason(getRandomString(255));
+		storage.setAtLocation(getLocation());
+		storage.setName(getRandomString(255));
+		storage.setActive(getRandomBool());
+		storage.setCapacity(getRandomInt());
+		storage.setDescription(getRandomString(500));
+		return  storage;
+	}
+
+
+	public StorageUnit newStorageUnit(LabManagementDao dao){
+		StorageUnit storageUnit=new StorageUnit();
+		storageUnit.setCreator(getUser());
+		storageUnit.setDateCreated(getRandomDate());
+		storageUnit.setChangedBy(getUser());
+		storageUnit.setDateChanged(getRandomDate());
+		storageUnit.setVoided(getRandomBool());
+		storageUnit.setDateVoided(getRandomDate());
+		storageUnit.setVoidedBy(getUser());
+		storageUnit.setVoidReason(getRandomString(255));
+		Storage storage=newStorage(dao);
+		dao.saveStorage(storage);
+		storageUnit.setStorage(storage);
+		storageUnit.setUnitName(getRandomString(255));
+		storageUnit.setDescription(getRandomString(500));
+		storageUnit.setActive(getRandomBool());
+		return  storageUnit;
+	}
+
 }
