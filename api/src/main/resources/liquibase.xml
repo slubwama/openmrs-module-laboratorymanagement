@@ -1982,4 +1982,62 @@
   <changeSet author="dev" id="labmanagement-1725950199884-25">
     <addForeignKeyConstraint baseColumnNames="storage_unit_id" baseTableName="labmgmt_sample_activity" constraintName="labmgmt_sample_activity_storage_unit_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="storage_unit_id" referencedTableName="labmgmt_storage_unit" />
   </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-26">
+    <dropNotNullConstraint tableName="labmgmt_sample_activity" columnName="destination_id" columnDataType="INT"/>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-27">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample_activity"/>
+      <not>
+        <columnExists tableName="labmgmt_sample_activity" columnName="activity_date"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample_activity">
+      <column name="activity_date" type="datetime">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-28">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample_activity"/>
+      <not>
+        <columnExists tableName="labmgmt_sample_activity" columnName="responsible_person_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample_activity">
+      <column name="responsible_person_id" type="INT">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-29">
+    <createIndex indexName="labmgmt_sample_activity_respusr_fk" tableName="labmgmt_sample_activity">
+      <column  name="responsible_person_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-30">
+    <addForeignKeyConstraint baseColumnNames="responsible_person_id" baseTableName="labmgmt_sample_activity" constraintName="labmgmt_sample_activity_respusr_fk" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="user_id" referencedTableName="users"/>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-31">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample"/>
+      <not>
+        <columnExists tableName="labmgmt_sample_activity" columnName="storage_status"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample">
+      <column name="storage_status" type="VARCHAR(50)">
+      </column>
+    </addColumn>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1725950199884-32">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_sample_activity"/>
+      <not>
+        <columnExists tableName="labmgmt_sample_activity" columnName="responsible_person_other"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_sample_activity">
+      <column name="responsible_person_other" type="VARCHAR(150)" />
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

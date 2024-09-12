@@ -19,7 +19,6 @@ import org.mockito.MockitoAnnotations;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
-import org.openmrs.logic.op.In;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.dao.LabManagementDao;
 import org.openmrs.module.labmanagement.api.dto.*;
@@ -1248,7 +1247,7 @@ public class LabManagementServiceTest extends BaseModuleContextSensitiveTest {
 		assertEquals(result.getData().size(), 0);
 
 		Sample sampleInStorage = eu().newSample(dao());
-		sampleInStorage.setStatus(SampleStatus.STORAGE);
+		sampleInStorage.setStatus(SampleStatus.ARCHIVED);
 		sampleInStorage = dao().saveSample(sampleInStorage);
 		Context.flushSession();
 		Context.flushSession();
@@ -2548,6 +2547,14 @@ tests	[…]
 		}
 		Worksheet worksheet = labManagementService.saveWorksheet(worksheetDTO);
 
+		TestRequestItemSearchFilter testRequestItemSearchFilter=new TestRequestItemSearchFilter();
+		testRequestItemSearchFilter.setSampleId(thisSample.getId());
+		testRequestItemSearchFilter.setIncludeTestWorksheetInfo(true);
+		Result<TestRequestItemDTO> testRequestItems =  labManagementService.findTestRequestItems(testRequestItemSearchFilter);
+		Assert.assertTrue(!testRequestItems.getData().isEmpty());
+		Assert.assertEquals(testRequestItems.getData().get(0).getWorksheetUuid(), worksheet.getUuid());
+
+
 		dashboardMetricsDTO = labManagementService.getDashboardMetrics(DateUtils.addDays(new Date(), -1),
 				DateUtil.endOfDay(new Date()));
 		Assert.assertEquals(dashboardMetricsDTO.getTestsInProgress(), new Long(10));
@@ -2612,6 +2619,22 @@ tests	[…]
 		Result<TestRequestReportItem> reportResult = labManagementService.findTestRequestReportItems(testRequestReportItemFilter);
 		Assert.assertTrue(reportResult.getData().size() > 0);
 
+		testRequestAction = new TestRequestAction();
+		testRequestAction.setParameters(new LinkedHashMap<>());
+		testRequestAction.setAction(ApprovalResult.APPROVED);
+		testRequestAction.setRecords(Arrays.asList(sampleIds.get(0).getUuid()));
+		testRequestAction.setActionDate(new Date());
+		testRequestAction.setRemarks("Test purpose");
+		testRequestAction.getParameters().put("responsiblePersonUuid", Context.getAuthenticatedUser().getUuid());
+		testRequestAction.getParameters().put("thawCycles", 5);
+		testRequestAction.getParameters().put("volume", 100);
+		testRequestAction.getParameters().put("volumeUnitUuid", eu().getConcept().getUuid());
+		labManagementService.disposeSamples(testRequestAction);
+
+		SampleActivitySearchFilter sampleActivitySearchFilter=new SampleActivitySearchFilter();
+		sampleActivitySearchFilter.setSampleId(sampleIds.get(0).getId());
+		Result<SampleActivityDTO> sampleActivityDTOResult = labManagementService.findSampleActivities(sampleActivitySearchFilter);
+		Assert.assertTrue(sampleActivityDTOResult.getData().size() > 0);
 
 		testRequestReportItemFilter=new TestRequestReportItemFilter();
 		reportResult = labManagementService.findTestRequestReportItems(testRequestReportItemFilter);
@@ -2674,8 +2697,6 @@ tests	[…]
 		testRequestReportItemFilter.setTestRequestIdMin(testRequest.getId() - 1);
 		reportResult = labManagementService.findTestRequestReportItems(testRequestReportItemFilter);
 		Assert.assertTrue(reportResult.getData().size() > 0);
-
-		ObsValue obsValue;
 
 		reportResult = labManagementService.findTestRequestReportItems(testRequestReportItemFilter);
 		Assert.assertTrue(reportResult.getData().size() > 0);

@@ -31,6 +31,10 @@
     <privilege  privilege="App: labmanagement.reports"  description="Able to view lab reports"  uuid="c04aac47-35c8-11ef-9df0-00155d919f83"/>
     <privilege  privilege="Task: labmanagement.reports.mutate"  description="Able to create lab reports"  uuid="c5464fbf-35c8-11ef-9df0-00155d919f83"/>
 
+    <privilege  privilege="App: labmanagement.repository"  description="Able to access sample repository"  uuid="1b4c1810-707b-11ef-a8bb-00155d79962d"/>
+    <privilege  privilege="Task: labmanagement.repository.mutate"  description="Able to manage sample repository"  uuid="14289fe5-707b-11ef-a8bb-00155d79962d"/>
+
+
     <!-- ROLES -->
     <role  role="Lab Management Base Role"  description="This Role is the default Role for lab management with basic functionality with less privileges"  uuid="dc37b5f4-35c3-11ef-9df0-00155d919f83"/>
     <role  role="Laboratory Results Approver" description="This enables approving lab test results in the lab management application"  uuid="e47f4f3f-35c3-11ef-9df0-00155d919f83"/>
@@ -41,6 +45,7 @@
     <role  role="Laboratory Clinician" description="This Role enables access to clinicians to make lab requests"  uuid="ff495a1a-35c3-11ef-9df0-00155d919f83"/>
     <role  role="Laboratory Phlebotomist" description="This Role enables access for sample collection"  uuid="9c04f977-35ca-11ef-9df0-00155d919f83"/>
     <role  role="Laboratory Reporting" description="This Role enables a provider to access reports"  uuid="04366bfd-35c4-11ef-9df0-00155d919f83"/>
+    <role  role="Laboratory Repository Manager" description="This Role enables a provider to manage sample repository"  uuid="edb1b3d5-707a-11ef-a8bb-00155d79962d"/>
 
     <!-- ROLE PRIVILEGES -->
     <!--* BASE ROLE  *-->
@@ -78,7 +83,6 @@
     <role_privilege  role="Laboratory Request Approver" privilege="App: labmanagement.testrequests"/>
     <role_privilege  role="Laboratory Request Approver" privilege="Task: labmanagement.testrequests.approve"/>
     <role_privilege  role="Laboratory Request Approver" privilege="Edit Orders" />
-
 
     <!--* Laboratory Phlebotomist *-->
     <role_role parent_role="Lab Management Base Role"  child_role="Laboratory Phlebotomist"/>
@@ -124,7 +128,15 @@
     <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.storage.mutate"/>
     <role_privilege  role="Laboratory Administrator" privilege="Manage Locations"/>
     <role_privilege  role="Laboratory Administrator" privilege="Manage Alerts" />
+    <role_privilege  role="Laboratory Administrator" privilege="App: labmanagement.repository" />
+    <role_privilege  role="Laboratory Administrator" privilege="Task: labmanagement.repository.mutate" />
 
+    <!--* Laboratory Repository *-->
+    <role_role parent_role="Lab Management Base Role"  child_role="Laboratory Repository Manager"/>
+    <role_privilege  role="Laboratory Repository Manager" privilege="App: labmanagement.repository" />
+    <role_privilege  role="Laboratory Repository Manager" privilege="Task: labmanagement.repository.mutate"/>
+    <role_privilege  role="Laboratory Repository Manager" privilege="App: labmanagement.samples"/>
+    <role_privilege  role="Laboratory Repository Manager" privilege="App: labmanagement.testrequests"/>
 
 </dataset>
 

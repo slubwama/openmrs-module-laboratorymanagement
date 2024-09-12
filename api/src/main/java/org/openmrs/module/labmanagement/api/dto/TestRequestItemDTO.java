@@ -56,6 +56,7 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
     private String referralOutSampleUuid;
     private Boolean Completed;
     private String testRequestUuid;
+    private String testRequestNo;
     private boolean voided;
     private Integer creator;
     private String creatorUuid;
@@ -626,5 +627,13 @@ public class TestRequestItemDTO extends TestRequestTestDTO {
 
     public void setResultDate(Date resultDate) {
         this.resultDate = resultDate;
+    }
+
+    public String getTestRequestNo() {
+        return testRequestNo;
+    }
+
+    public void setTestRequestNo(String testRequestNo) {
+        this.testRequestNo = testRequestNo;
     }
 }

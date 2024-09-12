@@ -1356,6 +1356,7 @@ public class LabManagementDao extends DaoBase {
                 "tri.completedDate as completedDate,\n" +
                 "tri.resultDate as resultDate,\n" +
                 "tr.uuid as testRequestUuid,\n" +
+                "tr.requestNo as testRequestNo,\n" +
                 "tri.creator.userId as creator,\n" +
                 "tri.creator.uuid as creatorUuid,\n" +
                 "tri.dateCreated as dateCreated,\n" +
@@ -1363,11 +1364,12 @@ public class LabManagementDao extends DaoBase {
                 "cb.uuid as changedByUuid,\n" +
                 "tri.dateChanged as dateChanged,\n" +
                 "tri.voided as voided \n" +
-                "from labmanagement.TestRequestItem tri left join\n" +
+                (filter.getSampleId() != null ? "from labmanagement.TestRequestItemSample tris join tris.testRequestItem tri left join\n" : "") +
+                (filter.getSampleId() == null ? "from labmanagement.TestRequestItem tri left join\n" : "") +
                 " tri.testRequest tr left join\n" +
                 " tri.order o left join\n" +
                 ((filter.getPendingResultApproval() != null && filter.getPendingResultApproval())|| (leftJoinForApproval || leftJoinForWorksheets) ?
-                        ( " tri.testRequestItemSamples tris left join tris.testResults tristr left join tristr.currentApproval tristrca left join " +
+                        ((filter.getSampleId() == null ? " tri.testRequestItemSamples tris left join" : "")  +" tris.testResults tristr left join tristr.currentApproval tristrca left join " +
                                 (leftJoinForWorksheets ? " tris.worksheetItems trisws left join " : "")
                                 )
                         : "") +
@@ -1383,6 +1385,11 @@ public class LabManagementDao extends DaoBase {
                 " tri.referralToFacility rtf\n");
 
         StringBuilder hqlFilter = new StringBuilder();
+        if(filter.getSampleId() != null){
+            appendFilter(hqlFilter, "tris.sample.id = :sampleId");
+            parameterList.put("sampleId", filter.getSampleId());
+        }
+
         if (!StringUtils.isBlank(filter.getTestRequestItemUuid())) {
             appendFilter(hqlFilter, "tri.uuid = :uuid");
             parameterList.put("uuid", filter.getTestRequestItemUuid());
@@ -1657,6 +1664,7 @@ public class LabManagementDao extends DaoBase {
                 "rtf.concept.id as referralToFacilityId,\n" +
                 "coalesce(s.referralToFacilityName, rtf.name) as referralToFacilityName,\n" +
                 "s.status as status,\n" +
+                "s.storageStatus as storageStatus,\n" +
                 "e.uuid as encounterUuid,\n" +
                 "tr.id as testRequestId,\n" +
                 "tr.uuid as testRequestUuid,\n" +
@@ -1758,8 +1766,21 @@ public class LabManagementDao extends DaoBase {
         }
 
         if (filter.getSampleStatuses() != null) {
-            appendFilter(hqlFilter, "s.status = :status");
+            appendFilter(hqlFilter, "s.status in :status");
             parameterWithList.put("status", filter.getSampleStatuses());
+        }
+
+        if(filter.getRepository() != null){
+            if(filter.getRepository()){
+                appendFilter(hqlFilter, "s.storageStatus is not null");
+            }else{
+                appendFilter(hqlFilter, "s.storageStatus is null");
+            }
+        }
+
+        if (filter.getStorageStatuses() != null) {
+            appendFilter(hqlFilter, "s.storageStatus in :sstatus");
+            parameterWithList.put("sstatus", filter.getStorageStatuses());
         }
 
         if(StringUtils.isNotBlank(filter.getReference())){
@@ -1800,6 +1821,11 @@ public class LabManagementDao extends DaoBase {
         if (filter.getUrgency() != null) {
             appendFilter(hqlFilter, "tr.urgency = :urgency");
             parameterList.put("urgency", filter.getUrgency());
+        }
+
+        if(filter.getStorageId() != null){
+            appendFilter(hqlFilter, "sus.id = :storageId");
+            parameterList.put("storageId", filter.getStorageId());
         }
 
         if((filter.getTestRequestItemConceptIds() != null && !filter.getTestRequestItemConceptIds().isEmpty()) ||
@@ -3961,6 +3987,7 @@ public class LabManagementDao extends DaoBase {
                 "su.voided as voided\n" +
                 "from labmanagement.StorageUnit su join su.storage s left join\n" +
                 " s.atLocation al left join\n" +
+                (filter.getAssigned() != null ? " su.samples spl left join" : "") +
                 " su.creator cb left join su.changedBy cb\n");
 
         StringBuilder hqlFilter = new StringBuilder();
@@ -3999,6 +4026,14 @@ public class LabManagementDao extends DaoBase {
         if(filter.getLocationId() != null){
             appendFilter(hqlFilter, "al.id = :locid");
             parameterList.put("locid", filter.getLocationId());
+        }
+
+        if(filter.getAssigned() != null){
+            if(filter.getAssigned()){
+                appendFilter(hqlFilter, "spl.id is not null");
+            }else{
+                appendFilter(hqlFilter, "spl.id is null");
+            }
         }
 
         if (!StringUtils.isBlank(filter.getSearchText())) {
@@ -4069,6 +4104,16 @@ public class LabManagementDao extends DaoBase {
         return result != null && !result.isEmpty();
     }
 
+    public boolean checkStorageUnitAssigned(StorageUnit storageUnit){
+        DbSession session = getSession();
+        Query query = session.createQuery("select s from labmanagement.Sample s where s.storageUnit = : su ");
+        query.setParameter("su", storageUnit);
+        query.setFirstResult(0);
+        query.setMaxResults(1);
+        List<TestResult> result = (List<TestResult>) query.list();
+        return result != null && !result.isEmpty();
+    }
+
 
     public void deleteStorageById(Integer storageId) {
         if(storageId == null) return ;
@@ -4098,6 +4143,135 @@ public class LabManagementDao extends DaoBase {
     public List<StorageUnit> getStorageUnitsByStorage(Storage storage) {
         if(storage == null) return Collections.emptyList();
         return (List<StorageUnit>) getSession().createCriteria(StorageUnit.class).add(Restrictions.eq("storage", storage)).list();
+    }
+
+    public List<Sample> getSamplesByUuid(List<String> uuids, boolean includeAll) {
+        Criteria criteria =  getSession().createCriteria(Sample.class);
+        criteria.add(Restrictions.in("uuid", uuids.toArray()));
+        if(!includeAll){
+            criteria.add(Restrictions.in("voided",false));
+        }
+        return criteria.list();
+    }
+
+    public Result<SampleActivityDTO> findSampleActivities(SampleActivitySearchFilter filter){
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select sa.uuid as uuid, sa.id as id, sa.sample.uuid as sampleUuid,\n" +
+                "sa.activityType as activityType,\n" +
+                "sas.uuid as sourceUuid,\n" +
+                "sas.name as sourceName,\n" +
+                "sad.uuid as destinationUuid,\n" +
+                "sad.name as destinationName,\n" +
+                "sa.sourceState as sourceState,\n" +
+                "sa.destinationState as destinationState,\n" +
+                "sa.activityBy.userId as activityBy, sa.activityBy.uuid as activityByUuid,\n" +
+                "sa.remarks as remarks,\n" +
+                "sa.status as status,\n" +
+                "sa.volume as volume,\n" +
+                "savu.conceptId as volumeUnit, savu.uuid as volumeUnitUuid,\n" +
+                "sa.thawCycles as thawCycles,\n" +
+                "su.uuid as storageUnitUuid,\n" +
+                "su.unitName as storageUnitName,\n" +
+                "s.uuid as storageUuid,\n" +
+                "s.name as storageName,\n" +
+                "sa.activityDate as activityDate,\n" +
+                "sarp.userId as responsiblePerson,\n" +
+                "sa.responsiblePersonOther as responsiblePersonOther,\n" +
+                "cb.userId as creator,\n" +
+                "sa.dateCreated as dateCreated\n" +
+                "from labmanagement.SampleActivity sa left join sa.storageUnit su left join su.storage s left join\n" +
+                " sa.source sas left join\n" +
+                " sa.destination sad left join\n" +
+                " sa.volumeUnit savu left join\n" +
+                " sa.responsiblePerson sarp left join\n" +
+                " sa.creator cb\n");
+
+        StringBuilder hqlFilter = new StringBuilder();
+
+        if (filter.getSampleActivityId() != null) {
+            appendFilter(hqlFilter, "sa.id = :said");
+            parameterList.put("said", filter.getSampleActivityId());
+        }
+
+        if (StringUtils.isNotBlank(filter.getSampleActivityUuid())) {
+            appendFilter(hqlFilter, "sa.uuid = :sauuid");
+            parameterList.put("sauuid", filter.getSampleActivityUuid());
+        }
+
+        if (filter.getSampleId() != null) {
+            appendFilter(hqlFilter, "sa.sample.id = :sasid");
+            parameterList.put("sasid", filter.getSampleId());
+        }
+
+        if(filter.getVoided() != null){
+            appendFilter(hqlFilter, "sa.voided = :voided");
+            parameterList.put("voided", filter.getVoided());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
+        }
+
+        Result<SampleActivityDTO> result = new Result<>();
+        if (filter.getLimit() != null) {
+            result.setPageIndex(filter.getStartIndex());
+            result.setPageSize(filter.getLimit());
+        }
+        result.setData(executeQuery(SampleActivityDTO.class, hqlQuery, result, " order by sa.id desc", parameterList, parameterWithList));
+
+        if (!result.getData().isEmpty()) {
+            List<Integer> conceptNamesToFetch = result.getData()
+                    .stream()
+                    .map(p-> p.getVolumeUnit())
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+            Map<Integer, List<ConceptNameDTO>> conceptNameDTOs = getConceptNamesByConceptIds(conceptNamesToFetch).stream().collect(Collectors.groupingBy(ConceptNameDTO::getConceptId));
+            List<UserPersonNameDTO> personNames = getPersonNameByUserIds(result.getData().stream().map(p -> Arrays.asList(
+                    p.getCreator(),
+                    p.getActivityBy(),
+                    p.getResponsiblePerson()
+            )).flatMap(Collection::stream).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+            for (SampleActivityDTO sampleActivityDTO : result.getData()) {
+
+                if(sampleActivityDTO.getVolumeUnit() != null){
+                    sampleActivityDTO.setVolumeUnitName(getConceptName(conceptNameDTOs,sampleActivityDTO.getVolumeUnit(), ConceptNameType.FULLY_SPECIFIED));
+                }
+
+                if (sampleActivityDTO.getActivityBy() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(sampleActivityDTO.getActivityBy())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        sampleActivityDTO.setActivityByFamilyName(userPersonNameDTO.get().getFamilyName());
+                        sampleActivityDTO.setActivityByMiddleName(userPersonNameDTO.get().getMiddleName());
+                        sampleActivityDTO.setActivityByGivenName(userPersonNameDTO.get().getGivenName());
+                    }
+                }
+
+                if (sampleActivityDTO.getCreator() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(sampleActivityDTO.getCreator())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        sampleActivityDTO.setCreatorFamilyName(userPersonNameDTO.get().getFamilyName());
+                        sampleActivityDTO.setCreatorMiddleName(userPersonNameDTO.get().getMiddleName());
+                        sampleActivityDTO.setCreatorGivenName(userPersonNameDTO.get().getGivenName());
+                    }
+                }
+                if (sampleActivityDTO.getResponsiblePerson() != null) {
+                    Optional<UserPersonNameDTO> userPersonNameDTO = personNames.stream().filter(p -> p.getUserId().equals(sampleActivityDTO.getResponsiblePerson())).findFirst();
+                    if (userPersonNameDTO.isPresent()) {
+                        sampleActivityDTO.setResponsiblePersonFamilyName(userPersonNameDTO.get().getFamilyName());
+                        sampleActivityDTO.setResponsiblePersonMiddleName(userPersonNameDTO.get().getMiddleName());
+                        sampleActivityDTO.setResponsiblePersonGivenName(userPersonNameDTO.get().getGivenName());
+                    }
+                }
+
+
+            }
+        }
+
+        return result;
+
     }
 
 }

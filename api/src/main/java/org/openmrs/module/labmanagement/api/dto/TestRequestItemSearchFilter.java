@@ -18,6 +18,7 @@ public class TestRequestItemSearchFilter extends SearchFilter {
     private Boolean pendingResultApproval;
     private boolean onlyPendingResultApproval = false;
     private boolean includeTestResult = false;
+    private Integer sampleId;
 
     private boolean includeTestResultApprovals = false;
     private boolean permApproval=false;
@@ -159,5 +160,13 @@ public class TestRequestItemSearchFilter extends SearchFilter {
 
     public void setItemMatch(RequestItemMatchOptions itemMatch) {
         this.itemMatch = itemMatch;
+    }
+
+    public Integer getSampleId() {
+        return sampleId;
+    }
+
+    public void setSampleId(Integer sampleId) {
+        this.sampleId = sampleId;
     }
 }

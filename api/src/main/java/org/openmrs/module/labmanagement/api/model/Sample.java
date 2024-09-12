@@ -72,6 +72,10 @@ public class Sample extends BaseChangeableOpenmrsData implements Serializable {
     @Enumerated(EnumType.STRING)
     private SampleStatus status;
 
+    @Column(name = "storage_status",length = 50)
+    @Enumerated(EnumType.STRING)
+    private StorageStatus storageStatus;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "encounter_id", nullable = false)
     private Encounter encounter;
@@ -322,5 +326,13 @@ public class Sample extends BaseChangeableOpenmrsData implements Serializable {
 
     public void setStorageUnit(StorageUnit storageUnit) {
         this.storageUnit = storageUnit;
+    }
+
+    public StorageStatus getStorageStatus() {
+        return storageStatus;
+    }
+
+    public void setStorageStatus(StorageStatus storageStatus) {
+        this.storageStatus = storageStatus;
     }
 }

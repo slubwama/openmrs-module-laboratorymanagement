@@ -13,7 +13,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.criterion.Restrictions;
 import org.openmrs.*;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.*;
@@ -994,9 +993,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 sample.setStatus(SampleStatus.COLLECTION);
             }
         }
-        sample.setStatus(SampleStatus.PENDING);
         sample.setEncounter(encounter);
-        //sample.setTestRequest();
         samples.add(sample);
 
         for(TestRequestTestDTO test: sampleDTO.getTests()){
@@ -4167,4 +4164,482 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         return dao.getStorageUnitByUuid(uuid);
     }
 
+
+    public Sample getSampleByUuid(String sampleUuid){
+        return dao.getSampleByUuid(sampleUuid);
+    }
+
+    public ApprovalDTO disposeSamples(TestRequestAction testRequestAction){
+        if(testRequestAction == null){
+            invalidRequest("labmanagement.fieldrequired", "Action information");
+        }
+
+        if(testRequestAction.getRecords() == null || testRequestAction.getRecords().isEmpty()){
+            invalidRequest("labmanagement.fieldrequired", "Records");
+        }
+
+        if(testRequestAction.getRecords().size() > 100){
+            invalidRequest("labmanagement.fieldrequired", "Records not exceeding 100");
+        }
+
+        if(testRequestAction.getAction() == null){
+            invalidRequest("labmanagement.fieldrequired", "Action");
+        }
+
+        if(testRequestAction.getActionDate() == null){
+            invalidRequest("labmanagement.fieldrequired", "Disposal date");
+        }
+
+        if(testRequestAction.getActionDate().after(new Date())){
+            invalidRequest("labmanagement.futuredatenotallowed", "Disposal date");
+        }
+
+        if(!StringUtils.isBlank(testRequestAction.getRemarks()) && testRequestAction.getRemarks().length() > 500){
+            invalidRequest("labmanagement.thingnotexceeds", "Name", "500");
+        }
+        if(testRequestAction.getParameters() == null){
+            testRequestAction.setParameters(new LinkedHashMap<>());
+        }
+        Object thawCyles = testRequestAction.getParameters().getOrDefault("thawCycles", null);
+        if(thawCyles != null){
+            thawCyles = Integer.parseInt(thawCyles.toString());
+            if((Integer) thawCyles < 0){
+                invalidRequest("labmanagement.fieldrequired", "Thaw Cycles greater than zero");
+            }
+        }
+
+        Concept volumeUnit = null;
+        String volumeUnitUuid = (String)testRequestAction.getParameters().getOrDefault("volumeUnitUuid", null);
+        Object volume = testRequestAction.getParameters().getOrDefault("volume", null);
+        boolean requireVolumeInfo = StringUtils.isNotBlank(volumeUnitUuid) || volume != null;
+        if(requireVolumeInfo){
+            if(StringUtils.isBlank(volumeUnitUuid)){
+                invalidRequest("labmanagement.fieldrequired", "Volume unit");
+            }
+            volumeUnit = Context.getConceptService().getConceptByUuid(volumeUnitUuid);
+            if (volumeUnit == null) {
+                invalidRequest("labmanagement.thingnotexists", "Volume unit");
+            }
+
+            if(volume == null){
+                invalidRequest("labmanagement.fieldrequired", "Volume");
+            }
+            volume = new BigDecimal(volume.toString());
+            if(((BigDecimal)volume).compareTo(BigDecimal.ZERO) < 0){
+                invalidRequest("labmanagement.fieldrequired", "Volume greater than or equal to zero");
+            }
+        }
+
+        List<String> records = testRequestAction.getRecords().stream().distinct().collect(Collectors.toList());
+        List<Sample> samples = dao.getSamplesByUuid(testRequestAction.getRecords(), false);
+        if(samples.size() != records.size()){
+            invalidRequest("labmanagement.notexists",
+                    String.format("%1s Record(s)", records.size() - samples.size()));
+        }
+
+        boolean verifiedRepositoryDisposal = false;
+        User responsiblePerson = null;
+        String responsiblePersonOther = null;
+        for(Sample sample : samples){
+            if(sample.getStatus() == null ||
+                    !SampleStatus.canDispose(sample)){
+                invalidRequest("labmanagement.actionnotallowed", "Disposal", sample.getAccessionNumber());
+            }
+            if(sample.getStorageUnit() != null){
+                verifiedRepositoryDisposal = true;
+
+                if(!Context.getAuthenticatedUser().hasPrivilege(Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE)){
+                    invalidRequest("labmanagement.notauthorised");
+                }
+
+                if(StringUtils.isBlank(testRequestAction.getRemarks())){
+                    invalidRequest("labmanagement.fieldrequired", "Remarks");
+                }
+
+                if(testRequestAction.getParameters().containsKey("responsiblePersonUuid")){
+                    String responsiblePersonUuid =(String) testRequestAction.getParameters().get("responsiblePersonUuid");
+                    if(!StringUtils.isBlank(responsiblePersonUuid)) {
+                        responsiblePerson = Context.getUserService().getUserByUuid(responsiblePersonUuid);
+                        if (responsiblePerson == null) {
+                            invalidRequest("labmanagement.thingnotexists", "Responsible Person");
+                        }
+                    }
+                }
+
+                if(responsiblePerson == null && testRequestAction.getParameters().containsKey("responsiblePersonOther")){
+                    responsiblePersonOther= (String) testRequestAction.getParameters().get("responsiblePersonOther");
+                }
+
+
+                if(responsiblePerson == null && StringUtils.isBlank(responsiblePersonOther)){
+                    invalidRequest("labmanagement.fieldrequired", "Responsible Person");
+                }
+
+                if(testRequestAction.getActionDate() == null){
+                    invalidRequest("labmanagement.fieldrequired", "Disposal date");
+                }
+
+                if(testRequestAction.getActionDate().after(new Date())){
+                    invalidRequest("labmanagement.futuredatenotallowed", "Disposal date");
+                }
+
+            }
+        }
+
+        String remarks = StringUtils.isBlank(testRequestAction.getRemarks()) ? null : testRequestAction.getRemarks().trim();
+        User currentUser = Context.getAuthenticatedUser();
+        for(Sample sample1 : samples){
+
+            SampleActivity sampleActivity = getSampleActivity(sample1, currentUser, remarks);
+            sampleActivity.setActivityType(SampleActivityType.DISPOSAL);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate());
+            sampleActivity.setDestinationState(SampleStatus.DISPOSED.name());
+            sampleActivity.setStatus(SampleStatus.DISPOSED.name());
+            sampleActivity.setResponsiblePerson(verifiedRepositoryDisposal ?  responsiblePerson : Context.getAuthenticatedUser());
+            sampleActivity.setResponsiblePersonOther(responsiblePersonOther);
+            if(volume != null) sampleActivity.setVolume((BigDecimal) volume);
+            sampleActivity.setVolumeUnit(volumeUnit);
+            if(thawCyles != null) sampleActivity.setThawCycles((Integer) thawCyles);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate() == null ? new Date() : testRequestAction.getActionDate());
+            sampleActivity = dao.saveSampleActivity(sampleActivity);
+
+            sample1.setStatus(SampleStatus.DISPOSED);
+            if(verifiedRepositoryDisposal){
+                sample1.setStorageStatus(StorageStatus.DISPOSED);
+            }
+            sample1.setDateChanged(new Date());
+            sample1.setChangedBy(currentUser);
+            sample1.setStorageUnit(null);
+            if(volume != null){
+                sample1.setVolume((BigDecimal) volume);
+                sample1.setVolumeUnit(volumeUnit);
+            }
+            sample1.setCurrentSampleActivity(sampleActivity);
+            dao.saveSample(sample1);
+
+        }
+        ApprovalDTO approvalDTO=new ApprovalDTO();
+        approvalDTO.setRemarks(remarks);
+        approvalDTO.setResult(testRequestAction.getAction());
+        return approvalDTO;
+    }
+
+    private static SampleActivity getSampleActivity(Sample sample1, User currentUser, String remarks) {
+        SampleActivity sampleActivity=new SampleActivity();
+        sampleActivity.setSample(sample1);
+        sampleActivity.setActivityBy(currentUser);
+        sampleActivity.setToSample(null);
+        sampleActivity.setSource(sample1.getAtLocation());
+        sampleActivity.setSourceState( sample1.getStatus().name());
+        sampleActivity.setDestination(null);
+        sampleActivity.setRemarks(remarks);
+        sampleActivity.setToSample(null);
+        sampleActivity.setReusedCheckout(null);
+        sampleActivity.setVolume(sample1.getVolume());
+        sampleActivity.setVolumeUnit(sample1.getVolumeUnit());
+        sampleActivity.setThawCycles(null);
+        sampleActivity.setCreator(currentUser);
+        sampleActivity.setDateCreated(new Date());
+        sampleActivity.setStorageUnit(sample1.getStorageUnit());
+        return sampleActivity;
+    }
+
+    public ApprovalDTO archiveSamples(TestRequestAction testRequestAction){
+        if(testRequestAction == null){
+            invalidRequest("labmanagement.fieldrequired", "Action information");
+        }
+
+        if(testRequestAction.getRecords() == null || testRequestAction.getRecords().isEmpty()){
+            invalidRequest("labmanagement.fieldrequired", "Records");
+        }
+
+        if(testRequestAction.getRecords().size() > 1){
+            invalidRequest("labmanagement.fieldrequired", "Records not exceeding one");
+        }
+
+        /*if(testRequestAction.getAction() == null){
+            invalidRequest("labmanagement.fieldrequired", "Action");
+        }
+
+        if(StringUtils.isBlank(testRequestAction.getRemarks())){
+            invalidRequest("labmanagement.fieldrequired", "Remarks");
+        }*/
+
+        if(!StringUtils.isBlank(testRequestAction.getRemarks()) && testRequestAction.getRemarks().length() > 500){
+            invalidRequest("labmanagement.thingnotexceeds", "Name", "500");
+        }
+
+        if(testRequestAction.getParameters() == null || testRequestAction.getParameters().isEmpty() ||
+        !testRequestAction.getParameters().containsKey("storageUnitUuid")){
+            invalidRequest("labmanagement.fieldrequired", "Storage unit");
+        }
+
+        String storageUnitUuid =(String) testRequestAction.getParameters().get("storageUnitUuid");
+        if(StringUtils.isBlank(storageUnitUuid)){
+            invalidRequest("labmanagement.fieldrequired", "Storage unit");
+        }
+        StorageUnit storageUnit = getStorageUnitByUuid(storageUnitUuid);
+        if(storageUnit == null){
+            invalidRequest("labmanagement.thingnotexists", "Storage unit");
+        }
+
+        String responsiblePersonOther = null;
+        User responsiblePerson = null;
+        if(testRequestAction.getParameters().containsKey("responsiblePersonUuid")){
+            String responsiblePersonUuid =(String) testRequestAction.getParameters().get("responsiblePersonUuid");
+            if(!StringUtils.isBlank(responsiblePersonUuid)) {
+                responsiblePerson = Context.getUserService().getUserByUuid(responsiblePersonUuid);
+                if (responsiblePerson == null) {
+                    invalidRequest("labmanagement.thingnotexists", "Responsible Person");
+                }
+            }
+        }
+
+        if(responsiblePerson == null && testRequestAction.getParameters().containsKey("responsiblePersonOther")){
+            responsiblePersonOther= (String) testRequestAction.getParameters().get("responsiblePersonOther");
+        }
+
+        if(responsiblePerson == null && StringUtils.isBlank(responsiblePersonOther)){
+            invalidRequest("labmanagement.fieldrequired", "Responsible Person");
+        }
+
+        if(testRequestAction.getActionDate() == null){
+            invalidRequest("labmanagement.fieldrequired", "Archival date");
+        }
+
+        if(testRequestAction.getActionDate().after(new Date())){
+            invalidRequest("labmanagement.futuredatenotallowed", "Archival date");
+        }
+
+        if(dao.checkStorageUnitAssigned(storageUnit)){
+            invalidRequest("labmanagement.storagealreadyassigned", "Storage unit");
+        }
+
+        Object thawCyles = testRequestAction.getParameters().getOrDefault("thawCycles", null);
+        if(thawCyles != null){
+            thawCyles = Integer.parseInt(thawCyles.toString());
+            if((Integer) thawCyles < 0){
+                invalidRequest("labmanagement.fieldrequired", "Thaw Cycles greater than zero");
+            }
+        }
+
+        Concept volumeUnit = null;
+        String volumeUnitUuid = (String)testRequestAction.getParameters().getOrDefault("volumeUnitUuid", null);
+        Object volume = testRequestAction.getParameters().getOrDefault("volume", null);
+        boolean requireVolumeInfo = StringUtils.isNotBlank(volumeUnitUuid) || volume != null;
+        if(requireVolumeInfo){
+            if(StringUtils.isBlank(volumeUnitUuid)){
+                invalidRequest("labmanagement.fieldrequired", "Volume unit");
+            }
+            volumeUnit = Context.getConceptService().getConceptByUuid(volumeUnitUuid);
+            if (volumeUnit == null) {
+                invalidRequest("labmanagement.thingnotexists", "Volume unit");
+            }
+
+            if(volume == null){
+                invalidRequest("labmanagement.fieldrequired", "Volume");
+            }
+            volume = new BigDecimal(volume.toString());
+            if(((BigDecimal)volume).compareTo(BigDecimal.ZERO) < 0){
+                invalidRequest("labmanagement.fieldrequired", "Volume greater than or equal to zero");
+            }
+        }
+
+        List<String> records = testRequestAction.getRecords().stream().distinct().collect(Collectors.toList());
+        List<Sample> samples = dao.getSamplesByUuid(testRequestAction.getRecords(), false);
+        if(samples.size() != records.size()){
+            invalidRequest("labmanagement.notexists",
+                    String.format("%1s Record(s)", records.size() - samples.size()));
+        }
+
+        for(Sample sample : samples){
+            if(sample.getStatus() == null ||
+                    !SampleStatus.canArchive(sample)){
+                invalidRequest("labmanagement.actionnotallowed", "Archive", sample.getAccessionNumber());
+            }
+        }
+
+        String remarks = StringUtils.isBlank(testRequestAction.getRemarks()) ? null : testRequestAction.getRemarks().trim();
+        User currentUser = Context.getAuthenticatedUser();
+        for(Sample sample1 : samples){
+
+            SampleActivity sampleActivity = getSampleActivity(sample1, currentUser, remarks);
+            sampleActivity.setActivityType(SampleActivityType.ARCHIVE);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate());
+            sampleActivity.setDestinationState(SampleStatus.ARCHIVED.name());
+            sampleActivity.setStatus(SampleStatus.ARCHIVED.name());
+            sampleActivity.setStorageUnit(storageUnit);
+            sampleActivity.setResponsiblePerson(responsiblePerson);
+            sampleActivity.setResponsiblePersonOther(responsiblePersonOther);
+            if(volume != null) sampleActivity.setVolume((BigDecimal) volume);
+            sampleActivity.setVolumeUnit(volumeUnit);
+            if(thawCyles != null) sampleActivity.setThawCycles((Integer) thawCyles);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate() == null ? new Date() : testRequestAction.getActionDate());
+            sampleActivity = dao.saveSampleActivity(sampleActivity);
+
+            sample1.setStatus(SampleStatus.ARCHIVED);
+            sample1.setStorageStatus(StorageStatus.ARCHIVED);
+            sample1.setDateChanged(new Date());
+            sample1.setChangedBy(currentUser);
+            sample1.setStorageUnit(storageUnit);
+            if(volume != null){
+                sample1.setVolume((BigDecimal) volume);
+                sample1.setVolumeUnit(volumeUnit);
+            }
+            sample1.setCurrentSampleActivity(sampleActivity);
+            dao.saveSample(sample1);
+
+        }
+        ApprovalDTO approvalDTO=new ApprovalDTO();
+        approvalDTO.setRemarks(remarks);
+        approvalDTO.setResult(testRequestAction.getAction());
+        return approvalDTO;
+    }
+
+    public ApprovalDTO checkOutSamples(TestRequestAction testRequestAction){
+        if(testRequestAction == null){
+            invalidRequest("labmanagement.fieldrequired", "Action information");
+        }
+
+        if(testRequestAction.getRecords() == null || testRequestAction.getRecords().isEmpty()){
+            invalidRequest("labmanagement.fieldrequired", "Records");
+        }
+
+        if(testRequestAction.getRecords().size() > 1){
+            invalidRequest("labmanagement.fieldrequired", "Records not exceeding one");
+        }
+
+        /*
+        if(testRequestAction.getAction() == null){
+            invalidRequest("labmanagement.fieldrequired", "Action");
+        }
+
+        if(StringUtils.isBlank(testRequestAction.getRemarks())){
+            invalidRequest("labmanagement.fieldrequired", "Remarks");
+        }*/
+
+        if(!StringUtils.isBlank(testRequestAction.getRemarks()) && testRequestAction.getRemarks().length() > 500){
+            invalidRequest("labmanagement.thingnotexceeds", "Name", "500");
+        }
+        /*
+        if(testRequestAction.getParameters() == null || testRequestAction.getParameters().isEmpty() ||
+                !testRequestAction.getParameters().containsKey("storageUnitUuid")){
+            invalidRequest("labmanagement.fieldrequired", "Storage unit");
+        }*/
+
+        String responsiblePersonOther = null;
+        User responsiblePerson = null;
+        if(testRequestAction.getParameters().containsKey("responsiblePersonUuid")){
+            String responsiblePersonUuid =(String) testRequestAction.getParameters().get("responsiblePersonUuid");
+            if(!StringUtils.isBlank(responsiblePersonUuid)) {
+                responsiblePerson = Context.getUserService().getUserByUuid(responsiblePersonUuid);
+                if (responsiblePerson == null) {
+                    invalidRequest("labmanagement.thingnotexists", "Responsible Person");
+                }
+            }
+        }
+
+        if(responsiblePerson == null && testRequestAction.getParameters().containsKey("responsiblePersonOther")){
+            responsiblePersonOther= (String) testRequestAction.getParameters().get("responsiblePersonOther");
+        }
+
+        if(responsiblePerson == null && StringUtils.isBlank(responsiblePersonOther)){
+            invalidRequest("labmanagement.fieldrequired", "Responsible Person");
+        }
+
+        if(testRequestAction.getActionDate() == null){
+            invalidRequest("labmanagement.fieldrequired", "Check-Out date");
+        }
+
+        if(testRequestAction.getActionDate().after(new Date())){
+            invalidRequest("labmanagement.futuredatenotallowed", "Check-Out date");
+        }
+
+        Object thawCyles = testRequestAction.getParameters().getOrDefault("thawCycles", null);
+        if(thawCyles != null){
+            thawCyles = Integer.parseInt(thawCyles.toString());
+            if((Integer) thawCyles < 0){
+                invalidRequest("labmanagement.fieldrequired", "Thaw Cycles greater than zero");
+            }
+        }
+
+        Concept volumeUnit = null;
+        String volumeUnitUuid = (String)testRequestAction.getParameters().getOrDefault("volumeUnitUuid", null);
+        Object volume = testRequestAction.getParameters().getOrDefault("volume", null);
+        boolean requireVolumeInfo = StringUtils.isNotBlank(volumeUnitUuid) || volume != null;
+        if(requireVolumeInfo){
+            if(StringUtils.isBlank(volumeUnitUuid)){
+                invalidRequest("labmanagement.fieldrequired", "Volume unit");
+            }
+            volumeUnit = Context.getConceptService().getConceptByUuid(volumeUnitUuid);
+            if (volumeUnit == null) {
+                invalidRequest("labmanagement.thingnotexists", "Volume unit");
+            }
+
+            if(volume == null){
+                invalidRequest("labmanagement.fieldrequired", "Volume");
+            }
+            volume = new BigDecimal(volume.toString());
+            if(((BigDecimal)volume).compareTo(BigDecimal.ZERO) < 0){
+                invalidRequest("labmanagement.fieldrequired", "Volume greater than or equal to zero");
+            }
+        }
+
+        List<String> records = testRequestAction.getRecords().stream().distinct().collect(Collectors.toList());
+        List<Sample> samples = dao.getSamplesByUuid(testRequestAction.getRecords(), false);
+        if(samples.size() != records.size()){
+            invalidRequest("labmanagement.notexists",
+                    String.format("%1s Record(s)", records.size() - samples.size()));
+        }
+
+        for(Sample sample : samples){
+            if(sample.getStatus() == null ||
+                    !SampleStatus.canCheckOut(sample)){
+                invalidRequest("labmanagement.actionnotallowed", "Check-Out", sample.getAccessionNumber());
+            }
+        }
+
+        String remarks = StringUtils.isBlank(testRequestAction.getRemarks()) ? null : testRequestAction.getRemarks().trim();
+        User currentUser = Context.getAuthenticatedUser();
+        for(Sample sample1 : samples){
+
+            SampleActivity sampleActivity = getSampleActivity(sample1, currentUser, remarks);
+            sampleActivity.setActivityType(SampleActivityType.CHECKOUT);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate());
+            sampleActivity.setDestinationState(SampleActivityType.CHECKOUT.name());
+            sampleActivity.setStatus(SampleActivityType.CHECKOUT.name());
+            sampleActivity.setResponsiblePerson( responsiblePerson);
+            sampleActivity.setResponsiblePersonOther(responsiblePersonOther);
+            if(volume != null) sampleActivity.setVolume((BigDecimal) volume);
+            sampleActivity.setVolumeUnit(volumeUnit);
+            if(thawCyles != null) sampleActivity.setThawCycles((Integer) thawCyles);
+            sampleActivity.setActivityDate(testRequestAction.getActionDate() == null ? new Date() : testRequestAction.getActionDate());
+            sampleActivity = dao.saveSampleActivity(sampleActivity);
+
+            sample1.setStatus(SampleStatus.TESTING);
+            sample1.setStorageStatus(StorageStatus.CHECKED_OUT);
+            sample1.setDateChanged(new Date());
+            sample1.setChangedBy(currentUser);
+            sample1.setStorageUnit(null);
+            if(volume != null){
+                sample1.setVolume((BigDecimal) volume);
+                sample1.setVolumeUnit(volumeUnit);
+            }
+            sample1.setCurrentSampleActivity(sampleActivity);
+            dao.saveSample(sample1);
+
+        }
+        ApprovalDTO approvalDTO=new ApprovalDTO();
+        approvalDTO.setRemarks(remarks);
+        approvalDTO.setResult(testRequestAction.getAction());
+        return approvalDTO;
+    }
+
+    public Result<SampleActivityDTO> findSampleActivities(SampleActivitySearchFilter filter){
+        return dao.findSampleActivities(filter);
+    }
+
+    public SampleActivity getSampleActivityById(Integer id){
+        return dao.getSampleActivityById(id);
+    }
 }

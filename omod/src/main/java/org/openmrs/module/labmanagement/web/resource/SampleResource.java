@@ -9,11 +9,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.Privileges;
 import org.openmrs.module.labmanagement.api.dto.*;
-import org.openmrs.module.labmanagement.api.model.Sample;
-import org.openmrs.module.labmanagement.api.model.SampleStatus;
-import org.openmrs.module.labmanagement.api.model.TestRequest;
-import org.openmrs.module.labmanagement.api.model.TestRequestItemStatus;
-import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
+import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.module.labmanagement.web.SampleTestRequestItemRepresentation;
 import org.openmrs.module.webservices.rest.SimpleObject;
@@ -92,6 +88,15 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             filter.setSampleTypeId(concept.getConceptId());
         }
 
+        param = context.getParameter("storage");
+        if (!StringUtils.isBlank(param)) {
+            Storage storage = getLabManagementService().getStorageByUuid(param);
+            if (storage == null) {
+                return emptyResult(context);
+            }
+            filter.setStorageId(storage.getId());
+        }
+
         param = context.getParameter("minActivatedDate");
         if (StringUtils.isNotBlank(param)) {
             Date date = (Date) ConversionUtil.convert(param, Date.class);
@@ -128,6 +133,20 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             filter.setMaxCollectionDate(date);
         }
 
+        param = context.getParameter("storageStatus");
+        if (!StringUtils.isBlank(param)) {
+            String[] params = param.split(",", 10);
+            List<StorageStatus> statusIds = new ArrayList<>();
+            for (String status : params) {
+                StorageStatus opStatus = (StorageStatus) Enum.valueOf(StorageStatus.class, status);
+                statusIds.add(opStatus);
+            }
+            if (statusIds.isEmpty()) {
+                return emptyResult(context);
+            }
+            filter.setStorageStatuses(statusIds);
+        }
+
         param = context.getParameter("sampleStatus");
         if (!StringUtils.isBlank(param)) {
             String[] params = param.split(",", 10);
@@ -141,6 +160,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             }
             filter.setSampleStatuses(statusIds);
         }
+
         param = context.getParameter("testRequestItemStatuses");
         if (!StringUtils.isBlank(param)) {
             String[] params = param.split(",", 10);
@@ -186,9 +206,14 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             filter.setReference(param);
         }
 
-        param = context.getParameter("storage");
+        param = context.getParameter("includeInStorage");
         if (!StringUtils.isBlank(param)) {
             filter.setIncludeSamplesInStorage("true".equalsIgnoreCase(param) || "1".equals(param));
+        }
+
+        param = context.getParameter("repository");
+        if (!StringUtils.isBlank(param)) {
+            filter.setRepository("true".equalsIgnoreCase(param) || "1".equals(param));
         }
 
         param = context.getParameter("forWorksheet");
@@ -336,6 +361,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             description.addProperty("referralToFacilityName");
             description.addProperty("currentSampleActivityUuid");
             description.addProperty("status");
+            description.addProperty("storageStatus");
             description.addProperty("encounterUuid");
             description.addProperty("testRequestUuid");
             description.addProperty("uuid");
@@ -355,6 +381,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             description.addProperty("storageUnitName");
             description.addProperty("storageUuid");
             description.addProperty("storageName");
+            description.addProperty("storageStatus");
         }
 
 		if (rep instanceof DefaultRepresentation){
@@ -418,6 +445,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             modelImpl.property("referralToFacilityName", new StringProperty());
             modelImpl.property("currentSampleActivityUuid", new StringProperty());
             modelImpl.property("status", new StringProperty());
+            modelImpl.property("storageStatus", new StringProperty());
             modelImpl.property("encounterUuid", new StringProperty());
             modelImpl.property("testRequestUuid", new StringProperty());
             modelImpl.property("uuid", new StringProperty());
@@ -436,6 +464,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             modelImpl.property("storageUnitName", new StringProperty());
             modelImpl.property("storageUuid", new StringProperty());
             modelImpl.property("storageName", new StringProperty());
+            modelImpl.property("storageStatus", new StringProperty());
 		}
 
 		if (rep instanceof FullRepresentation) {
@@ -511,10 +540,15 @@ public class SampleResource extends ResourceBase<SampleDTO> {
     public SimpleObject getPermission(SampleDTO sampleDTO) {
         Boolean hasEditPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE,null);
         Boolean hasCollectionPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,null);
+        Boolean hasEditTestResultsPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE,null);
+        Boolean hasEditRepositoryPermission = (Boolean) sampleDTO.getRequestContextItems().getOrDefault(Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE,null);
         if(hasEditPermission == null){
             User user = Context.getAuthenticatedUser();
             hasEditPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE));
             hasCollectionPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT));
+            hasEditTestResultsPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE));
+            hasEditRepositoryPermission = setRequestContextValue(sampleDTO.getRequestContextItems(), Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE,  user.hasPrivilege(Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE));
+
         }
 
         SimpleObject simpleObject = new SimpleObject();
@@ -522,6 +556,9 @@ public class SampleResource extends ResourceBase<SampleDTO> {
         simpleObject.add("canDelete", hasEditPermission && SampleStatus.canDeleteSampleWithStatus(sampleDTO.getStatus()));
         simpleObject.add("canReleaseForTesting", hasCollectionPermission && SampleStatus.canReleaseForTesting(sampleDTO));
         simpleObject.add("canView", sampleDTO != null);
+        simpleObject.add("canDisposeSample",  (sampleDTO.getStorageStatus() == null ? (hasEditTestResultsPermission || hasEditRepositoryPermission) : hasEditRepositoryPermission) && SampleStatus.canDispose(sampleDTO));
+        simpleObject.add("canArchiveSample",  hasEditRepositoryPermission && SampleStatus.canArchive(sampleDTO));
+        simpleObject.add("canCheckOutSample",  hasEditRepositoryPermission && SampleStatus.canCheckOut(sampleDTO));
         return simpleObject;
     }
 }

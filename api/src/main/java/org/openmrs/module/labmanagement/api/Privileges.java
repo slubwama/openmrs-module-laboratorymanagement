@@ -105,6 +105,16 @@ public class Privileges {
 	 */
 	public static final String TASK_LABMANAGEMENT_REPORTS_MUTATE = "Task: labmanagement.reports.mutate";
 
+	/**
+	 * App: labmanagement.repository: Able to access sample repository
+	 */
+	public static final String APP_LABMANAGEMENT_REPOSITORY = "App: labmanagement.repository";
+
+	/**
+	 * Task: labmanagement.repository.mutate: Able to manage sample repository
+	 */
+	public static final String TASK_LABMANAGEMENT_REPOSITORY_MUTATE = "Task: labmanagement.repository.mutate";
+
 
 
     public static final List<String> ALL = Arrays.asList(	APP_LABMANAGEMENT_DASHBOARD,
@@ -126,5 +136,7 @@ public class Privileges {
 	TASK_LABMANAGEMENT_TESTRESULTS_MUTATE,
 	TASK_LABMANAGEMENT_TESTRESULTS_APPROVE,
 	APP_LABMANAGEMENT_REPORTS,
-	TASK_LABMANAGEMENT_REPORTS_MUTATE);
+	TASK_LABMANAGEMENT_REPORTS_MUTATE,
+	APP_LABMANAGEMENT_REPOSITORY,
+	TASK_LABMANAGEMENT_REPOSITORY_MUTATE);
 }

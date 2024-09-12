@@ -84,6 +84,30 @@ public class TestRequestActionResource extends ResourceBase<TestRequestAction> {
                 delegate.setUuid("not-supported");
                 return delegate;
             }
+            case DISPOSE_SAMPLE:
+            {
+                getLabManagementService().disposeSamples(delegate);
+                delegate=new TestRequestAction();
+                delegate.setRemarks("Dispose action successfull");
+                delegate.setUuid("not-supported");
+                return delegate;
+            }
+            case ARCHIVE_SAMPLE:
+            {
+                getLabManagementService().archiveSamples(delegate);
+                delegate=new TestRequestAction();
+                delegate.setRemarks("Archive action successfull");
+                delegate.setUuid("not-supported");
+                return delegate;
+            }
+            case CHECK_OUT_SAMPLE:
+            {
+                getLabManagementService().checkOutSamples(delegate);
+                delegate=new TestRequestAction();
+                delegate.setRemarks("Check-out action successfull");
+                delegate.setUuid("not-supported");
+                return delegate;
+            }
         }
         throw new ResourceDoesNotSupportOperationException("Action type does not support operation");
     }
@@ -99,8 +123,10 @@ public class TestRequestActionResource extends ResourceBase<TestRequestAction> {
         description.addProperty("actionType");
         description.addProperty("action");
         description.addProperty("remarks");
+        description.addProperty("actionDate");
         description.addProperty("testRequestUuid");
         description.addProperty("records");
+        description.addProperty("parameters");
         return description;
     }
 

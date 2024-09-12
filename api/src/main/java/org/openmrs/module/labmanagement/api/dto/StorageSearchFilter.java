@@ -12,6 +12,7 @@ public class StorageSearchFilter extends SearchFilter {
     private Boolean includeUnits;
     private List<Integer> storageIds;
     private Boolean active;
+    private Boolean assigned;
 
     public Integer getStorageId() {
         return storageId;
@@ -83,6 +84,14 @@ public class StorageSearchFilter extends SearchFilter {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Boolean getAssigned() {
+        return assigned;
+    }
+
+    public void setAssigned(Boolean assigned) {
+        this.assigned = assigned;
     }
 }
 

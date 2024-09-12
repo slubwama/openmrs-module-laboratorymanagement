@@ -352,11 +352,11 @@ public interface LabManagementService extends OpenmrsService {
     TestResultImportConfig saveTestResultImportConfig(TestResultImportConfig testResultImportConfig);
 
     @Transactional(readOnly = true)
-    @Authorized(value = Privileges.APP_LABMANAGEMENT_STORAGE)
+    @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
     Result<StorageUnitDTO> findStorageUnits(StorageSearchFilter filter);
 
     @Transactional(readOnly = true)
-    @Authorized(value = Privileges.APP_LABMANAGEMENT_STORAGE)
+    @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
     Result<StorageDTO> findStorages(StorageSearchFilter filter);
 
     @Transactional
@@ -367,4 +367,31 @@ public interface LabManagementService extends OpenmrsService {
     @Authorized(value = Privileges.TASK_LABMANAGEMENT_STORAGE_MUTATE)
     void  deleteStorage(String storageUuid);
 
+    @Transactional(readOnly = true)
+    @Authorized(value = Privileges.APP_LABMANAGEMENT_SAMPLES)
+    Sample getSampleByUuid(String sampleUuid);
+
+    @Transactional
+    @Authorized(value = {Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE, Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE})
+    ApprovalDTO disposeSamples(TestRequestAction testRequestAction);
+
+    @Transactional
+    @Authorized(value = {Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE})
+    ApprovalDTO archiveSamples(TestRequestAction testRequestAction);
+
+    @Transactional
+    @Authorized(value = {Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE})
+    ApprovalDTO checkOutSamples(TestRequestAction testRequestAction);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
+    Storage getStorageByUuid(String uuid);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
+    Result<SampleActivityDTO> findSampleActivities(SampleActivitySearchFilter filter);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
+    SampleActivity getSampleActivityById(Integer id);
 }

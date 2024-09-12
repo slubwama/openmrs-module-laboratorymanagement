@@ -13,10 +13,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.Privileges;
 import org.openmrs.module.labmanagement.api.dto.*;
-import org.openmrs.module.labmanagement.api.model.SampleStatus;
-import org.openmrs.module.labmanagement.api.model.TestRequest;
-import org.openmrs.module.labmanagement.api.model.TestRequestItemSample;
-import org.openmrs.module.labmanagement.api.model.TestRequestItemStatus;
+import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.web.SampleTestRequestItemRepresentation;
 import org.openmrs.module.webservices.rest.SimpleObject;
@@ -175,6 +172,15 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             filter.setItemMatch(opStatus);
         }
 
+        param = context.getParameter("sample");
+        if (!StringUtils.isBlank(param)) {
+            Sample sample = getLabManagementService().getSampleByUuid(param);
+            if(sample == null){
+                return emptyResult(context);
+            }
+            filter.setSampleId(sample.getId());
+        }
+
         //filter.setIncludeTestItems(context.getRepresentation() instanceof FullRepresentation);
         Result<TestRequestItemDTO> result = getLabManagementService().findTestRequestItems(filter);
         return toAlreadyPaged(result, context);
@@ -262,6 +268,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             description.addProperty("completedDate");
             description.addProperty("resultDate");
             description.addProperty("testRequestUuid");
+            description.addProperty("testRequestNo");
             description.addProperty("dateCreated");
             description.addProperty("dateChanged");
             description.addProperty("worksheetNo");
@@ -357,6 +364,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             modelImpl.property("completedDate", new DateTimeProperty());
             modelImpl.property("resultDate", new DateTimeProperty());
             modelImpl.property("testRequestUuid", new StringProperty());
+            modelImpl.property("testRequestNo", new StringProperty());
             modelImpl.property("dateCreated", new DateTimeProperty());
             modelImpl.property("dateChanged", new DateTimeProperty());
             modelImpl.property("permission", new StringProperty());

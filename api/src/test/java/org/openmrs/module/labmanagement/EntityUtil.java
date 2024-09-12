@@ -452,7 +452,7 @@ public class EntityUtil {
 		Sample sample=newSample(dao);
 		dao.saveSample(sample);
 		sampleActivity.setSample(sample);
-		sampleActivity.setActivityType(getRandomString(50));
+		sampleActivity.setActivityType(SampleActivityType.ARCHIVE);
 		sampleActivity.setSource(getLocation());
 		sampleActivity.setDestination(getLocation());
 		sampleActivity.setSourceState(getRandomString(50));

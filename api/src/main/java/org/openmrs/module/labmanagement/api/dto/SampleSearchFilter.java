@@ -2,6 +2,7 @@ package org.openmrs.module.labmanagement.api.dto;
 
 import org.openmrs.Order;
 import org.openmrs.module.labmanagement.api.model.SampleStatus;
+import org.openmrs.module.labmanagement.api.model.StorageStatus;
 import org.openmrs.module.labmanagement.api.model.TestRequestItemStatus;
 
 import java.util.Date;
@@ -15,6 +16,7 @@ public class SampleSearchFilter extends SearchFilter {
     private Date minCollectionDate;
     private Date maxCollectionDate;
     private List<SampleStatus> sampleStatuses;
+    private List<StorageStatus> storageStatuses;
     private  List<TestRequestItemStatus> testRequestItemStatuses;
     private Integer testRequestId;
     private List<Integer> testRequestIds;
@@ -31,6 +33,8 @@ public class SampleSearchFilter extends SearchFilter {
     private Order.Urgency Urgency;
     private boolean forWorksheet = false;
     private boolean referenceOrForWorksheet = false;
+    private Integer storageId;
+    private Boolean repository;
 
     public Integer getPatientId() {
         return patientId;
@@ -214,5 +218,29 @@ public class SampleSearchFilter extends SearchFilter {
 
     public void setTestRequestItemStatuses(List<TestRequestItemStatus> testRequestItemStatuses) {
         this.testRequestItemStatuses = testRequestItemStatuses;
+    }
+
+    public Integer getStorageId() {
+        return storageId;
+    }
+
+    public void setStorageId(Integer storageId) {
+        this.storageId = storageId;
+    }
+
+    public List<StorageStatus> getStorageStatuses() {
+        return storageStatuses;
+    }
+
+    public void setStorageStatuses(List<StorageStatus> storageStatuses) {
+        this.storageStatuses = storageStatuses;
+    }
+
+    public Boolean getRepository() {
+        return repository;
+    }
+
+    public void setRepository(Boolean repository) {
+        this.repository = repository;
     }
 }

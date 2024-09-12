@@ -80,6 +80,11 @@ public class StorageUnitResource extends ResourceBase<StorageUnitDTO> {
             filter.setActive("true".equalsIgnoreCase(param) || "1".equals(param));
         }
 
+        param = context.getParameter("assigned");
+        if (!StringUtils.isBlank(param)) {
+            filter.setAssigned("true".equalsIgnoreCase(param) || "1".equals(param));
+        }
+
         Result<StorageUnitDTO> result = getLabManagementService().findStorageUnits(filter);
         return toAlreadyPaged(result, context);
     }

@@ -4,6 +4,7 @@ import org.openmrs.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Entity(name = "labmanagement.SampleActivity")
 @Table(name = "labmgmt_sample_activity")
@@ -18,16 +19,15 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
     private Sample sample;
 
     @Column(name = "activity_type", nullable = false, length = 50)
-    private String activityType;
-
+    @Enumerated(EnumType.STRING)
+    private SampleActivityType activityType;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "source_id", nullable = false)
     private Location source;
 
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "destination_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "destination_id")
     private Location destination;
 
     @Column(name = "source_state", nullable = false, length = 50)
@@ -68,6 +68,16 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     private StorageUnit storageUnit;
 
+    @Column(name = "activity_date")
+    private Date activityDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_person_id")
+    private User responsiblePerson;
+
+    @Column(name = "responsible_person_other", length = 150)
+    private String responsiblePersonOther;
+
     public Integer getId() {
         return id;
     }
@@ -84,11 +94,11 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
         this.sample = sample;
     }
 
-    public String getActivityType() {
+    public SampleActivityType getActivityType() {
         return activityType;
     }
 
-    public void setActivityType(String activityType) {
+    public void setActivityType(SampleActivityType activityType) {
         this.activityType = activityType;
     }
 
@@ -194,5 +204,29 @@ public class SampleActivity extends BaseChangeableOpenmrsData {
 
     public void setStorageUnit(StorageUnit storageUnit) {
         this.storageUnit = storageUnit;
+    }
+
+    public Date getActivityDate() {
+        return activityDate;
+    }
+
+    public void setActivityDate(Date activityDate) {
+        this.activityDate = activityDate;
+    }
+
+    public User getResponsiblePerson() {
+        return responsiblePerson;
+    }
+
+    public void setResponsiblePerson(User responsiblePerson) {
+        this.responsiblePerson = responsiblePerson;
+    }
+
+    public String getResponsiblePersonOther() {
+        return responsiblePersonOther;
+    }
+
+    public void setResponsiblePersonOther(String responsiblePersonOther) {
+        this.responsiblePersonOther = responsiblePersonOther;
     }
 }

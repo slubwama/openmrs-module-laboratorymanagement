@@ -1,10 +1,7 @@
 package org.openmrs.module.labmanagement.api.dto;
 
 import org.openmrs.Concept;
-import org.openmrs.module.labmanagement.api.model.ReferralOutOrigin;
-import org.openmrs.module.labmanagement.api.model.Sample;
-import org.openmrs.module.labmanagement.api.model.SampleStatus;
-import org.openmrs.module.labmanagement.api.model.TestRequestItem;
+import org.openmrs.module.labmanagement.api.model.*;
 
 import javax.persistence.Column;
 import javax.persistence.FetchType;
@@ -64,6 +61,7 @@ public class SampleDTO extends TestRequestSampleDTO {
     private String referralToFacilityName;
     private String currentSampleActivityUuid;
     private SampleStatus status;
+    private StorageStatus storageStatus;
     private String encounterUuid;
     private Integer testRequestId;
     private String testRequestUuid;
@@ -660,5 +658,13 @@ public class SampleDTO extends TestRequestSampleDTO {
 
     public void setStorageName(String storageName) {
         StorageName = storageName;
+    }
+
+    public StorageStatus getStorageStatus() {
+        return storageStatus;
+    }
+
+    public void setStorageStatus(StorageStatus storageStatus) {
+        this.storageStatus = storageStatus;
     }
 }
