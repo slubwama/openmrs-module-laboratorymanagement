@@ -7,6 +7,8 @@ import org.openmrs.logic.op.In;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.dto.TestRequestAction;
+import org.openmrs.module.labmanagement.api.model.Sample;
+import org.openmrs.module.labmanagement.api.utils.Pair;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
@@ -105,6 +107,17 @@ public class TestRequestActionResource extends ResourceBase<TestRequestAction> {
                 getLabManagementService().checkOutSamples(delegate);
                 delegate=new TestRequestAction();
                 delegate.setRemarks("Check-out action successfull");
+                delegate.setUuid("not-supported");
+                return delegate;
+            }
+            case USE_EXISTING_SAMPLE:
+            {
+                Pair<Sample, Map<Integer, String>> sample = getLabManagementService().useExistingSampleForTest(delegate);
+                if(sample.getValue2() != null){
+                    getLabManagementService().updateOrderInstructions(sample.getValue2());
+                }
+                delegate=new TestRequestAction();
+                delegate.setRemarks("Sample association successfull");
                 delegate.setUuid("not-supported");
                 return delegate;
             }

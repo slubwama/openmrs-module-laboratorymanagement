@@ -424,7 +424,7 @@ public class TestRequestResource extends ResourceBase<TestRequestDTO> {
             return;
         }
 
-        List<String> allowedFields = Arrays.asList("sampleTypeUuid", "accessionNumber", "externalRef", "tests");
+        List<String> allowedFields = Arrays.asList("sampleTypeUuid", "accessionNumber", "externalRef", "tests", "archive", "storageUnitUuid");
         List<TestRequestSampleDTO> itemsToUpdate = new ArrayList<>();
         for (Map<String, ?> item : items) {
             TestRequestSampleDTO itemDTO = new TestRequestSampleDTO();

@@ -10,10 +10,12 @@ import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.dto.Result;
+import org.openmrs.module.labmanagement.api.dto.SampleActivityDTO;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItem;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItemFilter;
 import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.ReferralLocation;
+import org.openmrs.module.labmanagement.api.model.SampleActivityType;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
 import org.openmrs.module.labmanagement.api.reporting.ReportParameter;
@@ -26,11 +28,9 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class SampleCustodyReport extends ReportGenerator {
 
@@ -115,6 +115,7 @@ public class SampleCustodyReport extends ReportGenerator {
 				filter.setTestRequestIdMin(lastTestRequestProcessed);
 
 				Result<TestRequestReportItem> data = labManagementService.findSampleCustodyReportItems(filter);
+
 				if (shouldStopExecution.apply(batchJob)) {
 					return;
 				}
@@ -137,8 +138,20 @@ public class SampleCustodyReport extends ReportGenerator {
 					hasAppendedHeaders = true;
 				}
 				if (!data.getData().isEmpty()) {
+
+					int fetchIndex = 0;
+					int rowIndex = 0;
+					int batchSize = 50;
+					Map<Integer, List<SampleActivityDTO>> sampleActivityMap = null;
 					for (TestRequestReportItem row : data.getData()) {
-						writeRow(csvWriter, row);
+						if(fetchIndex == rowIndex){
+						 	List<Integer> sampleIds =	data.getData().stream().skip(rowIndex).limit(batchSize).map(TestRequestReportItem::getSampleId).distinct().collect(Collectors.toList());
+							sampleActivityMap = labManagementService.getSampleActivitiesForReport(sampleIds).stream().collect(Collectors.groupingBy(SampleActivityDTO::getSampleId));
+						 	fetchIndex = fetchIndex + batchSize;
+						}
+
+						writeRow(csvWriter, row, sampleActivityMap);
+						rowIndex++;
 					}
 					csvWriter.flush();
 					recordsProcessed += data.getData().size();
@@ -187,8 +200,10 @@ public class SampleCustodyReport extends ReportGenerator {
 	}
 
 
-	protected void writeRow(CSVWriter csvWriter, TestRequestReportItem row) {
-		List<String> columnValues = new ArrayList<>(Arrays.asList(TIMESTAMP_FORMATTER.format(row.getDateCreated()),
+	protected void writeRow(CSVWriter csvWriter, TestRequestReportItem row, Map<Integer, List<SampleActivityDTO>> sampleActivityMap) throws IOException {
+
+
+	List<String> rowColumns = new ArrayList<>( Arrays.asList(TIMESTAMP_FORMATTER.format(row.getDateCreated()),
 				formatName(row.getCreatorFamilyName(), row.getCreatorMiddleName(), row.getCreatorGivenName()),
 				row.getAtLocationName(),
 				row.getRequestNo(),
@@ -220,7 +235,61 @@ public class SampleCustodyReport extends ReportGenerator {
 				row.getResultApprovalDate() == null ? null : TIMESTAMP_FORMATTER.format(row.getResultApprovalDate())
 		));
 
-		writeLineToCsv(csvWriter,columnValues.toArray(new String[0]));
+		List<SampleActivityDTO> sampleActivityDTOS = sampleActivityMap == null ? new ArrayList<>() :
+				sampleActivityMap.getOrDefault(row.getSampleId(), new ArrayList<>());
+		Optional<SampleActivityDTO> archiveActivity = sampleActivityDTOS.stream().filter(p->p.getActivityType() == SampleActivityType.ARCHIVE).reduce((x,y)-> y);
+		addActivityColumns(rowColumns, archiveActivity);
+
+		Optional<SampleActivityDTO> checkoutActivity = sampleActivityDTOS.stream().filter(p->p.getActivityType() == SampleActivityType.CHECKOUT).reduce((x,y)-> y);
+		addActivityColumns(rowColumns, checkoutActivity);
+
+		Optional<SampleActivityDTO> disposeActivity = sampleActivityDTOS.stream().filter(p->p.getActivityType() == SampleActivityType.DISPOSAL).reduce((x,y)-> y);
+		addActivityColumns(rowColumns, disposeActivity);
+		rowColumns.add(
+		sampleActivityDTOS.stream().filter(p-> (!archiveActivity.isPresent() || !archiveActivity.get().getId().equals(p.getSampleId())) &&
+						(!checkoutActivity.isPresent() || !checkoutActivity.get().getId().equals(p.getSampleId())) &&
+						(!disposeActivity.isPresent() || !disposeActivity.get().getId().equals(p.getSampleId()))
+		).map(p->
+			String.format("Activity: %1s%2sDate: %3s%4sEntry Date: %5s%6sBy: %7s%8sResponsible Person: %9s%10s",
+			p.getActivityType().name(),
+			"\r\n",
+			DATE_FORMATTER.format(p.getActivityDate() == null ? p.getDateCreated() : p.getActivityDate()),
+					"\r\n",
+			TIMESTAMP_FORMATTER.format(p.getDateCreated()),
+					"\r\n",
+			formatName(p.getActivityByFamilyName(),
+					p.getActivityByMiddleName(),
+					p.getActivityByGivenName()),
+					"\r\n",
+			p.getResponsiblePersonOther() != null ? p.getResponsiblePersonOther() :
+					formatName(p.getActivityByFamilyName(),
+							p.getActivityByMiddleName(),
+							p.getActivityByGivenName()),
+					"\r\n")
+		).collect(Collectors.joining("\r\n"))
+		);
+		writeLineToCsv(csvWriter, rowColumns.toArray(new String[0]));
+	}
+
+	private void addActivityColumns(List<String> rowColumns, Optional<SampleActivityDTO> disposeActivity) {
+		if(disposeActivity.isPresent()) {
+			rowColumns.add(DATE_FORMATTER.format(disposeActivity.get().getActivityDate() == null ?
+					disposeActivity.get().getDateCreated() : disposeActivity.get().getActivityDate()));
+			rowColumns.add(TIMESTAMP_FORMATTER.format(disposeActivity.get().getDateCreated()));
+			rowColumns.add(formatName(disposeActivity.get().getActivityByFamilyName(),
+					disposeActivity.get().getActivityByMiddleName(),
+					disposeActivity.get().getActivityByGivenName()));
+			rowColumns.add(disposeActivity.get().getResponsiblePersonOther() != null ? disposeActivity.get().getResponsiblePersonOther() :
+					formatName(disposeActivity.get().getActivityByFamilyName(),
+							disposeActivity.get().getActivityByMiddleName(),
+							disposeActivity.get().getActivityByGivenName()));
+
+		}else{
+			rowColumns.add(null);
+			rowColumns.add(null);
+			rowColumns.add(null);
+			rowColumns.add(null);
+		}
 	}
 
 	protected void writeHeaders(CSVWriter csvWriter) {
@@ -250,7 +319,25 @@ public class SampleCustodyReport extends ReportGenerator {
 				"Results By",
 				"Results Date",
 				"Results Last Approved By",
-				"Results Last Approved Date"));
+				"Results Last Approved Date",
+
+				"Archive Date",
+				"Archive Entry Date",
+				"Archive By",
+				"Archive Responsible Person",
+
+				"Check-Out Date",
+				"Check-Out Entry Date",
+				"Check-Out By",
+				"Check-Out Responsible Person",
+
+				"Disposal Date",
+				"Disposal Entry Date",
+				"Disposal By",
+				"Disposal Responsible Person",
+
+				"Other Activity"
+				));
 		writeLineToCsv(csvWriter, headers.toArray(new String[0]));
 	}
 }

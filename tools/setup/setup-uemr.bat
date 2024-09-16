@@ -125,7 +125,7 @@ access the browser and it fails
 run the concept dictionary
 
 rrestart 
-mvn openmrs-sdk:run -DserverId=esmugemr -DskipTests  -Dfork=false
+mvn -o openmrs-sdk:run -DserverId=esmugemr -DskipTests  -Dfork=false
 
 
 rem when sam updates the 4.0.0-SNAPSHOT you can apply the latest changes using the deploy command

@@ -79,6 +79,15 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             filter.setPatientId(patient.getPatientId());
         }
 
+        param = context.getParameter("referralLocation");
+        if (!StringUtils.isBlank(param)) {
+            ReferralLocation referralLocation = getLabManagementService().getReferralLocationByUuid(param);
+            if (referralLocation == null) {
+                return emptyResult(context);
+            }
+            filter.setReferralLocationId(referralLocation.getId());
+        }
+
         param = context.getParameter("sampleType");
         if (!StringUtils.isBlank(param)) {
             Concept concept = Context.getConceptService().getConceptByUuid(param);
@@ -174,7 +183,6 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             }
             filter.setTestRequestItemStatuses(statusIds);
         }
-
 
         param = context.getParameter("testRequest");
         if (!StringUtils.isBlank(param)) {
@@ -305,6 +313,8 @@ public class SampleResource extends ResourceBase<SampleDTO> {
         description.addProperty("referredOut");
         description.addProperty("testRequestUuid");
         description.addProperty("referralToFacilityUuid");
+        description.addProperty("archive");
+        description.addProperty("storageUnitUuid");
         return description;
     }
 
@@ -322,6 +332,8 @@ public class SampleResource extends ResourceBase<SampleDTO> {
         description.addProperty("volumeUnitUuid");
         description.addProperty("referredOut");
         description.addProperty("referralToFacilityUuid");
+        description.addProperty("archive");
+        description.addProperty("storageUnitUuid");
         return description;
     }
 
@@ -406,7 +418,9 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             description.addProperty("providedRef");
             description.addProperty("externalRef");
             description.addProperty("status");
+            description.addProperty("storageStatus");
             description.addProperty("testRequestItemSampleUuid");
+            description.addProperty("sampleTypeName");
         }
 
         return description;
@@ -484,6 +498,7 @@ public class SampleResource extends ResourceBase<SampleDTO> {
             modelImpl.property("providedRef", new StringProperty());
             modelImpl.property("externalRef", new StringProperty());
             modelImpl.property("testRequestItemSampleUuid", new StringProperty());
+            modelImpl.property("sampleTypeName", new StringProperty());
         }
 
         return modelImpl;

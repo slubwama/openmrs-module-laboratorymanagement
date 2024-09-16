@@ -12,6 +12,7 @@ public class SampleSearchFilter extends SearchFilter {
     private Integer sampleId;
     private String sampleUuid;
     private Integer patientId;
+    private Integer referralLocationId;
     private Integer sampleTypeId;
     private Date minCollectionDate;
     private Date maxCollectionDate;
@@ -242,5 +243,13 @@ public class SampleSearchFilter extends SearchFilter {
 
     public void setRepository(Boolean repository) {
         this.repository = repository;
+    }
+
+    public Integer getReferralLocationId() {
+        return referralLocationId;
+    }
+
+    public void setReferralLocationId(Integer referralLocationId) {
+        this.referralLocationId = referralLocationId;
     }
 }

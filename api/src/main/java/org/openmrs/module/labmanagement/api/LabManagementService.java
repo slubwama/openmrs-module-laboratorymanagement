@@ -181,6 +181,10 @@ public interface LabManagementService extends OpenmrsService {
     Pair<Sample, Map<Integer, String>> saveSample(SampleDTO sample);
 
     @Transactional
+    @Authorized({ Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT,Privileges.TASK_LABMANAGEMENT_SAMPLES_MUTATE})
+    Pair<Sample, Map<Integer, String>> useExistingSampleForTest(TestRequestAction testRequestAction);
+
+    @Transactional
     @Authorized(Privileges.TASK_LABMANAGEMENT_SAMPLES_COLLECT)
     Map<Integer, String> releaseSamplesForTesting(String testRequestUuid, List<String> sampleUuids);
 
@@ -339,6 +343,8 @@ public interface LabManagementService extends OpenmrsService {
     Result<TestRequestReportItem> findAuditReportReportItems(TestRequestReportItemFilter filter);
 
     Result<TestRequestReportItem> findSampleCustodyReportItems(TestRequestReportItemFilter filter);
+
+    List<SampleActivityDTO> getSampleActivitiesForReport(List<Integer> sampleIds);
 
     @Transactional(readOnly = true)
     @Authorized(Privileges.APP_LABMANAGEMENT_TESTRESULTS)

@@ -6,5 +6,6 @@ public enum TestRequestActionType {
     TEST_RESULT_APPROVAL(),
     DISPOSE_SAMPLE(),
     CHECK_OUT_SAMPLE(),
-    ARCHIVE_SAMPLE()
+    ARCHIVE_SAMPLE(),
+    USE_EXISTING_SAMPLE();
 }

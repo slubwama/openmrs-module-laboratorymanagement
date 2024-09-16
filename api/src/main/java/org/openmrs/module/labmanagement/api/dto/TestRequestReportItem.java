@@ -2,10 +2,7 @@ package org.openmrs.module.labmanagement.api.dto;
 
 import org.openmrs.Concept;
 import org.openmrs.Order;
-import org.openmrs.module.labmanagement.api.model.ApprovalResult;
-import org.openmrs.module.labmanagement.api.model.ReferralOutOrigin;
-import org.openmrs.module.labmanagement.api.model.SampleStatus;
-import org.openmrs.module.labmanagement.api.model.TestRequestItemStatus;
+import org.openmrs.module.labmanagement.api.model.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -70,6 +67,7 @@ public class TestRequestReportItem {
     private String creatorFamilyName;
     private Date dateCreated;
 
+    private Integer sampleId;
     private String sampleProvidedRef;
     private String sampleAccessionNumber;
     private String sampleExternalRef;
@@ -107,6 +105,7 @@ public class TestRequestReportItem {
     private String currentApprovalByMiddleName;
     private String currentApprovalByFamilyName;
     private String resultAtLocationName;
+
 
     public Integer getTestRequestItemId() {
         return testRequestItemId;
@@ -842,5 +841,13 @@ public class TestRequestReportItem {
 
     public void setResultAtLocationName(String resultAtLocationName) {
         this.resultAtLocationName = resultAtLocationName;
+    }
+
+    public Integer getSampleId() {
+        return sampleId;
+    }
+
+    public void setSampleId(Integer sampleId) {
+        this.sampleId = sampleId;
     }
 }

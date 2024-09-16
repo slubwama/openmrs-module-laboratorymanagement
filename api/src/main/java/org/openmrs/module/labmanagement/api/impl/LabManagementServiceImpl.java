@@ -656,6 +656,8 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         LocationService locationService = Context.getLocationService();
         Map<String, Location> locations=new HashMap<>();
         Map<String, Concept> sampleTypes=new HashMap<>();
+        Map<String, StorageUnit> storageUnits = new HashMap<>();
+        Map<String, String> archiveSampleList = new HashMap<>();
         TestConfigSearchFilter testConfigSearchFilter = new TestConfigSearchFilter();
         testConfigSearchFilter.setTestUuids(new ArrayList<>());
         List<TestRequestItemDTO> testRequests = testRequestDTO.getTests();
@@ -663,6 +665,8 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testRequests = new ArrayList<>();
         }
 
+        Boolean hasRepositoryMutate = null;
+        boolean archive = false;
         if(testRequestDTO.getSamples() != null && !testRequestDTO.getSamples().isEmpty()){
             int sampleIndex = 0;
             for(TestRequestSampleDTO sample : testRequestDTO.getSamples()){
@@ -683,14 +687,26 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                     invalidRequest("labmanagement.fieldrequired", "Sample tests " + sampleIndex);
                 }
 
-                if(sampleTypes.containsKey(sample.getSampleTypeUuid()))
-                    continue;
-
-                Concept concept = conceptService.getConceptByUuid(sample.getSampleTypeUuid());
-                if(concept == null){
-                    invalidRequest("labmanagement.thingnotexists",  "Sample type "+ sampleIndex);
+                StorageUnit storageUnit = null;
+                if(sample.getArchive() != null && sample.getArchive()){
+                    if(StringUtils.isBlank(sample.getStorageUnitUuid())){
+                        invalidRequest("labmanagement.fieldrequired", "Sample storage unit " + sampleIndex);
+                    }
+                    if(hasRepositoryMutate == null){
+                        hasRepositoryMutate = Context.getAuthenticatedUser().hasPrivilege(Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE);
+                    }
+                    if(!hasRepositoryMutate){
+                        invalidRequest("labmanagement.notauthorisedtoarchive");
+                    }
+                    if(!storageUnits.containsKey(sample.getStorageUnitUuid())) {
+                        storageUnit = getStorageUnitByUuid(sample.getStorageUnitUuid());
+                        if (storageUnit == null) {
+                            invalidRequest("labmanagement.thingnotexists", "Storage unit " + sampleIndex);
+                        }
+                        storageUnits.put(sample.getStorageUnitUuid(), storageUnit);
+                    }
+                    archive = true;
                 }
-                sampleTypes.putIfAbsent(sample.getSampleTypeUuid(), concept);
 
                 int testIndex = 0;
                 for(TestRequestItemDTO test : sample.getTests()){
@@ -709,6 +725,15 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 if(uniqueSampleTestCount != sampleTestCount){
                     invalidRequest("labmanagement.fieldrequired", "No duplicate tests for sample " + testIndex);
                 }
+
+                if(sampleTypes.containsKey(sample.getSampleTypeUuid()))
+                    continue;
+
+                Concept concept = conceptService.getConceptByUuid(sample.getSampleTypeUuid());
+                if(concept == null){
+                    invalidRequest("labmanagement.thingnotexists",  "Sample type "+ sampleIndex);
+                }
+                sampleTypes.putIfAbsent(sample.getSampleTypeUuid(), concept);
 
             }
         }
@@ -857,9 +882,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         if(testRequestDTO.getReferredIn()){
             for(TestRequestSampleDTO sample : testRequestDTO.getSamples()){
+
                 testInHouse = mapToSample(testRequestDTO, sample, conceptService, encounter, provider, patient,
                         careSetting, atLocation, locations, sampleTypes, visitDate, providerUserAccount, testInHouse,
-                        orders, testRequestItems, samples, testRequestItemSamples);
+                        orders, testRequestItems, samples, testRequestItemSamples, archiveSampleList);
             }
         }else{
             for(TestRequestTestDTO test : testRequests){
@@ -935,7 +961,6 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             dao.saveTestRequestItemSample(testRequestItemSample);
         }
 
-
         if(testRequestDTO.getReferredIn() || allReferredOut){
             queuePatient = false;
         }
@@ -944,6 +969,19 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
             Location locationTo =  locations.values().iterator().next();
             sendPatientToNextLocation(patient, encounter, provider, locationTo, encounter.getLocation(), PatientQueue.Status.PENDING, true);
+        }
+
+        if(archive) {
+            for (Sample sample : samples) {
+                String storageUnitUuid = archiveSampleList.getOrDefault(sample.getUuid(), null);
+                if (storageUnitUuid != null) {
+                    StorageUnit storageUnit = storageUnits.getOrDefault(storageUnitUuid, null);
+                    if (storageUnit != null) {
+                        SampleActivity sampleActivity = getSampleActivity(sample, Context.getAuthenticatedUser(), "Archived at registration");
+                        archiveSample(sample, new Date(), sampleActivity, storageUnit, Context.getAuthenticatedUser(), null, sample.getVolume(), sample.getVolumeUnit(), null, Context.getAuthenticatedUser());
+                    }
+                }
+            }
         }
 
         return testRequest;
@@ -965,7 +1003,8 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                                 Set<Order> orders,
                                 List<TestRequestItem> testRequestItems,
                                 List<Sample> samples,
-                                List<TestRequestItemSample> testRequestItemSamples){
+                                List<TestRequestItemSample> testRequestItemSamples,
+                                Map<String, String> archiveSampleList){
 
         Sample sample = new Sample();
         sample.setCreator(Context.getAuthenticatedUser());
@@ -995,6 +1034,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
         sample.setEncounter(encounter);
         samples.add(sample);
+        if(sampleDTO.getArchive() != null && sampleDTO.getArchive()) {
+            archiveSampleList.put(sample.getUuid(), sampleDTO.getStorageUnitUuid());
+        }
 
         for(TestRequestTestDTO test: sampleDTO.getTests()){
             test.setReferredOut(false);
@@ -1801,16 +1843,18 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         dao.saveSample(sample);
     }
 
+
     public  Pair<Sample, Map<Integer, String>> saveSample(SampleDTO sampleDTO){
         Sample sample;
         boolean isNew;
+        TestRequest testRequest = null;
         if (sampleDTO.getUuid() == null) {
             isNew = true;
             sample = new Sample();
             sample.setCreator(Context.getAuthenticatedUser());
             sample.setDateCreated(new Date());
 
-            TestRequest testRequest = getTestRequestByUuid(sampleDTO.getTestRequestUuid());
+            testRequest = getTestRequestByUuid(sampleDTO.getTestRequestUuid());
             if(testRequest == null){
                 invalidRequest("labmanagement.thingnotexists",  "Test request");
             }
@@ -1828,6 +1872,11 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         } else {
             isNew = false;
+            testRequest = getTestRequestByUuid(sampleDTO.getTestRequestUuid());
+            if(testRequest == null){
+                invalidRequest("labmanagement.thingnotexists",  "Test request");
+            }
+
             sample = dao.getSampleByUuid(sampleDTO.getUuid());
             if (sample == null) {
                 invalidRequest("labmanagement.thingnotexists", "Sample");
@@ -1848,6 +1897,29 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             if (StringUtils.isBlank(sample.getExternalRef())) {
                 invalidRequest("labmanagement.fieldrequired", "Sample external reference");
             }
+        }
+
+        boolean archive = false;
+        StorageUnit storageUnit = null;
+        if(sampleDTO.getArchive() != null && sampleDTO.getArchive()){
+            if(StringUtils.isBlank(sampleDTO.getStorageUnitUuid())){
+                invalidRequest("labmanagement.fieldrequired", "Sample storage unit");
+            }
+            if(!Context.getAuthenticatedUser().hasPrivilege(Privileges.TASK_LABMANAGEMENT_REPOSITORY_MUTATE)){
+                invalidRequest("labmanagement.notauthorisedtoarchive");
+            }
+            storageUnit = getStorageUnitByUuid(sampleDTO.getStorageUnitUuid());
+            if(storageUnit == null){
+                invalidRequest("labmanagement.thingnotexists", "Storage unit");
+            }
+
+            if(!isNew){
+                if(!SampleStatus.canArchive(sample)){
+                    invalidRequest("labmanagement.actionnotallowed", "Archive", sample.getAccessionNumber());
+                }
+            }
+
+            archive = true;
         }
 
         boolean requireContainerInfo = StringUtils.isNotBlank(sampleDTO.getContainerTypeUuid()) || sampleDTO.getContainerCount() != null;
@@ -1929,15 +2001,17 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         boolean canModifyTests = true;
         if(!isNew){
             canModifyTests = false;
-             if(TestRequestStatus.isNotCompleted(sample.getTestRequest().getStatus())){
+             if(TestRequestStatus.isNotCompleted(testRequest.getStatus())){
                  if(currentSampleRequestItemSamples != null){
                      if(currentSampleRequestItemSamples.isEmpty()){
                          canModifyTests = true;
                      }else{
                          // Add non modifieable current sample requests in order to allow saving
+                         TestRequest finalTestRequest = testRequest;
                          List<TestRequestItemSample> nonModifiableCurrentSampleRequestItemSamples =
                           currentSampleRequestItemSamples.stream().filter(p-> p.getTestRequestItem() != null &&
                                  !p.getTestRequestItem().getVoided() &&
+                                 !p.getTestRequestItem().getTestRequest().getId().equals(finalTestRequest.getId()) &&
                                  !TestRequestItemStatus.canModifyTestSamples(p.getTestRequestItem().getStatus())).collect(Collectors.toList());
                          if(nonModifiableCurrentSampleRequestItemSamples.isEmpty()){
                              canModifyTests = true;
@@ -1965,58 +2039,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
 
             if(sampleDTO.getSampleTestItemUuids() != null && !sampleDTO.getSampleTestItemUuids().isEmpty()){
-                int index = 1;
-                for(String sampleTestItemUuid : sampleDTO.getSampleTestItemUuids()){
-                    TestRequestItem testRequestItem = dao.getTestRequestItemByUuid(sampleTestItemUuid);
-                    if(testRequestItem == null || testRequestItem.getVoided()){
-                        invalidRequest("labmanagement.thingnotexists",  "Test " + index);
-                    }
-                    if(!testRequestItem.getTestRequest().getUuid().equals(sampleDTO.getTestRequestUuid())){
-                        invalidRequest("labmanagement.thingnotexists",  "Request test " + index);
-                    }
-
-                    Sample finalSample = sample;
-                    List<TestRequestItemSample> associatedSamples = dao.getTestRequestItemSamples(testRequestItem, false)
-                            .stream().filter(p-> isNew || !p.getSample().getUuid().equalsIgnoreCase(finalSample.getUuid())).collect(Collectors.toList());
-                    if(!associatedSamples.isEmpty()){
-                            invalidRequest("labmanagement.testalreadyassociatedwithsample",  "Test " + index, associatedSamples.get(0).getSample().getAccessionNumber());
-                    }
-
-
-                    long testItemsExistingSamplesReferralValue = 0;
-                    long samplesAssociatedWithTestItem = 0;
-                    if(testRequestItem.getTestRequestItemSamples() != null){
-
-                        boolean finalIsNew = isNew;
-                        Sample finalSample1 = sample;
-                        List<Sample> samplesAssociatedWithTestRequest = testRequestItem.getTestRequestItemSamples().stream()
-                                .filter(p->!p.getVoided() && (finalIsNew ||
-                                        !finalSample1.getId().equals(p.getSample().getId()))
-                                ).map(TestRequestItemSample::getSample).collect(Collectors.toList());
-                        samplesAssociatedWithTestItem = samplesAssociatedWithTestRequest.size();
-                        testItemsExistingSamplesReferralValue = samplesAssociatedWithTestRequest.stream()
-                                .filter(p->!p.getVoided() &&
-                                        p.getReferredOut() != null && p.getReferredOut()
-                                ).count();
-                    }
-
-                    if(samplesAssociatedWithTestItem > 0){
-                        boolean mixOfReferral = false;
-                        if(testItemsExistingSamplesReferralValue > 0){
-                           if(!sampleDTO.getReferredOut()){
-                               mixOfReferral = true;
-                           }
-                        }else if(sampleDTO.getReferredOut()){
-                            mixOfReferral = true;
-                        }
-                        if(mixOfReferral){
-                            invalidRequest("labmanagement.mixingreferredoutnotallowed", "" + index);
-                        }
-                    }
-
-                    index++;
-                    testRequestItems.putIfAbsent(sampleTestItemUuid, testRequestItem);
-                }
+                validateSampleTestItems(testRequest, sample, sampleDTO.getTestRequestUuid(), sampleDTO.getReferredOut(), sampleDTO.getSampleTestItemUuids(), isNew, testRequestItems, true);
             }
         }
 
@@ -2059,9 +2082,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         if(canModifyTests) {
             Set<String> testsToAdd = sampleDTO.getSampleTestItemUuids();
             if(!isNew) {
+                TestRequest finalTestRequest1 = testRequest;
                 testRequestItemsToDelete =  currentSampleRequestItemSamples.
                         stream().
-                        filter(p->!p.getVoided() &&
+                        filter(p->!p.getVoided() && p.getTestRequestItem().getTestRequest().getId().equals(finalTestRequest1.getId()) &&
                         sampleDTO.getSampleTestItemUuids().stream().noneMatch(x -> p.getTestRequestItem().getUuid().equalsIgnoreCase(x)))
                         .map(p->p.getId())
                         .collect(Collectors.toList());
@@ -2078,29 +2102,33 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
 
             samplesAdded=new ArrayList<>();
-            for(String testToAdd :  testsToAdd){
-                TestRequestItemSample testRequestItemSample = new TestRequestItemSample();
-                testRequestItemSample.setSample(sample);
-                testRequestItemSample.setTestRequestItem(testRequestItems.get(testToAdd));
-                samplesAdded.add(dao.saveTestRequestItemSample(testRequestItemSample));
-
-                if(testRequestItemSample.getTestRequestItem().getInitialSample() == null ||
-                        !testRequestItemSample.getTestRequestItem().getInitialSample().getId().equals(sample.getId())) {
-                    testRequestItemSample.getTestRequestItem().setInitialSample(sample);
-                    dao.saveTestRequestItem(testRequestItemSample.getTestRequestItem());
-                }
-
-            }
+            saveTestRequestItemSamples(testsToAdd, sample, testRequestItems, samplesAdded);
         }
+
         Map<Integer, String> instructionUpdate = null;
+        instructionUpdate = processReleaseItemsForTesting(archive, sample, testRequest, isNew, samplesAdded, oldReferredOut, isReferredOut);
+
+        if(archive && storageUnit != null){
+            SampleActivity sampleActivity = getSampleActivity(sample, Context.getAuthenticatedUser(), "Archived at collection");
+            archiveSample(sample, new Date(), sampleActivity, storageUnit, Context.getAuthenticatedUser(), null, sample.getVolume(), sample.getVolumeUnit(), null, Context.getAuthenticatedUser());
+        }
+
+        return new Pair<>(sample, instructionUpdate);
+    }
+
+    private Map<Integer, String> processReleaseItemsForTesting(boolean archive, Sample sample, TestRequest testRequest, boolean isNew, List<TestRequestItemSample> samplesAdded, boolean oldReferredOut, boolean isReferredOut) {
+        Map<Integer, String> instructionUpdate = null;
+        boolean requireAutoRelease = archive || !sample.getTestRequest().getId().equals(testRequest.getId());
+        boolean autoReleaseSamplesForTesting = GlobalProperties.getAutoReleaseSamples() || requireAutoRelease;
         if(isNew || (SampleStatus.canReleaseSamplesForTesting(sample.getStatus()) &&
-                TestRequestStatus.canReleaseSamplesForTesting(sample.getTestRequest().getStatus()))){
-            if(GlobalProperties.getAutoReleaseSamples()) {
-                releaseSamplesForTesting(sample.getTestRequest().getUuid(), Arrays.asList(sample.getUuid()));
+                TestRequestStatus.canReleaseSamplesForTesting(testRequest.getStatus()))){
+            // Auto release for new requests
+            if(autoReleaseSamplesForTesting) {
+                releaseSamplesForTesting(testRequest.getUuid(), Arrays.asList(sample.getUuid()));
             }
         }else{
-            if(samplesAdded != null && !samplesAdded.isEmpty() && TestRequestStatus.canReleaseSamplesForTesting(sample.getTestRequest().getStatus())) {
-                if(SampleStatus.canReleaseAdditionalTestItemsForTesting(sample.getStatus())) {
+            if(samplesAdded != null && !samplesAdded.isEmpty() && TestRequestStatus.canReleaseSamplesForTesting(testRequest.getStatus())) {
+                if((SampleStatus.canReleaseAdditionalTestItemsForTesting(sample.getStatus()) || requireAutoRelease)) {
                     Map<String, Pair<TestRequestItem,Map<String,Sample>>> testRequestItemSamplesForRelease = new HashMap<>();
                     for(TestRequestItemSample testRequestItemSample : samplesAdded){
                         if(!testRequestItemSamplesForRelease.containsKey(testRequestItemSample.getTestRequestItem().getUuid())){
@@ -2112,12 +2140,13 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 }
             }
 
-            if(SampleStatus.canReleaseAdditionalTestItemsForTesting(sample.getStatus()) && !isNew && !oldReferredOut && isReferredOut){
+            if((SampleStatus.canReleaseAdditionalTestItemsForTesting(sample.getStatus()) || requireAutoRelease) && !isNew && !oldReferredOut && isReferredOut){
                 List<TestRequestItemSample> newCurrentSampleRequestItemSamples = dao.getTestRequestItemSamples(sample);
 
                 List<TestRequestItemSample> finalSamplesAdded = samplesAdded;
+                TestRequest finalTestRequest2 = testRequest;
                 newCurrentSampleRequestItemSamples = newCurrentSampleRequestItemSamples.stream().filter(p-> p.getTestRequestItem() != null &&
-                        !p.getTestRequestItem().getVoided() && (finalSamplesAdded == null  || finalSamplesAdded.isEmpty() ||
+                        !p.getTestRequestItem().getVoided() && p.getTestRequestItem().getTestRequest().getId().equals(finalTestRequest2.getId()) && (finalSamplesAdded == null  || finalSamplesAdded.isEmpty() ||
                         finalSamplesAdded.stream().noneMatch(x->x.getId().equals(p.getId()))
                         ) ).collect(Collectors.toList());
 
@@ -2134,7 +2163,131 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
                 instructionUpdate = internalReleaseForTesting(testRequestItemSamplesForRelease);
             }
         }
+        return instructionUpdate;
+    }
 
+    protected void saveTestRequestItemSamples(Set<String> testsToAdd, Sample sample, Map<String, TestRequestItem> testRequestItems, List<TestRequestItemSample> samplesAdded) {
+        for(String testToAdd : testsToAdd){
+            TestRequestItemSample testRequestItemSample = new TestRequestItemSample();
+            testRequestItemSample.setSample(sample);
+            testRequestItemSample.setTestRequestItem(testRequestItems.get(testToAdd));
+            samplesAdded.add(dao.saveTestRequestItemSample(testRequestItemSample));
+
+            if(testRequestItemSample.getTestRequestItem().getInitialSample() == null ||
+                    !testRequestItemSample.getTestRequestItem().getInitialSample().getId().equals(sample.getId())) {
+                testRequestItemSample.getTestRequestItem().setInitialSample(sample);
+                dao.saveTestRequestItem(testRequestItemSample.getTestRequestItem());
+            }
+
+        }
+    }
+
+    protected void validateSampleTestItems(TestRequest testRequest, Sample sample, String testRequestUuid, boolean referredOut, Set<String> sampleTestItemUuids, boolean isNew, Map<String, TestRequestItem> testRequestItems, boolean checkSameTestRequest) {
+        int index = 1;
+        for(String sampleTestItemUuid : sampleTestItemUuids){
+            TestRequestItem testRequestItem = dao.getTestRequestItemByUuid(sampleTestItemUuid);
+
+            if(testRequestItem == null || testRequestItem.getVoided()){
+                invalidRequest("labmanagement.thingnotexists",  "Test " + index);
+            }
+
+            if(checkSameTestRequest) {
+                // Skip tests not belonging to this test request
+                if (!testRequestItem.getTestRequest().getId().equals(testRequest.getId())) {
+                    continue;
+                }
+                if (!testRequestItem.getTestRequest().getUuid().equals(testRequestUuid)) {
+                    invalidRequest("labmanagement.thingnotexists", "Request test " + index);
+                }
+            }
+
+            Sample finalSample = sample;
+            List<TestRequestItemSample> associatedSamples = dao.getTestRequestItemSamples(testRequestItem, false)
+                    .stream().filter(p-> isNew || !p.getSample().getUuid().equalsIgnoreCase(finalSample.getUuid())).collect(Collectors.toList());
+            if(!associatedSamples.isEmpty()){
+                    invalidRequest("labmanagement.testalreadyassociatedwithsample",  "Test " + index, associatedSamples.get(0).getSample().getAccessionNumber());
+            }
+
+            long testItemsExistingSamplesReferralValue = 0;
+            long samplesAssociatedWithTestItem = 0;
+            if (testRequestItem.getTestRequestItemSamples() != null) {
+
+                boolean finalIsNew = isNew;
+                Sample finalSample1 = sample;
+                List<Sample> samplesAssociatedWithTestRequest = testRequestItem.getTestRequestItemSamples().stream()
+                        .filter(p -> !p.getVoided() && (finalIsNew ||
+                                !finalSample1.getId().equals(p.getSample().getId()))
+                        ).map(TestRequestItemSample::getSample).collect(Collectors.toList());
+                samplesAssociatedWithTestItem = samplesAssociatedWithTestRequest.size();
+                testItemsExistingSamplesReferralValue = samplesAssociatedWithTestRequest.stream()
+                        .filter(p -> !p.getVoided() &&
+                                p.getReferredOut() != null && p.getReferredOut()
+                        ).count();
+            }
+
+            if (samplesAssociatedWithTestItem > 0) {
+                boolean mixOfReferral = false;
+                if (testItemsExistingSamplesReferralValue > 0) {
+                    if (!referredOut) {
+                        mixOfReferral = true;
+                    }
+                } else if (referredOut) {
+                    mixOfReferral = true;
+                }
+                if (mixOfReferral) {
+                    invalidRequest("labmanagement.mixingreferredoutnotallowed", "" + index);
+                }
+            }
+
+            index++;
+            testRequestItems.putIfAbsent(sampleTestItemUuid, testRequestItem);
+
+        }
+    }
+
+    public Pair<Sample, Map<Integer, String>> useExistingSampleForTest(TestRequestAction testRequestAction){
+        if(testRequestAction == null){
+            invalidRequest("labmanagement.fieldrequired", "Action information");
+        }
+
+        if(testRequestAction.getRecords() == null || testRequestAction.getRecords().isEmpty()){
+            invalidRequest("labmanagement.fieldrequired", "Records");
+        }
+
+        if(StringUtils.isBlank(testRequestAction.getTestRequestUuid())){
+            invalidRequest("labmanagement.fieldrequired", "Test request");
+        }
+
+        if(StringUtils.isBlank(testRequestAction.getUuid())){
+            invalidRequest("labmanagement.fieldrequired", "Sample");
+        }
+
+        TestRequest testRequest = getTestRequestByUuid(testRequestAction.getTestRequestUuid());
+        if(testRequest == null){
+            invalidRequest("labmanagement.thingnotexists",  "Test request");
+        }
+
+        Sample sample = getSampleByUuid(testRequestAction.getUuid());
+        if(sample == null){
+            invalidRequest("labmanagement.thingnotexists",  "Sample");
+        }
+
+        Set<String> records = new HashSet<>(testRequestAction.getRecords());
+        Map<String, TestRequestItem> testRequestItems = new HashMap<>();
+        validateSampleTestItems(testRequest, sample,
+                testRequestAction.getTestRequestUuid(),
+                sample.getReferredOut() != null && sample.getReferredOut(),records,false,testRequestItems, false);
+
+        if(!TestRequestStatus.isNotCompleted(testRequest.getStatus())){
+            invalidRequest("labmanagement.actionnotallowed", "Test request modification ", testRequest.getRequestNo());
+        }
+
+        List<TestRequestItemSample> samplesAdded=new ArrayList<>();
+        saveTestRequestItemSamples(records, sample, testRequestItems, samplesAdded);
+
+        Map<Integer, String> instructionUpdate = null;
+        boolean referredOut = sample.getReferredOut() != null && sample.getReferredOut();
+        instructionUpdate = processReleaseItemsForTesting(false, sample, testRequest, false, samplesAdded, referredOut, referredOut);
         return new Pair<>(sample, instructionUpdate);
     }
 
@@ -2179,7 +2332,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             invalidRequest("labmanagement.thingdoesnotallowsamplereleasefortesting",  "Test Request");
         }
 
-        List<Sample> samples = dao.getTestRequestSamplesByUuid(testRequest.getId(), sampleUuids);
+        List<Sample> samples = dao.getTestRequestSamplesByUuid(sampleUuids);
         if(samples.isEmpty()){
             invalidRequest("labmanagement.thingnotexists",  "Samples");
         }
@@ -2190,11 +2343,11 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
         Map<String, Pair<TestRequestItem,Map<String,Sample>>> testRequestItemSamples = new HashMap<>();
         for(Sample sample : samples){
-            if(sample.getVoided() || !SampleStatus.canReleaseSamplesForTesting(sample.getStatus())){
-                invalidRequest("labmanagement.thingdoesnotallowsamplereleasefortesting",  "Sample "+  sample.getAccessionNumber());
-            }
 
-            List<TestRequestItemSample> sampleTestRequestSamples = dao.getTestRequestItemSamples(sample);
+            List<TestRequestItemSample> sampleTestRequestSamples = dao.getTestRequestItemSamples(sample)
+                    .stream()
+                    .filter(p->p.getTestRequestItem().getTestRequest().getId().equals(testRequest.getId()))
+                    .collect(Collectors.toList());
             if(sampleTestRequestSamples == null || sampleTestRequestSamples.isEmpty() ||
                     sampleTestRequestSamples.stream().allMatch(BaseOpenmrsData::getVoided)
             ){
@@ -2289,10 +2442,13 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
     }
 
     private Sample  updateSampleForTesting(Sample sample){
-        sample.setStatus(SampleStatus.TESTING);
-        sample.setChangedBy(Context.getAuthenticatedUser());
-        sample.setDateChanged(new Date());
-        return dao.saveSample(sample);
+        if(sample.getStorageStatus() == null || sample.getStorageStatus() == StorageStatus.CHECKED_OUT) {
+            sample.setStatus(SampleStatus.TESTING);
+            sample.setChangedBy(Context.getAuthenticatedUser());
+            sample.setDateChanged(new Date());
+            return dao.saveSample(sample);
+        }
+        return sample;
     }
 
     public void updateOrderInstructions(Map<Integer, String> orderInstructions){
@@ -3931,6 +4087,10 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         return result;
     }
 
+    public List<SampleActivityDTO> getSampleActivitiesForReport(List<Integer> sampleIds){
+        return dao.getSampleActivitiesForReport(sampleIds);
+    }
+
     public TestResultImportConfig getTestResultImportConfigByHeaderHash(String headerHash, Concept test){
         return dao.getTestResultImportConfigByHeaderHash(headerHash, test);
     }
@@ -4304,7 +4464,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             sampleActivity = dao.saveSampleActivity(sampleActivity);
 
             sample1.setStatus(SampleStatus.DISPOSED);
-            if(verifiedRepositoryDisposal){
+            if(verifiedRepositoryDisposal || sample1.getStorageStatus() != null){
                 sample1.setStorageStatus(StorageStatus.DISPOSED);
             }
             sample1.setDateChanged(new Date());
@@ -4464,36 +4624,40 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         for(Sample sample1 : samples){
 
             SampleActivity sampleActivity = getSampleActivity(sample1, currentUser, remarks);
-            sampleActivity.setActivityType(SampleActivityType.ARCHIVE);
-            sampleActivity.setActivityDate(testRequestAction.getActionDate());
-            sampleActivity.setDestinationState(SampleStatus.ARCHIVED.name());
-            sampleActivity.setStatus(SampleStatus.ARCHIVED.name());
-            sampleActivity.setStorageUnit(storageUnit);
-            sampleActivity.setResponsiblePerson(responsiblePerson);
-            sampleActivity.setResponsiblePersonOther(responsiblePersonOther);
-            if(volume != null) sampleActivity.setVolume((BigDecimal) volume);
-            sampleActivity.setVolumeUnit(volumeUnit);
-            if(thawCyles != null) sampleActivity.setThawCycles((Integer) thawCyles);
-            sampleActivity.setActivityDate(testRequestAction.getActionDate() == null ? new Date() : testRequestAction.getActionDate());
-            sampleActivity = dao.saveSampleActivity(sampleActivity);
-
-            sample1.setStatus(SampleStatus.ARCHIVED);
-            sample1.setStorageStatus(StorageStatus.ARCHIVED);
-            sample1.setDateChanged(new Date());
-            sample1.setChangedBy(currentUser);
-            sample1.setStorageUnit(storageUnit);
-            if(volume != null){
-                sample1.setVolume((BigDecimal) volume);
-                sample1.setVolumeUnit(volumeUnit);
-            }
-            sample1.setCurrentSampleActivity(sampleActivity);
-            dao.saveSample(sample1);
+            archiveSample(sample1, testRequestAction.getActionDate(), sampleActivity, storageUnit, responsiblePerson, responsiblePersonOther, volume, volumeUnit, thawCyles, currentUser);
 
         }
         ApprovalDTO approvalDTO=new ApprovalDTO();
         approvalDTO.setRemarks(remarks);
         approvalDTO.setResult(testRequestAction.getAction());
         return approvalDTO;
+    }
+
+    protected void archiveSample(Sample sample1, Date actionDate, SampleActivity sampleActivity, StorageUnit storageUnit, User responsiblePerson, String responsiblePersonOther, Object volume, Concept volumeUnit, Object thawCyles, User currentUser) {
+        sampleActivity.setActivityType(SampleActivityType.ARCHIVE);
+        sampleActivity.setActivityDate(actionDate);
+        sampleActivity.setDestinationState(SampleStatus.ARCHIVED.name());
+        sampleActivity.setStatus(SampleStatus.ARCHIVED.name());
+        sampleActivity.setStorageUnit(storageUnit);
+        sampleActivity.setResponsiblePerson(responsiblePerson);
+        sampleActivity.setResponsiblePersonOther(responsiblePersonOther);
+        if(volume != null) sampleActivity.setVolume((BigDecimal) volume);
+        sampleActivity.setVolumeUnit(volumeUnit);
+        if(thawCyles != null) sampleActivity.setThawCycles((Integer) thawCyles);
+        sampleActivity.setActivityDate(actionDate == null ? new Date() : actionDate);
+        sampleActivity = dao.saveSampleActivity(sampleActivity);
+
+        sample1.setStatus(SampleStatus.ARCHIVED);
+        sample1.setStorageStatus(StorageStatus.ARCHIVED);
+        sample1.setDateChanged(new Date());
+        sample1.setChangedBy(currentUser);
+        sample1.setStorageUnit(storageUnit);
+        if(volume != null){
+            sample1.setVolume((BigDecimal) volume);
+            sample1.setVolumeUnit(volumeUnit);
+        }
+        sample1.setCurrentSampleActivity(sampleActivity);
+        dao.saveSample(sample1);
     }
 
     public ApprovalDTO checkOutSamples(TestRequestAction testRequestAction){
@@ -4603,6 +4767,11 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         User currentUser = Context.getAuthenticatedUser();
         for(Sample sample1 : samples){
 
+            SampleStatus newSampleStatus = SampleStatus.TESTING;
+            if(sample1.getCurrentSampleActivity() != null && StringUtils.isNotBlank(sample1.getCurrentSampleActivity().getSourceState())){
+                newSampleStatus = SampleStatus.findByName(sample1.getCurrentSampleActivity().getSourceState());
+            }
+
             SampleActivity sampleActivity = getSampleActivity(sample1, currentUser, remarks);
             sampleActivity.setActivityType(SampleActivityType.CHECKOUT);
             sampleActivity.setActivityDate(testRequestAction.getActionDate());
@@ -4616,7 +4785,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             sampleActivity.setActivityDate(testRequestAction.getActionDate() == null ? new Date() : testRequestAction.getActionDate());
             sampleActivity = dao.saveSampleActivity(sampleActivity);
 
-            sample1.setStatus(SampleStatus.TESTING);
+            sample1.setStatus(newSampleStatus == null ? SampleStatus.TESTING : newSampleStatus);
             sample1.setStorageStatus(StorageStatus.CHECKED_OUT);
             sample1.setDateChanged(new Date());
             sample1.setChangedBy(currentUser);

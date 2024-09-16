@@ -15,6 +15,7 @@ import java.util.Date;
 public class SampleActivityDTO implements Serializable {
     private Integer id;
     private String uuid;
+    private Integer sampleId;
     private String sampleUuid;
     private SampleActivityType activityType;
     private String sourceUuid;
@@ -365,5 +366,13 @@ public class SampleActivityDTO implements Serializable {
 
     public void setActivityByUuid(String activityByUuid) {
         this.activityByUuid = activityByUuid;
+    }
+
+    public Integer getSampleId() {
+        return sampleId;
+    }
+
+    public void setSampleId(Integer sampleId) {
+        this.sampleId = sampleId;
     }
 }

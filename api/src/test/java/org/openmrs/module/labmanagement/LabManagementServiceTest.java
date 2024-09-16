@@ -1277,6 +1277,12 @@ public class LabManagementServiceTest extends BaseModuleContextSensitiveTest {
 		result = labManagementService.findSamples(filter);
 		assertFalse(result.getData().stream().anyMatch(p -> p.getTestRequestUuid().equalsIgnoreCase(testRequest.getUuid())));
 		assertTrue(result.getData().isEmpty());
+
+		filter = new SampleSearchFilter();
+		filter.setReferralLocationId(testRequest.getReferralFromFacility().getId());
+		result = labManagementService.findSamples(filter);
+		assertTrue(result.getData().stream().anyMatch(p -> p.getTestRequestUuid().equalsIgnoreCase(testRequest.getUuid())));
+		assertFalse(result.getData().isEmpty());
 	}
 
 	@Test
@@ -2924,6 +2930,8 @@ tests	[…]
 		testRequestReportItemFilter=new TestRequestReportItemFilter();
 		reportResult = labManagementService.findSampleCustodyReportItems(testRequestReportItemFilter);
 		Assert.assertTrue(reportResult.getData().size() > 0);
+
+		labManagementService.getSampleActivitiesForReport(reportResult.getData().stream().map(p->p.getSampleId()).distinct().collect(Collectors.toList()));
 
 
 		testRequestReportItemFilter=new TestRequestReportItemFilter();

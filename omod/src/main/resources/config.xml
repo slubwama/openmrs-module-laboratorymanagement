@@ -152,7 +152,7 @@
     <globalProperty>
         <property>labmanagement.enableSpecimenIdAutoGeneration</property>
         <defaultValue>true</defaultValue>
-        <description>Configuration to enable/disable auto speciment id generation button.</description>
+        <description>Configuration to require auto specimen id generation.</description>
     </globalProperty>
     <globalProperty>
         <property>labmanagement.testGroupConcept</property>

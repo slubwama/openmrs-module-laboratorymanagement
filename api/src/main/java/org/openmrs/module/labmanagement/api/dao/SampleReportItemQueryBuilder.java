@@ -32,6 +32,7 @@ public class SampleReportItemQueryBuilder {
                 "st.conceptId as sampleTypeId,\n" +
                 "sal.name as sampleAtLocationName,\n" +
                 "clb.userId as collectedBy,\n" +
+                "s.id as sampleId,\n" +
                 "s.collectionDate as collectionDate,\n" +
                 "s.accessionNumber as sampleAccessionNumber,\n" +
                 "s.providedRef as sampleProvidedRef,\n" +

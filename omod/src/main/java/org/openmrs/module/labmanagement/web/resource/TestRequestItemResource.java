@@ -404,6 +404,7 @@ public class TestRequestItemResource extends ResourceBase<TestRequestItemDTO> {
             simpleObject.add("providedRef",p.getProvidedRef());
             simpleObject.add("externalRef",p.getExternalRef());
             simpleObject.add("collectionDate", p.getCollectionDate());
+            simpleObject.add("sampleTypeName",p.getSampleTypeName());
             simpleObject.add("testRequestItemSampleUuid",p.getTestRequestItemSampleUuid());
             return simpleObject;
         }).collect(Collectors.toList());

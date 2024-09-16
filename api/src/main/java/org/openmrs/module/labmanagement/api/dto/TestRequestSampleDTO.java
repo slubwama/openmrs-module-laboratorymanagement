@@ -7,6 +7,8 @@ public class TestRequestSampleDTO {
     private String accessionNumber;
     private String externalRef;
     private List<TestRequestItemDTO> tests;
+    private Boolean archive;
+    private String storageUnitUuid;
 
     public String getSampleTypeUuid() {
         return sampleTypeUuid;
@@ -38,5 +40,21 @@ public class TestRequestSampleDTO {
 
     public void setTests(List<TestRequestItemDTO> tests) {
         this.tests = tests;
+    }
+
+    public Boolean getArchive() {
+        return archive;
+    }
+
+    public void setArchive(Boolean archive) {
+        this.archive = archive;
+    }
+
+    public String getStorageUnitUuid() {
+        return storageUnitUuid;
+    }
+
+    public void setStorageUnitUuid(String storageUnitUuid) {
+        this.storageUnitUuid = storageUnitUuid;
     }
 }

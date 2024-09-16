@@ -2,6 +2,9 @@ package org.openmrs.module.labmanagement.api.model;
 
 import org.openmrs.module.labmanagement.api.dto.TestResultDTO;
 
+import java.util.Arrays;
+import java.util.List;
+
 public enum TestRequestItemStatus {
     REFERRED_OUT_PROVIDER(),
     REQUEST_APPROVAL(),
@@ -10,6 +13,10 @@ public enum TestRequestItemStatus {
     IN_PROGRESS(),
     CANCELLED(),
     COMPLETED();
+
+    public static List<TestRequestItemStatus> getStatusesNotApplicableForWorksheet(){
+        return Arrays.asList(REFERRED_OUT_PROVIDER, REFERRED_OUT_LAB, CANCELLED);
+    }
 
     public static boolean isRequestApproveable(TestRequestItemStatus testRequestItemStatus, ApprovalResult action) {
         return testRequestItemStatus != null && (testRequestItemStatus.equals(REQUEST_APPROVAL) ||
@@ -29,9 +36,11 @@ public enum TestRequestItemStatus {
     public  static  boolean isCancelled(TestRequestItemStatus testRequestItemStatus){
         return testRequestItemStatus != null && testRequestItemStatus.equals(CANCELLED);
     }
+
     public  static  boolean canModifyTestSamples(TestRequestItemStatus testRequestItemStatus){
         return testRequestItemStatus != null && (testRequestItemStatus.equals(SAMPLE_COLLECTION));
     }
+
     public  static  boolean canModifyReferralInformation(TestRequestItemStatus testRequestItemStatus){
         return testRequestItemStatus != null && (testRequestItemStatus.equals(SAMPLE_COLLECTION) || testRequestItemStatus.equals(IN_PROGRESS) );
     }
@@ -40,6 +49,11 @@ public enum TestRequestItemStatus {
         return testRequestItemStatus != null && (testRequestItemStatus.equals(SAMPLE_COLLECTION) ||
                 testRequestItemStatus.equals(REFERRED_OUT_LAB) ||
                 testRequestItemStatus.equals(IN_PROGRESS));
+    }
+
+    public static boolean needsReleaseSamplesForTesting(TestRequestItemStatus testRequestItemStatus) {
+        return testRequestItemStatus != null && (testRequestItemStatus.equals(SAMPLE_COLLECTION) ||
+                testRequestItemStatus.equals(REFERRED_OUT_LAB));
     }
 
     public  static  boolean canApprove(TestRequestItemStatus testRequestItemStatus){
