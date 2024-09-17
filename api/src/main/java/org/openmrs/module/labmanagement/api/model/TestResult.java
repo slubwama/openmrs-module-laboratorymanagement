@@ -73,6 +73,9 @@ public class TestResult extends BaseChangeableOpenmrsData implements Serializabl
     @JoinColumn(name = "at_location_id", nullable = true)
     private Location atLocation;
 
+    @Column(name = "document_id", nullable = true)
+    private Integer documentId;
+
     public String getRemarks() {
         return remarks;
     }
@@ -218,7 +221,13 @@ public class TestResult extends BaseChangeableOpenmrsData implements Serializabl
         this.atLocation = atLocation;
     }
 
+    public Integer getDocumentId() {
+        return documentId;
+    }
 
+    public void setDocumentId(Integer documentId) {
+        this.documentId = documentId;
+    }
 
     public void completeTestResult(String status){
         setStatus(status);

@@ -3030,6 +3030,15 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         return testResults;
     }
 
+    public List<Integer> getWorksheetTestResultIdsForAttachmentUpdate(Integer worksheetId){
+        return dao.getWorksheetTestResultIdsForAttachmentUpdate(worksheetId);
+    }
+
+
+    public void saveTestResultAttachment(List<Integer> testResultIds, Document document){
+        dao.saveTestResultAttachment(testResultIds, document);
+    }
+
     public TestResult saveTestResult(TestResultDTO testResultDTO){
         return saveTestResult(testResultDTO, null);
     }
@@ -4810,5 +4819,9 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
 
     public SampleActivity getSampleActivityById(Integer id){
         return dao.getSampleActivityById(id);
+    }
+
+    public Document getDocumentById(Integer id){
+        return dao.getDocumentById(id);
     }
 }

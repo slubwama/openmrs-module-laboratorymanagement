@@ -2040,4 +2040,55 @@
       <column name="responsible_person_other" type="VARCHAR(150)" />
     </addColumn>
   </changeSet>
+  <changeSet author="dev" id="labmanagement-1726473485023-1">
+    <createTable tableName="labmgmt_document">
+      <column  autoIncrement="true" name="document_id" type="INT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="file_extension" type="VARCHAR(10)"/>
+      <column name="content_type" type="VARCHAR(128)"/>
+      <column name="content_size" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="content_title" type="VARCHAR(256)"/>
+      <column name="file_name" type="VARCHAR(256)"/>
+      <column name="document_group" type="INT"/>
+      <column name="document_group_item_ref" type="VARCHAR(256)"/>
+      <column name="content_data" type="MEDIUMBLOB"/>
+      <column defaultValueNumeric="0" name="creator" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="date_created" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changed_by" type="INT"/>
+      <column name="date_changed" type="datetime"/>
+      <column defaultValueNumeric="0" name="voided" type="BIT(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="voided_by" type="INT"/>
+      <column name="date_voided" type="datetime"/>
+      <column name="void_reason" type="VARCHAR(255)"/>
+      <column name="uuid" type="CHAR(38)">
+        <constraints nullable="false" unique="true"/>
+      </column>
+      <column name="ref_count" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="ref_update" type="datetime">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="dev" id="labmanagement-1726473485023-2">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="labmgmt_test_result"/>
+      <not>
+        <columnExists tableName="labmgmt_test_result" columnName="document_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="labmgmt_test_result">
+      <column name="document_id" type="INT" />
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

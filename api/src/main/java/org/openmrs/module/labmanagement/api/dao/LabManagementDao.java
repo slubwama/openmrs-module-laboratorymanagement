@@ -21,6 +21,7 @@ import org.openmrs.*;
 import org.openmrs.Order;
 import org.openmrs.api.ConceptNameType;
 import org.openmrs.api.db.hibernate.DbSession;
+import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.dto.TestApprovalDTO;
@@ -122,8 +123,13 @@ public class LabManagementDao extends DaoBase {
         getSession().saveOrUpdate(testRequest);
         return testRequest;
     }
+
     public SampleActivity getSampleActivityById(Integer id) {
         return (SampleActivity) getSession().createCriteria(SampleActivity.class).add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    public Document getDocumentById(Integer id){
+        return (Document) getSession().createCriteria(Document.class).add(Restrictions.eq("id", id)).uniqueResult();
     }
 
     public SampleActivity getSampleActivityByUuid(String uuid) {
@@ -236,19 +242,6 @@ public class LabManagementDao extends DaoBase {
     public Worksheet saveWorksheet(Worksheet worksheet) {
         getSession().saveOrUpdate(worksheet);
         return worksheet;
-    }
-
-    public TestResultDocument getTestResultDocumentById(Integer id) {
-        return (TestResultDocument) getSession().createCriteria(TestResultDocument.class).add(Restrictions.eq("id", id)).uniqueResult();
-    }
-
-    public TestResultDocument getTestResultDocumentByUuid(String uuid) {
-        return (TestResultDocument) getSession().createCriteria(TestResultDocument.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
-    }
-
-    public TestResultDocument saveTestResultDocument(TestResultDocument testResultDocument) {
-        getSession().saveOrUpdate(testResultDocument);
-        return testResultDocument;
     }
 
     public ApprovalConfig getApprovalConfigById(Integer id) {
@@ -2704,6 +2697,7 @@ public class LabManagementDao extends DaoBase {
                 "trt.archiveSample as archiveSample,\n" +
                 "trt.remarks as remarks,\n" +
                 "trt.completedDate as completedDate,\n" +
+                "trt.documentId as documentId,\n" +
                 "trt.completed as completed,\n" +
                 "trt.completedResult as completedResult,\n" +
                 "trt.creator.userId as creator,\n" +
@@ -3381,6 +3375,34 @@ public class LabManagementDao extends DaoBase {
         query.setMaxResults(1);
         List<Integer> result = (List<Integer>) query.list();
         return result == null || result.isEmpty() ? null : result.get(0);
+    }
+
+    public List<Integer> getWorksheetTestResultIdsForAttachmentUpdate(Integer worksheetId){
+        Query query = getSession().createQuery("select tr.id, tr.requireApproval, tr.completed, tr.dateCreated, tr.documentId from labmanagement.WorksheetItem w join " +
+                "w.testResults tr where w.worksheet.id = :wid and w.voided=0 and tr.voided = 0");
+        query.setParameter("wid", worksheetId);
+        final Integer timeout = GlobalProperties.getTestResultEditTimeout();
+        List<Integer> result = (List<Integer>) query.list().stream().map(p->{
+            return  ((Object[])p)[4] == null || TestResultDTO.canUpdateTestResult((Boolean) ((Object[])p)[1],(Boolean) ((Object[])p)[2], (Date) ((Object[])p)[3], timeout) ? (Integer)((Object[])p)[0] : (Integer)null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        return result;
+    }
+
+    public void saveTestResultAttachment(List<Integer> testResultIds, Document document){
+        if(testResultIds == null || testResultIds.isEmpty()) throw new LabManagementException("No test results specified");
+        DbSession session = getSession();
+        Query query = session.createQuery("Update labmanagement.Document as d set d.refUpdate = :now, d.refCount = COALESCE(d.refCount,1)-1 WHERE d.id in (" +
+                "select tr.documentId from labmanagement.TestResult tr where tr.id in :id )");
+        query.setParameterList("id", testResultIds);
+        query.setParameter("now", new Date());
+        query.executeUpdate();
+
+        getSession().saveOrUpdate(document);
+
+        query = session.createQuery("Update labmanagement.TestResult set documentId = :docId WHERE id in (:id)");
+        query.setParameterList("id", testResultIds);
+        query.setParameter("docId", document.getId());
+        query.executeUpdate();
     }
 
     public Result<TestRequestReportItem> findTestRequestReportItems(TestRequestReportItemFilter filter){

@@ -1,9 +1,20 @@
 package org.openmrs.module.labmanagement.api.model;
 
-import javax.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.openmrs.BaseChangeableOpenmrsData;
 
-//@Table(name = "labmgmt_document")
-public class Document {
+import javax.persistence.*;
+import java.util.Date;
+
+@Entity(name = "labmanagement.Document")
+@Table(name = "labmgmt_document")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONE)
+public class Document  extends BaseChangeableOpenmrsData {
+
+    public static final  int WORKSHEET_TEST_RESULT_DOC_GROUP = 1;
+    public static final  int TEST_RESULT_DOC_GROUP = 2;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "document_id", nullable = false)
@@ -32,6 +43,12 @@ public class Document {
 
     @Column(name = "content_data")
     private byte[] contentData;
+
+    @Column(name = "ref_count", nullable = false)
+    private Integer refCount;
+
+    @Column(name = "ref_update", nullable = false)
+    private Date refUpdate;
 
     public Integer getId() {
         return id;
@@ -105,4 +122,19 @@ public class Document {
         this.contentData = contentData;
     }
 
+    public Integer getRefCount() {
+        return refCount;
+    }
+
+    public void setRefCount(Integer refCount) {
+        this.refCount = refCount;
+    }
+
+    public Date getRefUpdate() {
+        return refUpdate;
+    }
+
+    public void setRefUpdate(Date refUpdate) {
+        this.refUpdate = refUpdate;
+    }
 }

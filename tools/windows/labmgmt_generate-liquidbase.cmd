@@ -25,7 +25,9 @@ REM D:\RnD\os\tools\liquibase-4.28.0\liquibase.bat --log-level INFO  --driver=co
 REM D:\RnD\os\tools\liquibase-4.28.0\liquibase.bat --log-level INFO  --driver=com.mysql.cj.jdbc.Driver --changeLogFile=D:\RnD\os\src\liquidbase\liquibase2.xml --url="jdbc:mysql://127.0.0.1:3306/esmugemr?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&sessionVariables=default_storage_engine=InnoDB" --username=openmrs --password=openmrs --diff-types=data --include-objects="table:labmgmt_approval_config, table:labmgmt_approval_flow"  generateChangeLog 
 
 
-D:\RnD\os\tools\liquibase-4.28.0\liquibase.bat --log-level INFO  --driver=com.mysql.cj.jdbc.Driver --changeLogFile=D:\RnD\os\src\liquidbase\liquibase2.xml --url="jdbc:mysql://127.0.0.1:3306/esmugemr?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&sessionVariables=default_storage_engine=InnoDB" --username=openmrs --password=openmrs --include-objects="table:labmgmt_storage, table:labmgmt_storage_unit"  generateChangeLog 
+REM D:\RnD\os\tools\liquibase-4.28.0\liquibase.bat --log-level INFO  --driver=com.mysql.cj.jdbc.Driver --changeLogFile=D:\RnD\os\src\liquidbase\liquibase2.xml --url="jdbc:mysql://127.0.0.1:3306/esmugemr?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&sessionVariables=default_storage_engine=InnoDB" --username=openmrs --password=openmrs --include-objects="table:labmgmt_storage, table:labmgmt_storage_unit"  generateChangeLog 
+
+D:\RnD\os\tools\liquibase-4.28.0\liquibase.bat --log-level INFO  --driver=com.mysql.cj.jdbc.Driver --changeLogFile=D:\RnD\os\src\liquidbase\liquibase2.xml --url="jdbc:mysql://127.0.0.1:3306/esmugemrdocs?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&sessionVariables=default_storage_engine=InnoDB" --username=openmrs --password=openmrs --include-objects="table:labmgmt_document"  generateChangeLog 
 
 
 

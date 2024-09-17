@@ -399,27 +399,6 @@ public class EntityUtil {
 		return  approvalFlow;
 	}
 
-	public TestResultDocument newTestResultDocument(LabManagementDao dao){
-		TestResultDocument testResultDocument=new TestResultDocument();
-		testResultDocument.setCreator(getUser());
-		testResultDocument.setDateCreated(getRandomDate());
-		testResultDocument.setChangedBy(getUser());
-		testResultDocument.setDateChanged(getRandomDate());
-		testResultDocument.setVoided(false);
-		testResultDocument.setDateVoided(getRandomDate());
-		testResultDocument.setVoidedBy(getUser());
-		testResultDocument.setVoidReason(getRandomString(255));
-		TestResult testResult=newTestResult(dao);
-		dao.saveTestResult(testResult);
-		testResultDocument.setTestResult(testResult);
-		testResultDocument.setDocumentType(getRandomString(50));
-		testResultDocument.setDocumentName(getRandomString(256));
-		testResultDocument.setDocumentProvider(getRandomByte());
-		testResultDocument.setDocumentProviderRef(getRandomString(1024));
-		testResultDocument.setRemarks(getRandomString(500));
-		return  testResultDocument;
-	}
-
 	public ApprovalConfig newApprovalConfig(LabManagementDao dao){
 		ApprovalConfig approvalConfig=new ApprovalConfig();
 		approvalConfig.setCreator(getUser());

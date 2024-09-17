@@ -146,4 +146,7 @@ delete from liquibasechangelog l  where ID  like '%ugandaemrsync-20230302-0940%'
 
 the latest snapshop failed so I return back to the last one that worked before 13th April
 
+openmrsconfig.zip
+Try unzipping that in the runtime  directory of  any server you are running.  Then run the ./build.sh file
+
 rem does not work 44305mvn openmrs-sdk:setup -U -Ddistro=org.openmrs.module:ugandaemr:4.0.0-20240612.103412-167 -DserverId=esmugemr

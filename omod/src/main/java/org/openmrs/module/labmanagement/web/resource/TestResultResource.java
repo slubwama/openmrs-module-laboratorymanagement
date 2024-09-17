@@ -221,6 +221,7 @@ public class TestResultResource extends ResourceBase<TestResultDTO> {
             description.addProperty("dateChanged");
             description.addProperty("completed");
             description.addProperty("completedResult");
+            description.addProperty("hasAttachment");
             description.addProperty("completedDate");
             description.addProperty("atLocationUuid");
             description.addProperty("atLocationName");
@@ -338,5 +339,11 @@ public class TestResultResource extends ResourceBase<TestResultDTO> {
         simpleObject.add("canUpdate", testResultDTO.getCanUpdate());
         return simpleObject;
     }
+
+    @PropertyGetter("hasAttachment")
+    public Boolean getHasAttachment(TestResultDTO testResultDTO) {
+        return testResultDTO.getDocumentId() != null;
+    }
+
 
 }

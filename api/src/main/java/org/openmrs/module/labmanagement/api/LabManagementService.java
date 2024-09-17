@@ -252,6 +252,13 @@ public interface LabManagementService extends OpenmrsService {
     List<TestResult> saveWorksheetTestResults(WorksheetTestResultDTO worksheetTestResultDTO);
 
     @Transactional(readOnly = true)
+    List<Integer> getWorksheetTestResultIdsForAttachmentUpdate(Integer worksheetId);
+
+    @Transactional
+    @Authorized(Privileges.TASK_LABMANAGEMENT_TESTRESULTS_MUTATE)
+    void saveTestResultAttachment(List<Integer> testResultIds, Document document);
+
+    @Transactional(readOnly = true)
     @Authorized(Privileges.APP_LABMANAGEMENT_TESTRESULTS)
     TestResult getTestResultById(Integer id);
     @Transactional(readOnly = true)
@@ -400,4 +407,8 @@ public interface LabManagementService extends OpenmrsService {
     @Transactional(readOnly = true)
     @Authorized(value = { Privileges.APP_LABMANAGEMENT_STORAGE, Privileges.APP_LABMANAGEMENT_SAMPLES }, requireAll = false)
     SampleActivity getSampleActivityById(Integer id);
+
+    @Transactional(readOnly = true)
+    @Authorized(value = {Privileges.APP_LABMANAGEMENT_TESTRESULTS})
+    Document getDocumentById(Integer id);
 }

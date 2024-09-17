@@ -78,6 +78,7 @@ public class TestResultDTO {
     private Map<String, Object> requestContextItems;
     private String atLocationUuid;
     private String atLocationName;
+    private Integer documentId;
 
     public Integer getId() {
         return id;
@@ -691,6 +692,17 @@ public class TestResultDTO {
         }
     }
 
+    public static boolean canUpdateTestResult(Boolean requireApproval, Boolean completed, Date dateCreated, int editTimeout){
+        if(requireApproval == null) return  false;
+        if(requireApproval){
+            return !(completed != null && completed);
+        }
+        else{
+            Date cutoffDate = DateUtils.addSeconds(dateCreated, editTimeout);
+            return (new Date().before(cutoffDate));
+        }
+    }
+
     public static boolean canUpdateTestResult(TestResult testResult, int editTimeout){
         if(testResult == null ||testResult.getVoided()) return  false;
         if(testResult.getRequireApproval()){
@@ -748,5 +760,13 @@ public class TestResultDTO {
 
     public void setAtLocationName(String atLocationName) {
         this.atLocationName = atLocationName;
+    }
+
+    public Integer getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(Integer documentId) {
+        this.documentId = documentId;
     }
 }

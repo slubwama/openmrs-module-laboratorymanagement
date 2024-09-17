@@ -523,53 +523,6 @@ public class LabManagementDaoTest extends BaseModuleContextSensitiveTest {
         assertThat(savedApprovalFlow, hasProperty("levelFourAllowPrevious", is(approvalFlow.getLevelFourAllowPrevious())));
     }
 
-    @Test
-    public void saveTestResultDocument_shouldSaveAllProperties(){
-//Given
-        TestResultDocument testResultDocument=eu().newTestResultDocument(dao());
-
-//When
-        dao().saveTestResultDocument(testResultDocument);
-
-//Let's clean up the cache to be sure getTestResultDocumentByUuid fetches from DB and not from cache
-        Context.flushSession();
-        Context.flushSession();
-
-//Then
-        TestResultDocument savedTestResultDocument = dao().getTestResultDocumentByUuid(testResultDocument.getUuid());
-        assertThat(savedTestResultDocument, hasProperty("uuid", is(testResultDocument.getUuid())));
-        assertThat(savedTestResultDocument, hasProperty("creator", is(testResultDocument.getCreator())));
-        assertThat(savedTestResultDocument, hasProperty("dateCreated", is(testResultDocument.getDateCreated())));
-        assertThat(savedTestResultDocument, hasProperty("changedBy", is(testResultDocument.getChangedBy())));
-        assertThat(savedTestResultDocument, hasProperty("dateChanged", is(testResultDocument.getDateChanged())));
-        assertThat(savedTestResultDocument, hasProperty("voided", is(testResultDocument.getVoided())));
-        assertThat(savedTestResultDocument, hasProperty("dateVoided", is(testResultDocument.getDateVoided())));
-        assertThat(savedTestResultDocument, hasProperty("voidedBy", is(testResultDocument.getVoidedBy())));
-        assertThat(savedTestResultDocument, hasProperty("voidReason", is(testResultDocument.getVoidReason())));
-        assertThat(savedTestResultDocument, hasProperty("testResult", is(testResultDocument.getTestResult())));
-        assertThat(savedTestResultDocument, hasProperty("documentType", is(testResultDocument.getDocumentType())));
-        assertThat(savedTestResultDocument, hasProperty("documentName", is(testResultDocument.getDocumentName())));
-        assertThat(savedTestResultDocument, hasProperty("documentProvider", is(testResultDocument.getDocumentProvider())));
-        assertThat(savedTestResultDocument, hasProperty("documentProviderRef", is(testResultDocument.getDocumentProviderRef())));
-        assertThat(savedTestResultDocument, hasProperty("remarks", is(testResultDocument.getRemarks())));
-
-        savedTestResultDocument = dao().getTestResultDocumentById(testResultDocument.getId());
-        assertThat(savedTestResultDocument, hasProperty("uuid", is(testResultDocument.getUuid())));
-        assertThat(savedTestResultDocument, hasProperty("creator", is(testResultDocument.getCreator())));
-        assertThat(savedTestResultDocument, hasProperty("dateCreated", is(testResultDocument.getDateCreated())));
-        assertThat(savedTestResultDocument, hasProperty("changedBy", is(testResultDocument.getChangedBy())));
-        assertThat(savedTestResultDocument, hasProperty("dateChanged", is(testResultDocument.getDateChanged())));
-        assertThat(savedTestResultDocument, hasProperty("voided", is(testResultDocument.getVoided())));
-        assertThat(savedTestResultDocument, hasProperty("dateVoided", is(testResultDocument.getDateVoided())));
-        assertThat(savedTestResultDocument, hasProperty("voidedBy", is(testResultDocument.getVoidedBy())));
-        assertThat(savedTestResultDocument, hasProperty("voidReason", is(testResultDocument.getVoidReason())));
-        assertThat(savedTestResultDocument, hasProperty("testResult", is(testResultDocument.getTestResult())));
-        assertThat(savedTestResultDocument, hasProperty("documentType", is(testResultDocument.getDocumentType())));
-        assertThat(savedTestResultDocument, hasProperty("documentName", is(testResultDocument.getDocumentName())));
-        assertThat(savedTestResultDocument, hasProperty("documentProvider", is(testResultDocument.getDocumentProvider())));
-        assertThat(savedTestResultDocument, hasProperty("documentProviderRef", is(testResultDocument.getDocumentProviderRef())));
-        assertThat(savedTestResultDocument, hasProperty("remarks", is(testResultDocument.getRemarks())));
-    }
 
     @Test
     public void saveApprovalConfig_shouldSaveAllProperties(){
