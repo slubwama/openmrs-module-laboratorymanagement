@@ -1258,14 +1258,6 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             }
             Patient patient = Context.getPatientService().getPatientByUuid(referralLocationDTO.getPatientUuid());
             if (patient != null) {
-                ReferralLocationSearchFilter filter = new ReferralLocationSearchFilter();
-                filter.setPatientUuid(referralLocationDTO.getPatientUuid());
-                filter.setLimit(2);
-                filter.setVoided(false);
-                Result<ReferralLocationDTO> referralLocationResult = findReferralLocations(filter);
-                if (referralLocationResult.getData().stream().anyMatch(p-> isNew || !p.getUuid().equals(referralLocation.getUuid()))) {
-                    invalidRequest("labmanagement.referrallocation.patientexists");
-                }
                 referralLocation.setPatient(patient);
             } else {
                 invalidRequest("labmanagement.notexists", "patientUuid");
@@ -3141,6 +3133,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
         }
         boolean recreateNextApprovalIfObsChange = false;
         String oldObs = null;
+        String oldRemarks = testResult.getRemarks();
         if(testResult.getObs() != null)
             oldObs = testResult.getObs().getValueAsString(Context.getLocale());
 
@@ -3247,7 +3240,7 @@ public class LabManagementServiceImpl extends BaseOpenmrsService implements LabM
             testResult.setObs(obs);
         }
 
-        if(recreateNextApprovalIfObsChange && !Objects.equals(newObs,oldObs)){
+        if(recreateNextApprovalIfObsChange && (!Objects.equals(newObs,oldObs) || !Objects.equals(testResult.getRemarks(), oldRemarks) )){
             setNextTestApproval(testResult, testConfig.getApprovalFlow(), true);
         }
 

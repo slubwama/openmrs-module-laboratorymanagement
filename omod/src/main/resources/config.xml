@@ -264,13 +264,13 @@
 
     <globalProperty>
         <property>labmanagement.barcodePrintUri</property>
-        <defaultValue>metsbcp://print/bc128/%BARCODE%</defaultValue>
+        <defaultValue>metsbcp://print/bc128/%BARCODE%|||%TYPE%|||%NAME%</defaultValue>
         <description>URI for triggering printing a barcode. Use %BARCODE% placeholder.</description>
     </globalProperty>
 
     <globalProperty>
         <property>labmanagement.barcodeAlgorithm</property>
-        <defaultValue>year2_month2_day2_number</defaultValue>
+        <defaultValue>date_number_48bit</defaultValue>
         <description>Algorithm used to generate barcodes. Options:- number_plain,year2_month2_day2_number,date_number_48bit,ugemr</description>
     </globalProperty>
 
