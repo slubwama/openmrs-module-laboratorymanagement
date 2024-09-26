@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.web.resource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
@@ -12,8 +11,6 @@ import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.dto.BatchJobDTO;
 import org.openmrs.module.labmanagement.api.dto.BatchJobSearchFilter;
 import org.openmrs.module.labmanagement.api.dto.Result;
-import org.openmrs.module.labmanagement.api.dto.TestRequestDTO;
-import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobStatus;
 import org.openmrs.module.labmanagement.api.model.BatchJobType;
 import org.openmrs.module.webservices.rest.web.RequestContext;

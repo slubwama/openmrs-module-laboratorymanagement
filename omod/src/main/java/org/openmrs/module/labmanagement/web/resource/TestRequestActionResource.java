@@ -3,7 +3,6 @@ package org.openmrs.module.labmanagement.web.resource;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.StringProperty;
-import org.openmrs.logic.op.In;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.dto.TestRequestAction;

@@ -1,16 +1,13 @@
 package org.openmrs.module.labmanagement.api.dao;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.Obs;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItemFilter;
-import org.openmrs.module.labmanagement.api.model.ApprovalResult;
 import org.openmrs.module.labmanagement.api.reporting.ObsValue;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class TestRequestReportItemQueryBuilder {

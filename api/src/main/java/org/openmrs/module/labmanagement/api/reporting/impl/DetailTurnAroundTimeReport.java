@@ -218,7 +218,7 @@ public class DetailTurnAroundTimeReport extends ReportGenerator {
 	protected void writeRow(CSVWriter csvWriter, TestRequestReportItem row, Map<Integer, List<ObsDto>> observations) {
 
 		Long turnAroundTime = TurnAroundTimeCalculator.getTurnAroundTime(
-				row.getCollectionDate() != null ? row.getCollectionDate() : row.getRequestApprovalDate() != null ? row.getRequestApprovalDate() : row.getDateCreated(),
+				getTurnAroundStartDate(row.getCollectionDate(),row.getRequestApprovalDate() ,row.getDateCreated()),
 		row.getResultDate() != null ? row.getResultDate() : row.getCompletedDate());
 
 		writeLineToCsv(csvWriter, TIMESTAMP_FORMATTER.format(row.getDateCreated()),

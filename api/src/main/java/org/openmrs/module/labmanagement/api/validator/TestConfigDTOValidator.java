@@ -6,12 +6,9 @@ import org.openmrs.api.context.Context;
 import org.openmrs.messagesource.MessageSourceService;
 import org.openmrs.module.labmanagement.api.dto.TestConfigDTO;
 import org.openmrs.module.labmanagement.api.LabManagementService;
-import org.openmrs.module.labmanagement.api.dto.TestConfigDTO;
 import org.openmrs.module.labmanagement.api.model.TestConfig;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-
-import java.math.BigDecimal;
 
 @Handler(supports = { TestConfigDTO.class }, order = 50)
 public class TestConfigDTOValidator implements Validator {

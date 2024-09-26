@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.web.resource;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
@@ -17,7 +16,6 @@ import org.openmrs.module.labmanagement.api.model.*;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.web.SampleTestRequestItemRepresentation;
 import org.openmrs.module.webservices.rest.SimpleObject;
-import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.PropertyGetter;

@@ -7,8 +7,6 @@ import org.openmrs.Role;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 
-import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Set;
 
 import org.openmrs.module.dataexchange.DataImporter;

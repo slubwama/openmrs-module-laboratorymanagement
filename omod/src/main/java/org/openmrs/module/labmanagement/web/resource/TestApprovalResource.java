@@ -4,18 +4,12 @@ import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.IntegerProperty;
-import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
 import org.apache.commons.lang.StringUtils;
-import org.openmrs.Concept;
-import org.openmrs.Location;
-import org.openmrs.Patient;
-import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.*;
-import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
@@ -29,7 +23,6 @@ import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOp
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/test-approvals", supportedClass = TestApprovalDTO.class, supportedOpenmrsVersions = {

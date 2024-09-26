@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.api.jobs;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.EncounterType;
 import org.openmrs.Order;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 

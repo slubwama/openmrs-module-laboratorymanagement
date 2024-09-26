@@ -13,9 +13,7 @@ import org.openmrs.module.labmanagement.api.reporting.GenericObject;
 import org.openmrs.module.labmanagement.api.reporting.Report;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
 import org.openmrs.module.labmanagement.api.reporting.ReportParameter;
-import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.FileUtil;
-import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.scheduler.SchedulerException;
 import org.openmrs.scheduler.SchedulerService;
 import org.openmrs.scheduler.TaskDefinition;
@@ -25,7 +23,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 public class AsyncTasksBatchJob extends AbstractTask {
 

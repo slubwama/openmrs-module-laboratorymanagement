@@ -1,11 +1,6 @@
 package org.openmrs.module.labmanagement.api.reporting;
 
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.openmrs.module.labmanagement.api.LabManagementException;
-
-import java.util.Date;
 
 public class IntegerReportParameter extends ReportParameterValue<Integer> {
 

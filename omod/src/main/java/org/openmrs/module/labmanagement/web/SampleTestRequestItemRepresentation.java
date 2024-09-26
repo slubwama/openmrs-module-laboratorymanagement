@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.web;
 
-import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 
 public class SampleTestRequestItemRepresentation implements Representation {

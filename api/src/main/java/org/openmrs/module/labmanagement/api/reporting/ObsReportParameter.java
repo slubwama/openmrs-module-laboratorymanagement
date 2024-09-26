@@ -6,9 +6,7 @@ import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.LabManagementException;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ObsReportParameter extends ReportParameterValue<ObsValue> {

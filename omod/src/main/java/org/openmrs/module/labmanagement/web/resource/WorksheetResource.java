@@ -14,7 +14,6 @@ import org.openmrs.module.labmanagement.api.dto.*;
 import org.openmrs.module.labmanagement.api.model.Worksheet;
 import org.openmrs.module.labmanagement.api.model.WorksheetItemStatus;
 import org.openmrs.module.labmanagement.api.model.WorksheetStatus;
-import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.RequestContext;

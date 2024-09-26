@@ -1,7 +1,5 @@
 package org.openmrs.module.labmanagement.api.reporting;
 
-import liquibase.pro.packaged.B;
-import org.openmrs.module.labmanagement.api.jobs.AsyncTaskJob;
 import org.openmrs.module.labmanagement.api.jobs.DataMigrationJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobType;
 import org.openmrs.module.labmanagement.api.reporting.impl.*;

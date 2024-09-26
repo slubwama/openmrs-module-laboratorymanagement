@@ -23,7 +23,6 @@ import org.openmrs.module.labmanagement.api.utils.csv.CSVWriter;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -292,7 +291,7 @@ public class SummarizedTurnAroundTimeReport extends ReportGenerator {
 					for (TestRequestReportItem row : data.getData()) {
 						writeLineToCsv(step1Writer, Integer.toString(row.getOrderConceptId()),
 								formatTestName(row.getTestName(), row.getTestShortName()),
-							Long.toString(TurnAroundTimeCalculator.getTurnAroundTime(row.getCollectionDate() != null ? row.getCollectionDate() : row.getRequestApprovalDate() != null ? row.getRequestApprovalDate() : row.getDateCreated(),
+							Long.toString(TurnAroundTimeCalculator.getTurnAroundTime(getTurnAroundStartDate(row.getCollectionDate(),row.getRequestApprovalDate() ,row.getDateCreated()),
 										row.getResultDate() != null ? row.getResultDate() : row.getCompletedDate())));
 						count--;
 						if(count == 0){

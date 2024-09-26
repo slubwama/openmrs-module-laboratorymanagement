@@ -3,11 +3,8 @@ package org.openmrs.module.labmanagement.web.resource;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
-import org.apache.commons.lang.StringUtils;
-import org.openmrs.module.labmanagement.api.LabManagementService;
 import org.openmrs.module.labmanagement.api.ModuleConstants;
 import org.openmrs.module.labmanagement.api.dto.*;
-import org.openmrs.module.labmanagement.api.model.TestResult;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.PropertySetter;
@@ -23,7 +20,6 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/worksheet-test-result", supportedClass = WorksheetTestResultDTO.class, supportedOpenmrsVersions = {

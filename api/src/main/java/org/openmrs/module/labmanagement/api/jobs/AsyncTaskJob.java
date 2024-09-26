@@ -1,6 +1,5 @@
 package org.openmrs.module.labmanagement.api.jobs;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.openmrs.module.labmanagement.api.LabManagementService;
@@ -8,9 +7,7 @@ import org.openmrs.module.labmanagement.api.dto.ObsDto;
 import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.BatchJobStatus;
 import org.openmrs.module.labmanagement.api.reporting.*;
-import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.FileUtil;
-import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
 import org.openmrs.module.labmanagement.api.utils.NumberFormatUtil;
 import org.openmrs.module.labmanagement.api.utils.csv.CSVWriter;
 

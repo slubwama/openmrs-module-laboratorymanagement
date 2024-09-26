@@ -1,7 +1,6 @@
 package org.openmrs.module.labmanagement.api.reporting;
 
 import org.apache.commons.lang.StringUtils;
-import org.openmrs.Concept;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.LabManagementException;

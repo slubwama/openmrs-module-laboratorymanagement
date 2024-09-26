@@ -9,14 +9,12 @@ import org.openmrs.Patient;
 import org.openmrs.User;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.labmanagement.api.LabManagementService;
-import org.openmrs.module.labmanagement.api.dto.ObsDto;
 import org.openmrs.module.labmanagement.api.dto.Result;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItem;
 import org.openmrs.module.labmanagement.api.dto.TestRequestReportItemFilter;
 import org.openmrs.module.labmanagement.api.model.BatchJob;
 import org.openmrs.module.labmanagement.api.model.ReferralLocation;
 import org.openmrs.module.labmanagement.api.reporting.GenericObject;
-import org.openmrs.module.labmanagement.api.reporting.ObsValue;
 import org.openmrs.module.labmanagement.api.reporting.ReportGenerator;
 import org.openmrs.module.labmanagement.api.utils.DateUtil;
 import org.openmrs.module.labmanagement.api.utils.GlobalProperties;
@@ -29,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class AuditTestReport extends ReportGenerator {
 

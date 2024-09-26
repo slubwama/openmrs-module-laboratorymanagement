@@ -9,8 +9,6 @@
  */
 package org.openmrs.module.labmanagement.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.hibernate.criterion.Restrictions;
 import org.openmrs.Concept;
 import org.openmrs.Order;
 import org.openmrs.annotation.Authorized;
