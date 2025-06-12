@@ -11,9 +11,9 @@
 
     <url>https://wiki.openmrs.org/x/FQ4z</url>
     <scm>
-        <connection>scm:git@github.com:METS-Programme/openmrs-module-laboratorymanagement.git</connection>
-        <developerConnection>scm:git@github.com:METS-Programme/openmrs-module-laboratorymanagement.git</developerConnection>
-        <url>scm:git:https://github.com/METS-Programme/openmrs-module-laboratorymanagement.git/</url>
+        <connection>scm:git:https://github.com/METS-Programme/openmrs-module-laboratorymanagement.git</connection>
+        <developerConnection>scm:git:git@github.com:METS-Programme/openmrs-module-laboratorymanagement.git</developerConnection>
+        <url>https://github.com/METS-Programme/openmrs-module-laboratorymanagement</url>
         <tag>HEAD</tag>
     </scm>
 
