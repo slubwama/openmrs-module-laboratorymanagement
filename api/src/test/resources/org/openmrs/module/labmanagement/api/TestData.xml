@@ -1,0 +1,3 @@
+<dataset>
+	<privilege  privilege="Task: labmanagement.testresults.approve"  description="Able to approve lab test results"  uuid="b887639b-35c8-11ef-9df0-00155d919f83"/>
+</dataset>
